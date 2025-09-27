@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1758890683221,
+      "tag": "0000_real_boomer",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1758959387712,
+      "tag": "0001_illegal_cassandra_nova",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758959795772,
+      "tag": "0002_spooky_doctor_doom",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758959897777,
+      "tag": "0003_breezy_ben_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1758960638513,
+      "tag": "0004_abandoned_amazoness",
+      "breakpoints": true
+    }
+  ]
+}
