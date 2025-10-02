@@ -36,6 +36,13 @@
       "when": 1758960638513,
       "tag": "0004_abandoned_amazoness",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1759411960319,
+      "tag": "0005_wealthy_puck",
+      "breakpoints": true
     }
   ]
 }

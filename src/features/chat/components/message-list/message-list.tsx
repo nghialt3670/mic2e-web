@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { getMessages } from "../../actions/message-actions";
+import { getMessages } from "../../actions/message-actions/get-messages";
 import useChatStore from "../../stores/chat-store";
 import { MessageItem } from "../message-item";
 
@@ -13,7 +13,7 @@ export const MessageList = () => {
     const fetchMessages = async () => {
       if (!chatId) return;
       const { data: messages } = await getMessages({ chatId });
-      if (!messages) return;
+      if (!messages || messages.length === 0) return;
       setMessages(messages);
     };
     fetchMessages();

@@ -30,23 +30,23 @@ export const sendMessage = withErrorHandler<SendMessageRequest, Message>(async (
         return { message: "Chat not found", code: 404 }
     }
 
-    await db.insert(messages).values({
+    const userMessage = await db.insert(messages).values({
         chatId,
         sender: "user",
         text: message.text,
-    });
-
-    console.log(message);
+    }).returning().then(rows => rows[0]);
 
     const mockResponseMessage = {
         ...message,
     }
 
     const createdMessage = await db.insert(messages).values({
-            chatId,
+        chatId,
         sender: "assistant",
         text: mockResponseMessage.text,
     }).returning().then(rows => rows[0]);
+
+    console.log(createdMessage);
 
     return { message: "Message sent successfully", code: 200, data: createdMessage }
 })

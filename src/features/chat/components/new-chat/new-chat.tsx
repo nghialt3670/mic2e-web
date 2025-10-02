@@ -8,9 +8,11 @@ import useChatStore from "../../stores/chat-store";
 
 export const NewChat = () => {
   const router = useRouter();
-  const { clearMessages } = useChatStore();
+  const { clearMessages, setChatId } = useChatStore();
+  
   const handleNewChatClick = () => {
     clearMessages();
+    setChatId(undefined);
     router.push("/");
   };
 

@@ -15,6 +15,7 @@ export const ChatBox = ({ chatId }: ChatBoxProps) => {
 
   useEffect(() => {
     setChatId(chatId);
+    console.log(chatId);
   }, [chatId, setChatId]);
 
   return (

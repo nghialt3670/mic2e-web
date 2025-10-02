@@ -4,9 +4,10 @@ import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { Send, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
-import { createChat } from "../../actions/chat-actions";
-import { sendMessage } from "../../actions/message-actions";
+import { createChat } from "../../actions/chat-actions/create-chat";
+import { sendMessage } from "../../actions/message-actions/send-message";
 import useChatStore from "../../stores/chat-store";
 
 export const MessageInput = () => {
@@ -27,24 +28,30 @@ export const MessageInput = () => {
   };
 
   const handleSendClick = async () => {
+    if (!text.trim()) return;
     const chatId = await getChatId();
-    window.history.pushState({}, "", `/chats/${chatId}`);
+    router.push(`/chats/${chatId}`);
 
-    addMessage({
-      id: "",
+    const requestMessage = {
+      id: uuidv4(),
       chatId,
       createdAt: new Date(),
       sender: "user",
       text,
-    });
+    };
 
-    const message = await withToastHandler(sendMessage, {
+    addMessage(requestMessage);
+
+    const { id, ...message } = requestMessage;
+
+    const responseMessage = await withToastHandler(sendMessage, {
       chatId,
-      message: { text },
+      message,
     });
-    if (message) {
-      addMessage(message);
+    if (responseMessage) {
+      addMessage(responseMessage);
     }
+    setText("");
   };
 
   return (

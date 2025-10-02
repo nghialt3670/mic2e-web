@@ -1,9 +1,9 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { v4 as uuidv4 } from "uuid";
 
 export const users = pgTable("users", {
-  id: uuid("id")
+  id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
   name: text("name"),
@@ -14,34 +14,34 @@ export const users = pgTable("users", {
 });
 
 export const chats = pgTable("chats", {
-  id: uuid("id")
+  id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  userId: uuid("userId").notNull(),
+  userId: text("userId").notNull().references(() => users.id),
   title: text("title"),
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
 
 export const messages = pgTable("messages", {
-  id: uuid("id")
+  id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  chatId: uuid("chatId").notNull(),
+  chatId: text("chatId").notNull().references(() => chats.id),
   sender: text("sender").notNull(),
   text: text("text"),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
 export const attachments = pgTable("attachments", {
-  id: uuid("id")
+  id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
   name: text("name").notNull(),
   size: integer("size").notNull(),
   type: text("type").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
-  messageId: uuid("messageId").notNull(),
+  messageId: text("messageId").notNull().references(() => messages.id),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

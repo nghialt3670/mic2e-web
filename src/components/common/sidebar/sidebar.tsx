@@ -6,6 +6,7 @@ import {
   Sidebar as SidebarUI,
 } from "@/components/ui/sidebar";
 import { NewChat } from "@/features/chat/components/new-chat";
+import { ChatList } from "@/features/chat/components/chat-list";
 
 export const Sidebar = () => {
   return (
@@ -15,7 +16,9 @@ export const Sidebar = () => {
         <SidebarGroup>
           <NewChat />
         </SidebarGroup>
-        <SidebarGroup />
+        <SidebarGroup>
+          <ChatList />
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter />
     </SidebarUI>
