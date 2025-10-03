@@ -13,7 +13,7 @@ interface ChatStore {
   setChats: (chats: Partial<Chat>[]) => void;
 }
 
-const useChatStore = create<ChatStore>((set) => ({
+export const useChatStore = create<ChatStore>((set) => ({
   page: 1,
   size: 20,
   chat: undefined,
@@ -25,5 +25,3 @@ const useChatStore = create<ChatStore>((set) => ({
     set((state) => ({ chats: [...state.chats, chat] })),
   setChats: (chats: Partial<Chat>[]) => set({ chats }),
 }));
-
-export default useChatStore;

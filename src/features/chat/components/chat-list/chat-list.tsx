@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { getChatPage } from "../../actions/chat-actions/get-chat-page";
-import useChatStore from "../../stores/chat-store";
+import { useChatStore } from "../../stores/chat-store";
 import { ChatItem } from "../chat-item";
 
 export const ChatList = () => {

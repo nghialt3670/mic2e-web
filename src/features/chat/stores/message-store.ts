@@ -12,7 +12,7 @@ interface MessageStore {
   clearMessages: () => void;
 }
 
-const useMessageStore = create<MessageStore>((set) => ({
+export const useMessageStore = create<MessageStore>((set) => ({
   page: 1,
   size: 20,
   messages: [],
@@ -23,5 +23,3 @@ const useMessageStore = create<MessageStore>((set) => ({
     set((state) => ({ messages: [...state.messages, message] })),
   clearMessages: () => set({ messages: [] }),
 }));
-
-export default useMessageStore;

@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 
 import { getMessagePage } from "../../actions/message-actions/get-message-page";
-import useChatStore from "../../stores/chat-store";
-import useMessageStore from "../../stores/message-store";
+import { useChatStore } from "../../stores/chat-store";
+import { useMessageStore } from "../../stores/message-store";
 import { MessageItem } from "../message-item";
 
 export const MessageList = () => {
@@ -26,8 +26,6 @@ export const MessageList = () => {
     };
     fetchMessages();
   }, [chat, page, size, messages, setMessages]);
-
-  console.log(messages);
 
   return (
     <div className="flex flex-col gap-2 h-full">

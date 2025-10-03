@@ -3,7 +3,7 @@
 import { Chat } from "@/lib/drizzle/schema";
 import { useEffect } from "react";
 
-import useChatStore from "../../stores/chat-store";
+import { useChatStore } from "../../stores/chat-store";
 import { MessageInput } from "../message-input";
 import { MessageList } from "../message-list";
 
