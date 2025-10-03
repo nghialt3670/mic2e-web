@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { createChat } from "../../actions/chat-actions/create-chat";
 import { sendMessage } from "../../actions/message-actions/send-message";
-import useChatStore from "../../stores/chat-store";
+import useChatStore from "../../stores/message-store";
 
 export const MessageInput = () => {
   const [text, setText] = useState("");

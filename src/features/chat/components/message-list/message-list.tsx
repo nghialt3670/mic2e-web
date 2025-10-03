@@ -2,22 +2,32 @@
 
 import { useEffect } from "react";
 
-import { getMessages } from "../../actions/message-actions/get-messages";
+import { getMessagePage } from "../../actions/message-actions/get-message-page";
 import useChatStore from "../../stores/chat-store";
+import useMessageStore from "../../stores/message-store";
 import { MessageItem } from "../message-item";
 
 export const MessageList = () => {
-  const { chatId, messages, setMessages } = useChatStore();
+  const { chat } = useChatStore();
+  const { page, size, messages, setMessages } = useMessageStore();
 
   useEffect(() => {
     const fetchMessages = async () => {
+      const chatId = chat?.id;
       if (!chatId) return;
-      const { data: messages } = await getMessages({ chatId });
-      if (!messages || messages.length === 0) return;
-      setMessages(messages);
+      const { data: messagePage } = await getMessagePage({
+        chatId,
+        page,
+        size,
+      });
+      if (!messagePage?.items) return;
+      console.log(messagePage.items);
+      setMessages(messagePage.items);
     };
     fetchMessages();
-  }, [chatId, setMessages]);
+  }, [chat, page, size, messages, setMessages]);
+
+  console.log(messages);
 
   return (
     <div className="flex flex-col gap-2 h-full">

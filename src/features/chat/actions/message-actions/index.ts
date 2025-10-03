@@ -1,3 +1,3 @@
 export { createMessage } from "./create-message";
-export { getMessages } from "./get-messages";
+export { getMessagePage } from "./get-message-page";
 export { sendMessage } from "./send-message";

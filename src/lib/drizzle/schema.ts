@@ -17,7 +17,9 @@ export const chats = pgTable("chats", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  userId: text("userId").notNull().references(() => users.id),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id),
   title: text("title"),
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow(),
@@ -27,7 +29,9 @@ export const messages = pgTable("messages", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  chatId: text("chatId").notNull().references(() => chats.id),
+  chatId: text("chatId")
+    .notNull()
+    .references(() => chats.id),
   sender: text("sender").notNull(),
   text: text("text"),
   createdAt: timestamp("createdAt").defaultNow(),
@@ -41,7 +45,9 @@ export const attachments = pgTable("attachments", {
   size: integer("size").notNull(),
   type: text("type").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
-  messageId: text("messageId").notNull().references(() => messages.id),
+  messageId: text("messageId")
+    .notNull()
+    .references(() => messages.id),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

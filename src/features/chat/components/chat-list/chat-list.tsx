@@ -1,25 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-import { withToastHandler } from "@/utils/client/client-action-handlers";
-import { getChats } from "../../actions/chat-actions/get-chats";
-import { Chat } from "@/lib/drizzle/schema";
+import { getChatPage } from "../../actions/chat-actions/get-chat-page";
+import useChatStore from "../../stores/chat-store";
 import { ChatItem } from "../chat-item";
 
 export const ChatList = () => {
-  const [chats, setChats] = useState<Chat[]>([]);
+  const { page, size, chats, setChats } = useChatStore();
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await withToastHandler(getChats, undefined);
-      if (data) setChats(data);
+      const { data: chatPage } = await getChatPage({ page, size });
+      if (chatPage) setChats(chatPage.items);
     };
     fetch();
-  }, []);
+  }, [page, size, setChats]);
 
   if (chats.length === 0) {
-    return <div className="px-2 py-1 text-sm text-muted-foreground">No chats</div>;
+    return (
+      <div className="px-2 py-1 text-sm text-muted-foreground">No chats</div>
+    );
   }
 
   return (

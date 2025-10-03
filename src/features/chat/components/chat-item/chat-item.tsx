@@ -1,7 +1,12 @@
 import { Chat } from "@/lib/drizzle/schema";
 import Link from "next/link";
+import { FC } from "react";
 
-export const ChatItem = ({ chat }: { chat: Chat }) => {
+interface ChatItemProps {
+  chat: Partial<Chat>;
+}
+
+export const ChatItem: FC<ChatItemProps> = ({ chat }) => {
   const title = chat.title || "New chat";
   return (
     <Link

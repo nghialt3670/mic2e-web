@@ -5,8 +5,8 @@ import {
   SidebarHeader,
   Sidebar as SidebarUI,
 } from "@/components/ui/sidebar";
-import { NewChat } from "@/features/chat/components/new-chat";
 import { ChatList } from "@/features/chat/components/chat-list";
+import { NewChat } from "@/features/chat/components/new-chat";
 
 export const Sidebar = () => {
   return (

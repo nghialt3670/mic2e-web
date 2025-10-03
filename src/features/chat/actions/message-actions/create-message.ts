@@ -5,6 +5,7 @@ import { db } from "@/lib/drizzle/db";
 import { chats, messages } from "@/lib/drizzle/schema";
 import { type Message } from "@/lib/drizzle/schema";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
+import { getSessionUserId } from "@/utils/server/session";
 import { and, eq } from "drizzle-orm";
 
 interface CreateMessageRequest {
@@ -14,17 +15,14 @@ interface CreateMessageRequest {
 
 export const createMessage = withErrorHandler<CreateMessageRequest, Message>(
   async ({ chatId, message }) => {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getSessionUserId();
+    if (!userId) {
       return { message: "Unauthorized", code: 401 };
     }
 
-    const sessionUserId = session.user.id;
-
     const chat = await db.query.chats.findFirst({
-      where: and(eq(chats.id, chatId), eq(chats.userId, sessionUserId)),
+      where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
     });
-
     if (!chat) {
       return { message: "Chat not found", code: 404 };
     }

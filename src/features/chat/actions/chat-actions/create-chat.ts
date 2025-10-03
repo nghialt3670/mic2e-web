@@ -1,22 +1,22 @@
 "use server";
 
-import { auth } from "@/auth";
 import { db } from "@/lib/drizzle/db";
 import { type Chat } from "@/lib/drizzle/schema";
 import { chats } from "@/lib/drizzle/schema";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
+import { getSessionUserId } from "@/utils/server/session";
 
 export const createChat = withErrorHandler<void, Chat>(async () => {
-  const session = await auth();
+  const userId = await getSessionUserId();
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return { message: "Unauthorized", code: 401 };
   }
 
   const chat = await db
     .insert(chats)
     .values({
-      userId: session.user.id,
+      userId,
     })
     .returning()
     .then((rows) => rows[0]);
