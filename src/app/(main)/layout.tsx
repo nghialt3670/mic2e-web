@@ -11,10 +11,10 @@ export default function MainLayout({
   return (
     <SidebarProvider>
       <Sidebar />
-      <SidebarInset>
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+      <SidebarInset className="flex flex-col h-screen">
+          <Header />
+          <main className="flex-1 overflow-auto">{children}</main>
+          <Footer />
       </SidebarInset>
     </SidebarProvider>
   );

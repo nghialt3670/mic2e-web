@@ -21,14 +21,13 @@ export const MessageList = () => {
         size,
       });
       if (!messagePage?.items) return;
-      console.log(messagePage.items);
       setMessages(messagePage.items);
     };
     fetchMessages();
-  }, [chat, page, size, messages, setMessages]);
+  }, [chat, page, size, setMessages]);
 
   return (
-    <div className="flex flex-col gap-2 h-full">
+    <div className="flex flex-col gap-2 h-full w-full max-w-5xl overflow-y-scroll">
       {messages.map((message) => (
         <MessageItem key={message.id} message={message} />
       ))}

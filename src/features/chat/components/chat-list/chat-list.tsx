@@ -25,7 +25,7 @@ export const ChatList = () => {
 
   return (
     <div className="flex flex-col gap-1">
-      {chats.map((chat) => (
+      {chats.reverse().map((chat) => (
         <ChatItem key={chat.id} chat={chat} />
       ))}
     </div>

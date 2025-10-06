@@ -20,7 +20,7 @@ export const ChatBox = ({ chat }: ChatBoxProps) => {
   }, [chat, setChat]);
 
   return (
-    <div className="flex flex-col h-full p-4">
+    <div className="flex flex-col items-center h-full p-4">
       <MessageList />
       <MessageInput />
     </div>

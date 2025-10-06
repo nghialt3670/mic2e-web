@@ -37,6 +37,13 @@ export const createMessage = withErrorHandler<CreateMessageRequest, Message>(
       .returning()
       .then((rows) => rows[0]);
 
+    await db.update(chats)
+      .set({
+        title: message.text,
+        updatedAt: new Date(),
+      })
+      .where(eq(chats.id, chatId));
+
     return {
       message: "Message created successfully",
       code: 200,
