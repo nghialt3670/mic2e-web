@@ -12,9 +12,9 @@ export default function MainLayout({
     <SidebarProvider>
       <Sidebar />
       <SidebarInset className="flex flex-col h-screen">
-          <Header />
-          <main className="flex-1 overflow-auto">{children}</main>
-          <Footer />
+        <Header />
+        <main className="flex-1 overflow-auto">{children}</main>
+        <Footer />
       </SidebarInset>
     </SidebarProvider>
   );

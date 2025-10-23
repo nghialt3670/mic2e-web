@@ -1,9 +1,8 @@
 "use server";
 
-import { auth } from "@/auth";
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
-import { chats, messages, attachments } from "@/lib/drizzle/drizzle-schema";
-import { type Message, type Attachment } from "@/lib/drizzle/drizzle-schema";
+import { attachments, chats, messages } from "@/lib/drizzle/drizzle-schema";
+import { type Message } from "@/lib/drizzle/drizzle-schema";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, eq } from "drizzle-orm";
@@ -40,18 +39,16 @@ export const createMessage = withErrorHandler<CreateMessageRequest, Message>(
 
     // Create attachments if any URLs provided
     if (attachmentUrls.length > 0) {
-      const attachmentData = attachmentUrls.map(url => ({
+      const attachmentData = attachmentUrls.map((url) => ({
         messageId: createdMessage.id,
-        name: url.split('/').pop() || 'unknown',
-        size: 0, // We don't store file size in this implementation
-        type: 'image/jpeg', // Default type, could be improved
         url: url,
       }));
 
       await drizzleClient.insert(attachments).values(attachmentData);
     }
 
-    await drizzleClient.update(chats)
+    await drizzleClient
+      .update(chats)
       .set({
         title: message.text,
         updatedAt: new Date(),

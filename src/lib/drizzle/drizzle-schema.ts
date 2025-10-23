@@ -17,7 +17,7 @@ export const chats = pgTable("chats", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  userId: text("userId")  
+  userId: text("userId")
     .notNull()
     .references(() => users.id),
   title: text("title"),
@@ -52,10 +52,7 @@ export const attachments = pgTable("attachments", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  name: text("name").notNull(),
-  size: integer("size").notNull(),
-  type: text("type").notNull(),
-  url: text("url").notNull(), // URL/path to the uploaded file
+  url: text("url").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
   messageId: text("messageId")
     .notNull()
@@ -75,12 +72,15 @@ export const chatsRelations = relations(chats, ({ one, many }) => ({
   chat2editCycles: many(chat2editCycles),
 }));
 
-export const chat2editCyclesRelations = relations(chat2editCycles, ({ one }) => ({
-  chat: one(chats, {
-    fields: [chat2editCycles.chatId],
-    references: [chats.id],
+export const chat2editCyclesRelations = relations(
+  chat2editCycles,
+  ({ one }) => ({
+    chat: one(chats, {
+      fields: [chat2editCycles.chatId],
+      references: [chats.id],
+    }),
   }),
-}));
+);
 
 export const messagesRelations = relations(messages, ({ one, many }) => ({
   chat: one(chats, {
@@ -101,3 +101,4 @@ export type User = typeof users.$inferSelect;
 export type Chat = typeof chats.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
+export type Chat2editCycle = typeof chat2editCycles.$inferSelect;

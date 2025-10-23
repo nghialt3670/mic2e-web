@@ -29,7 +29,5 @@ export default async function ChatPage({
     return <ChatNotFound />;
   }
 
-  return (
-    <ChatBox chat={chat} />
-  )
+  return <ChatBox chat={chat} />;
 }

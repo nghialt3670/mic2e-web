@@ -16,7 +16,10 @@ interface ImageCarouselProps {
   onRemoveImage: (index: number) => void;
 }
 
-export const ImageCarousel = ({ images, onRemoveImage }: ImageCarouselProps) => {
+export const ImageCarousel = ({
+  images,
+  onRemoveImage,
+}: ImageCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (images.length === 0) return null;
@@ -43,7 +46,7 @@ export const ImageCarousel = ({ images, onRemoveImage }: ImageCarouselProps) => 
               // Handle both File objects (for preview) and uploaded URLs (for display)
               const imageSrc = (image as any).url || URL.createObjectURL(image);
               const isUploaded = !!(image as any).url;
-              
+
               return (
                 <CarouselItem key={index} className="pl-1 basis-1/3">
                   <div className="relative group aspect-square">
@@ -75,7 +78,7 @@ export const ImageCarousel = ({ images, onRemoveImage }: ImageCarouselProps) => 
           )}
         </Carousel>
         <div className="text-center text-xs text-muted-foreground mt-2">
-          {images.length} image{images.length !== 1 ? 's' : ''} selected
+          {images.length} image{images.length !== 1 ? "s" : ""} selected
         </div>
       </div>
     </div>

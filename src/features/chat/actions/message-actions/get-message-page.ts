@@ -1,8 +1,8 @@
 "use server";
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
-import { chats, messages, attachments } from "@/lib/drizzle/drizzle-schema";
-import { type Message, type Attachment } from "@/lib/drizzle/drizzle-schema";
+import { attachments, chats, messages } from "@/lib/drizzle/drizzle-schema";
+import { type Attachment, type Message } from "@/lib/drizzle/drizzle-schema";
 import { Page } from "@/types/api-types";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
@@ -57,12 +57,12 @@ export const getMessagePage = withErrorHandler<
         .select()
         .from(attachments)
         .where(eq(attachments.messageId, message.id));
-      
+
       return {
         ...message,
         attachments: messageAttachments,
       };
-    })
+    }),
   );
 
   return {

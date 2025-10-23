@@ -19,7 +19,9 @@ export const Header = () => {
     <div className="flex justify-between items-center px-4 py-2">
       <div className="flex items-center gap-2">
         <SidebarToggle />
-        <h1 className="text-xl font-medium">Multimodal Interactive Chat2Edit</h1>
+        <h1 className="text-xl font-medium">
+          Multimodal Interactive Chat2Edit
+        </h1>
       </div>
       {renderUserOrLogin()}
     </div>
