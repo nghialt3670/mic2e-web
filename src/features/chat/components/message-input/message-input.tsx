@@ -8,19 +8,22 @@ import { v4 as uuidv4 } from "uuid";
 import { createChat } from "../../actions/chat-actions/create-chat";
 import { getResponse } from "../../actions/chat-actions/get-response";
 import { createMessage } from "../../actions/message-actions/create-message";
+import { useAttachmentStore } from "../../stores/attachment-store";
 import { useChatStore } from "../../stores/chat-store";
 import { useMessageStore } from "../../stores/message-store";
 import { AttachmentUpload } from "../attachment-upload";
 import { UploadAttachmentList } from "../upload-attachment-list";
-import { useAttachmentStore } from "../../stores/attachment-store";
 
 export const MessageInput = () => {
   const [text, setText] = useState("");
   const { chat, setChat, addChat } = useChatStore();
   const { addMessage } = useMessageStore();
-  const { filenameToUrlMap, filenameToPathMap, setAttachments } = useAttachmentStore();
+  const { filenameToUrlMap, filenameToPathMap, setAttachments } =
+    useAttachmentStore();
 
-  const isAllUploaded = Object.keys(filenameToPathMap).every((filename) => filenameToPathMap[filename] in filenameToUrlMap);
+  const isAllUploaded = Object.keys(filenameToPathMap).every(
+    (filename) => filenameToPathMap[filename] in filenameToUrlMap,
+  );
   const disableSubmit = !text.trim() || !isAllUploaded;
   const attachmentUrls = Object.values(filenameToUrlMap);
 

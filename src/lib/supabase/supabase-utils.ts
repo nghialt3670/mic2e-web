@@ -4,8 +4,8 @@ import { clientEnv } from "@/utils/client/client-env";
 export async function uploadFileToSupabase(
   file: File,
   path: string,
+  bucketName: string,
 ): Promise<string> {
-  const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
   const { error } = await supabaseClient.storage
     .from(bucketName)
     .upload(path, file, {
@@ -21,8 +21,10 @@ export async function uploadFileToSupabase(
   return publicUrl;
 }
 
-export async function removeFileFromSupabase(path: string): Promise<void> {
-  const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
+export async function removeFileFromSupabase(
+  path: string,
+  bucketName: string,
+): Promise<void> {
   const { error } = await supabaseClient.storage
     .from(bucketName)
     .remove([path]);

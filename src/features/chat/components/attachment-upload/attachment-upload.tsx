@@ -1,14 +1,25 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  removeFileFromSupabase,
+  uploadFileToSupabase,
+} from "@/lib/supabase/supabase-utils";
+import { clientEnv } from "@/utils/client/client-env";
 import { Upload } from "lucide-react";
 import { useRef } from "react";
+
 import { useAttachmentStore } from "../../stores/attachment-store";
-import { removeFileFromSupabase, uploadFileToSupabase } from "@/lib/supabase/supabase-utils";
 
 export const AttachmentUpload = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { filenameToFileMap, filenameToPathMap, filenameToUrlMap, setAttachments, updateAttachmentUrl } = useAttachmentStore();
+  const {
+    filenameToFileMap,
+    filenameToPathMap,
+    filenameToUrlMap,
+    setAttachments,
+    updateAttachmentUrl,
+  } = useAttachmentStore();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -17,21 +28,24 @@ export const AttachmentUpload = () => {
       const path = filenameToPathMap[filename];
       const url = filenameToUrlMap[filename];
       if (url) {
-        removeFileFromSupabase(path);
+        removeFileFromSupabase(
+          path,
+          clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME,
+        );
       }
     });
 
     setAttachments(files);
 
-    Object.keys(filenameToFileMap).forEach(async (filename) => {
-      const file = filenameToFileMap[filename];
-      const path = filenameToPathMap[filename];
-      const url = filenameToUrlMap[filename];
-      if (!url) {
-        const uploadedUrl = await uploadFileToSupabase(file, path);
-        if (uploadedUrl) {
-          updateAttachmentUrl(filename, uploadedUrl);
-        }
+    files.forEach(async (file) => {
+      const path = `${Date.now()}.${file.name}`;
+      const uploadedUrl = await uploadFileToSupabase(
+        file,
+        path,
+        clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME,
+      );
+      if (uploadedUrl) {
+        updateAttachmentUrl(file.name, uploadedUrl);
       }
     });
 

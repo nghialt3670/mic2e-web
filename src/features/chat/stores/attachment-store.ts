@@ -1,4 +1,3 @@
-import { uuidv4 } from "zod";
 import { create } from "zustand";
 
 interface AttachmentStore {
@@ -19,14 +18,20 @@ export const useAttachmentStore = create<AttachmentStore>((set) => ({
 
   setAttachments: (files: File[]) =>
     set((state) => ({
-      filenameToFileMap: files.reduce((acc, file) => ({
-        ...acc,
-        [file.name]: file,
-      }), {}),
-      filenameToPathMap: files.reduce((acc, file) => ({
-        ...acc,
-        [file.name]: `${uuidv4()}.${file.name}`,
-      }), {}),
+      filenameToFileMap: files.reduce(
+        (acc, file) => ({
+          ...acc,
+          [file.name]: file,
+        }),
+        {},
+      ),
+      filenameToPathMap: files.reduce(
+        (acc, file) => ({
+          ...acc,
+          [file.name]: `${Date.now()}.${file.name}`,
+        }),
+        {},
+      ),
       filenameToUrlMap: {},
     })),
 
@@ -38,7 +43,7 @@ export const useAttachmentStore = create<AttachmentStore>((set) => ({
       },
       filenameToPathMap: {
         ...state.filenameToPathMap,
-        [file.name]: `${uuidv4()}.${file.name}`,
+        [file.name]: `${Date.now()}.${file.name}`,
       },
     })),
 

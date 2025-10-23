@@ -1,3 +1,5 @@
+"use client";
+
 import { z } from "zod";
 
 const clientEnvSchema = z.object({
@@ -6,4 +8,9 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME: z.string(),
 });
 
-export const clientEnv = clientEnvSchema.parse(process.env);
+export const clientEnv = clientEnvSchema.parse({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME:
+    process.env.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME,
+});
