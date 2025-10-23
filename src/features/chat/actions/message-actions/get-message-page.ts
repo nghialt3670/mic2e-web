@@ -1,12 +1,16 @@
 "use server";
 
-import { db } from "@/lib/drizzle/db";
-import { chats, messages } from "@/lib/drizzle/schema";
-import { type Message } from "@/lib/drizzle/schema";
+import { drizzleClient } from "@/lib/drizzle/drizzle-client";
+import { chats, messages, attachments } from "@/lib/drizzle/drizzle-schema";
+import { type Message, type Attachment } from "@/lib/drizzle/drizzle-schema";
 import { Page } from "@/types/api-types";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, asc, count, eq } from "drizzle-orm";
+
+interface MessageWithAttachments extends Message {
+  attachments?: Attachment[];
+}
 
 interface GetMessagePageRequest {
   chatId: string;
@@ -16,14 +20,14 @@ interface GetMessagePageRequest {
 
 export const getMessagePage = withErrorHandler<
   GetMessagePageRequest,
-  Page<Message>
+  Page<MessageWithAttachments>
 >(async ({ chatId, page, size }) => {
   const userId = await getSessionUserId();
   if (!userId) {
     return { message: "Unauthorized", code: 401 };
   }
 
-  const chat = await db.query.chats.findFirst({
+  const chat = await drizzleClient.query.chats.findFirst({
     where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
   });
   if (!chat) {
@@ -33,12 +37,12 @@ export const getMessagePage = withErrorHandler<
   const currentPage = Math.max(1, page ?? 1);
   const pageSize = Math.min(100, Math.max(1, size ?? 20));
 
-  const [{ value: total = 0 } = { value: 0 }] = await db
+  const [{ value: total = 0 } = { value: 0 }] = await drizzleClient
     .select({ value: count() })
     .from(messages)
     .where(eq(messages.chatId, chatId));
 
-  const messagesData = await db
+  const messagesData = await drizzleClient
     .select()
     .from(messages)
     .where(eq(messages.chatId, chatId))
@@ -46,11 +50,26 @@ export const getMessagePage = withErrorHandler<
     .limit(pageSize)
     .offset((currentPage - 1) * pageSize);
 
+  // Fetch attachments for each message
+  const messagesWithAttachments: MessageWithAttachments[] = await Promise.all(
+    messagesData.map(async (message) => {
+      const messageAttachments = await drizzleClient
+        .select()
+        .from(attachments)
+        .where(eq(attachments.messageId, message.id));
+      
+      return {
+        ...message,
+        attachments: messageAttachments,
+      };
+    })
+  );
+
   return {
     message: "Messages fetched successfully",
     code: 200,
     data: {
-      items: messagesData,
+      items: messagesWithAttachments,
       total,
       page: currentPage,
       size: pageSize,

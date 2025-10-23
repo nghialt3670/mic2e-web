@@ -1,4 +1,4 @@
-import { Chat } from "@/lib/drizzle/schema";
+import { Chat } from "@/lib/drizzle/drizzle-schema";
 import Link from "next/link";
 import { FC } from "react";
 

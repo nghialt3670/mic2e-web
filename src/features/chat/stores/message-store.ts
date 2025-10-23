@@ -1,4 +1,4 @@
-import { Message } from "@/lib/drizzle/schema";
+import { Message } from "@/lib/drizzle/drizzle-schema";
 import { create } from "zustand";
 
 interface MessageStore {

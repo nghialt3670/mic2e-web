@@ -7,9 +7,10 @@ import { useRef } from "react";
 interface FileUploadProps {
   onFilesSelected: (files: File[]) => void;
   disabled?: boolean;
+  className?: string;
 }
 
-export const FileUpload = ({ onFilesSelected, disabled }: FileUploadProps) => {
+export const FileUpload = ({ onFilesSelected, disabled, className }: FileUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,6 +49,7 @@ export const FileUpload = ({ onFilesSelected, disabled }: FileUploadProps) => {
         onClick={handleClick}
         disabled={disabled}
         type="button"
+        className={className}
       >
         <Upload />
       </Button>

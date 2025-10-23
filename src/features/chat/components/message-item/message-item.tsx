@@ -1,4 +1,4 @@
-import { Message, Attachment } from "@/lib/drizzle/schema";
+import { Message, Attachment } from "@/lib/drizzle/drizzle-schema";
 import { ImageCarousel } from "../image-carousel";
 
 interface MessageWithAttachments extends Partial<Message> {
@@ -10,10 +10,12 @@ export const MessageItem = ({ message }: { message: MessageWithAttachments }) =>
     ? new Date(message.createdAt).toLocaleString()
     : "";
 
-  // Convert attachments to File objects for display
+  // Convert attachments to File objects for display using the URL
   const imageFiles = message.attachments?.map((attachment: Partial<Attachment>) => {
-    // This is a mock conversion - in a real app you'd fetch the actual file
+    // Create a mock File object with the URL for display
     const mockFile = new File([], attachment.name || 'unknown', { type: attachment.type || 'image/jpeg' });
+    // Add the URL as a property for the ImageCarousel to use
+    (mockFile as any).url = attachment.url;
     return mockFile;
   }) || [];
 

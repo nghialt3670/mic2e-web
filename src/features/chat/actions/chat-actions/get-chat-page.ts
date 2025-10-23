@@ -1,8 +1,8 @@
 "use server";
 
-import { db } from "@/lib/drizzle/db";
-import { type Chat } from "@/lib/drizzle/schema";
-import { chats } from "@/lib/drizzle/schema";
+import { drizzleClient } from "@/lib/drizzle/drizzle-client";
+import { type Chat } from "@/lib/drizzle/drizzle-schema";
+import { chats } from "@/lib/drizzle/drizzle-schema";
 import { Page } from "@/types/api-types";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
@@ -24,12 +24,12 @@ export const getChatPage = withErrorHandler<GetChatPageRequest, Page<Chat>>(
     const currentPage = Math.max(1, page ?? 1);
     const pageSize = Math.min(100, Math.max(1, size ?? 20));
 
-    const [{ value: total = 0 } = { value: 0 }] = await db
+    const [{ value: total = 0 } = { value: 0 }] = await drizzleClient
       .select({ value: count() })
       .from(chats)
       .where(eq(chats.userId, userId));
 
-    const chatsData = await db
+    const chatsData = await drizzleClient
       .select()
       .from(chats)
       .where(eq(chats.userId, userId))

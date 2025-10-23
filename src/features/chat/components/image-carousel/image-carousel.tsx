@@ -39,25 +39,33 @@ export const ImageCarousel = ({ images, onRemoveImage }: ImageCarouselProps) => 
           }}
         >
           <CarouselContent className="-ml-1">
-            {images.map((image, index) => (
-              <CarouselItem key={index} className="pl-1 basis-1/3">
-                <div className="relative group aspect-square">
-                  <img
-                    src={URL.createObjectURL(image)}
-                    alt={`Upload ${index + 1}`}
-                    className="w-full h-full object-cover rounded-md"
-                  />
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5"
-                    onClick={() => onRemoveImage(index)}
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </Button>
-                </div>
-              </CarouselItem>
-            ))}
+            {images.map((image, index) => {
+              // Handle both File objects (for preview) and uploaded URLs (for display)
+              const imageSrc = (image as any).url || URL.createObjectURL(image);
+              const isUploaded = !!(image as any).url;
+              
+              return (
+                <CarouselItem key={index} className="pl-1 basis-1/3">
+                  <div className="relative group aspect-square">
+                    <img
+                      src={imageSrc}
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                    {!isUploaded && (
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5"
+                        onClick={() => onRemoveImage(index)}
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </Button>
+                    )}
+                  </div>
+                </CarouselItem>
+              );
+            })}
           </CarouselContent>
           {images.length > 3 && (
             <>

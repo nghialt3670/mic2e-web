@@ -1,6 +1,6 @@
 "use client";
 
-import { Chat } from "@/lib/drizzle/schema";
+import { Chat } from "@/lib/drizzle/drizzle-schema";
 import { useEffect } from "react";
 
 import { useChatStore } from "../../stores/chat-store";
@@ -16,13 +16,14 @@ export const ChatBox = ({ chat }: ChatBoxProps) => {
 
   useEffect(() => {
     setChat(chat);
-    console.log(chat);
   }, [chat, setChat]);
 
   return (
-    <div className="flex flex-col items-center h-full p-4">
+    <div className="flex flex-col items-center h-full pb-10 ">
       <MessageList />
-      <MessageInput />
+      <div className="w-full flex justify-center items-center p-6">
+        <MessageInput />
+      </div>
     </div>
   );
 };

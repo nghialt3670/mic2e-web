@@ -1,8 +1,8 @@
 "use server";
 
-import { db } from "@/lib/drizzle/db";
-import { chats, messages } from "@/lib/drizzle/schema";
-import { type Message } from "@/lib/drizzle/schema";
+import { drizzleClient } from "@/lib/drizzle/drizzle-client";
+import { chats, messages } from "@/lib/drizzle/drizzle-schema";
+import { type Message } from "@/lib/drizzle/drizzle-schema";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, eq } from "drizzle-orm";
@@ -18,7 +18,7 @@ export const getResponse = withErrorHandler<GetResponseRequest, Message>(
       return { message: "Unauthorized", code: 401 };
     }
 
-    const chat = await db.query.chats.findFirst({
+    const chat = await drizzleClient.query.chats.findFirst({
       where: and(
         eq(chats.id, chatId),
         eq(chats.userId, sessionUserId),
@@ -33,7 +33,7 @@ export const getResponse = withErrorHandler<GetResponseRequest, Message>(
       text: "Hello, how can I help you today?",
     };
 
-    const createdMessage = await db
+    const createdMessage = await drizzleClient
       .insert(messages)
       .values({
         chatId,
