@@ -1,19 +1,13 @@
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   convertFileToFigJsonFile,
   readFigJsonFileAsDataURL,
 } from "@/lib/fabric";
 import { removeFileFromSupabase, uploadFileToSupabase } from "@/lib/supabase";
 import { clientEnv } from "@/utils/client/client-env";
-import {
-  getImageDimensions,
-} from "@/utils/client/file-readers";
-import { XIcon } from "lucide-react";
+import { getImageDimensions } from "@/utils/client/file-readers";
+import { AlertCircle, XIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -60,9 +54,23 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
   useEffect(() => {
     const uploadAttachment = async () => {
       if (!attachment || attachment.uploadInfo) return;
-      const path = `figs/${Date.now()}_${file.name}`;
-      const url = await uploadFileToSupabase(attachment.file, path, bucketName);
-      updateAttachmentUploadInfo(file.name, { path, url });
+      try {
+        const path = `figs/${Date.now()}_${attachment.file.name}`;
+        const url = await uploadFileToSupabase(
+          attachment.file,
+          path,
+          bucketName,
+        );
+        updateAttachmentUploadInfo(attachment.originalName, { path, url });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Upload failed";
+        updateAttachmentUploadInfo(attachment.originalName, {
+          path: "",
+          url: "",
+          error: errorMessage,
+        });
+      }
     };
 
     if (attachment && !attachment.uploadInfo) {
@@ -72,8 +80,8 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
 
   const handleRemoveClick = () => {
     if (!attachment) return;
-    removeFile(file.name);
-    removeAttachment(file.name);
+    removeFile(attachment.originalName);
+    removeAttachment(attachment.originalName);
     if (attachment.uploadInfo) {
       removeFileFromSupabase(attachment.uploadInfo.path, bucketName);
     }
@@ -83,11 +91,14 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     return null;
   }
 
-  const imageFilename = file.name.replace(".fig.json", "");
+  const imageFilename = attachment.originalName.replace(".fig.json", "");
+  const hasError = !!attachment.uploadInfo?.error;
 
   return (
     <>
-      <div className="group relative h-40 rounded-md border bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center cursor-pointer overflow-visible hover:z-10">
+      <div
+        className={`group relative h-40 rounded-md border bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center cursor-pointer overflow-visible hover:z-10 ${hasError ? "border-red-400 hover:border-red-500" : ""}`}
+      >
         <Button
           className="absolute top-1 right-1 z-10 bg-white/80 hover:bg-white size-6 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
           variant="ghost"
@@ -104,7 +115,16 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
           <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 z-[5]" />
         )}
 
-        <div 
+        {attachment.uploadInfo?.error && (
+          <div
+            className="absolute inset-0 m-auto z-10 text-red-400 p-2 size-fit"
+            title={attachment.uploadInfo.error}
+          >
+            <AlertCircle size={72} />
+          </div>
+        )}
+
+        <div
           className="w-full h-full flex items-center justify-center"
           onClick={() => setIsZoomOpen(true)}
         >
@@ -113,7 +133,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
             alt={imageFilename}
             width={attachment.imageInfo.width}
             height={attachment.imageInfo.height}
-            className="object-contain max-h-full w-auto transition-transform duration-200 group-hover:scale-101 rounded-md"
+            className={`object-contain max-h-full w-auto transition-all duration-200 group-hover:scale-101 rounded-md ${hasError ? "opacity-60" : ""}`}
             style={{
               width: "auto",
               height: "auto",

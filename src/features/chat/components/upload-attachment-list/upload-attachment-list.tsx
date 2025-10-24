@@ -1,6 +1,7 @@
+import { AnimatePresence, motion } from "framer-motion";
+
 import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
 import { UploadAttachmentItem } from "../upload-attachment-item";
-import { AnimatePresence, motion } from "framer-motion";
 
 export const UploadAttachmentList = () => {
   const { files } = useUploadAttachmentStore();
@@ -17,9 +18,7 @@ export const UploadAttachmentList = () => {
             transition={{ duration: 0.2 }}
             layout
           >
-            <UploadAttachmentItem
-              file={file}
-            />
+            <UploadAttachmentItem file={file} />
           </motion.div>
         ))}
       </AnimatePresence>

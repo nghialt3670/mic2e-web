@@ -59,7 +59,9 @@ export const MessageInput = () => {
     const createdMessage = await withToastHandler(createMessage, {
       chatId,
       message: requestMessage,
-      attachmentUrls: attachments.map((attachment) => attachment.uploadInfo?.url),
+      attachmentUrls: attachments.map(
+        (attachment) => attachment.uploadInfo?.url,
+      ),
     });
     if (createdMessage) {
       addMessage(createdMessage);
