@@ -1,5 +1,10 @@
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   convertFileToFigJsonFile,
   readFigJsonFileAsDataURL,
 } from "@/lib/fabric";
@@ -10,7 +15,7 @@ import {
 } from "@/utils/client/file-readers";
 import { XIcon } from "lucide-react";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
 
@@ -28,6 +33,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
   } = useUploadAttachmentStore();
   const attachment = getAttachment(file.name);
   const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   useEffect(() => {
     const createAttachment = async () => {
@@ -80,31 +86,60 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
   const imageFilename = file.name.replace(".fig.json", "");
 
   return (
-    <div className="relative h-40 rounded-md overflow-hidden border bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center">
-      <Button
-        className="absolute top-1 right-1 z-10 bg-white/80 hover:bg-white size-6"
-        variant="ghost"
-        size="icon"
-        onClick={handleRemoveClick}
-      >
-        <XIcon className="h-4 w-4" />
-      </Button>
+    <>
+      <div className="group relative h-40 rounded-md border bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center cursor-pointer overflow-visible hover:z-10">
+        <Button
+          className="absolute top-1 right-1 z-10 bg-white/80 hover:bg-white size-6 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRemoveClick();
+          }}
+        >
+          <XIcon className="h-4 w-4" />
+        </Button>
 
-      {!attachment.uploadInfo && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 z-[5]" />
-      )}
+        {!attachment.uploadInfo && (
+          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 z-[5]" />
+        )}
 
-      <Image
-        src={attachment.imageInfo.dataUrl}
-        alt={imageFilename}
-        width={attachment.imageInfo.width}
-        height={attachment.imageInfo.height}
-        className="object-contain max-h-full w-auto"
-        style={{
-          width: "auto",
-          height: "auto",
-        }}
-      />
-    </div>
+        <div 
+          className="w-full h-full flex items-center justify-center"
+          onClick={() => setIsZoomOpen(true)}
+        >
+          <Image
+            src={attachment.imageInfo.dataUrl}
+            alt={imageFilename}
+            width={attachment.imageInfo.width}
+            height={attachment.imageInfo.height}
+            className="object-contain max-h-full w-auto transition-transform duration-200 group-hover:scale-101 rounded-md"
+            style={{
+              width: "auto",
+              height: "auto",
+            }}
+          />
+        </div>
+      </div>
+
+      <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden">
+          <DialogTitle className="sr-only">{imageFilename}</DialogTitle>
+          <div className="relative w-full h-full flex items-center justify-center">
+            <Image
+              src={attachment.imageInfo.dataUrl}
+              alt={imageFilename}
+              width={attachment.imageInfo.width}
+              height={attachment.imageInfo.height}
+              className="object-contain max-w-full max-h-[90vh]"
+              style={{
+                width: "auto",
+                height: "auto",
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
