@@ -120,7 +120,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
             className="absolute inset-0 m-auto z-10 text-red-400 p-2 size-fit"
             title={attachment.uploadInfo.error}
           >
-            <AlertCircle size={72} />
+            <AlertCircle size={64} />
           </div>
         )}
 
@@ -133,7 +133,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
             alt={imageFilename}
             width={attachment.imageInfo.width}
             height={attachment.imageInfo.height}
-            className={`object-contain max-h-full w-auto transition-all duration-200 group-hover:scale-101 rounded-md ${hasError ? "opacity-60" : ""}`}
+            className={`object-contain max-h-full w-auto transition-all duration-200 group-hover:scale-101 rounded-md ${hasError ? "opacity-50" : ""}`}
             style={{
               width: "auto",
               height: "auto",
