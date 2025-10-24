@@ -80,18 +80,18 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
   const imageFilename = file.name.replace(".fig.json", "");
 
   return (
-    <div className="relative size-fit inline-block rounded-md overflow-hidden border">
+    <div className="relative h-40 rounded-md overflow-hidden border bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center">
       <Button
-        className="absolute top-1 right-1 z-10"
+        className="absolute top-1 right-1 z-10 bg-white/80 hover:bg-white size-6"
         variant="ghost"
         size="icon"
         onClick={handleRemoveClick}
       >
-        <XIcon />
+        <XIcon className="h-4 w-4" />
       </Button>
 
       {!attachment.uploadInfo && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200" />
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 z-[5]" />
       )}
 
       <Image
@@ -99,7 +99,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
         alt={imageFilename}
         width={attachment.imageInfo.width}
         height={attachment.imageInfo.height}
-        className="max-w-screen-s max-h-screen-sm object-contain"
+        className="object-contain max-h-full w-auto"
         style={{
           width: "auto",
           height: "auto",
