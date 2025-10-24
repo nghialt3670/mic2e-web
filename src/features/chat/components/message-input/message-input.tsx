@@ -8,9 +8,9 @@ import { v4 as uuidv4 } from "uuid";
 import { createChat } from "../../actions/chat-actions/create-chat";
 import { getResponse } from "../../actions/chat-actions/get-response";
 import { createMessage } from "../../actions/message-actions/create-message";
-import { useAttachmentStore } from "../../stores/attachment-store";
 import { useChatStore } from "../../stores/chat-store";
 import { useMessageStore } from "../../stores/message-store";
+import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
 import { AttachmentUpload } from "../attachment-upload";
 import { UploadAttachmentList } from "../upload-attachment-list";
 
@@ -18,14 +18,12 @@ export const MessageInput = () => {
   const [text, setText] = useState("");
   const { chat, setChat, addChat } = useChatStore();
   const { addMessage } = useMessageStore();
-  const { filenameToUrlMap, filenameToPathMap, setAttachments } =
-    useAttachmentStore();
+  const { setAttachments, getAttachments, isAllUploaded } =
+    useUploadAttachmentStore();
 
-  const isAllUploaded = Object.keys(filenameToPathMap).every(
-    (filename) => filenameToPathMap[filename] in filenameToUrlMap,
-  );
-  const disableSubmit = !text.trim() || !isAllUploaded;
-  const attachmentUrls = Object.values(filenameToUrlMap);
+  const attachments = getAttachments();
+  const isAllRead = attachments.every((attachment) => attachment.imageInfo);
+  const canSubmit = text.trim() && isAllRead && isAllUploaded();
 
   const getChatId = async () => {
     if (chat) {
@@ -43,7 +41,7 @@ export const MessageInput = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!text.trim() && attachmentUrls.length === 0) return;
+    if (!text.trim()) return;
 
     const chatId = await getChatId();
     if (!chatId) return;
@@ -61,7 +59,7 @@ export const MessageInput = () => {
     const createdMessage = await withToastHandler(createMessage, {
       chatId,
       message: requestMessage,
-      attachmentUrls,
+      attachmentUrls: attachments.map((attachment) => attachment.uploadInfo?.url),
     });
     if (createdMessage) {
       addMessage(createdMessage);
@@ -83,8 +81,8 @@ export const MessageInput = () => {
   };
 
   return (
-    <div className="relative w-full max-w-5xl mr-4">
-      <UploadAttachmentList />
+    <div className="relative w-full max-w-5xl">
+      {isAllRead && <UploadAttachmentList />}
       <form className="w-full" onSubmit={handleSubmit}>
         <div className="relative">
           <Input
@@ -107,7 +105,7 @@ export const MessageInput = () => {
           </div>
           <Button
             type="submit"
-            disabled={disableSubmit}
+            disabled={!canSubmit}
             size="icon"
             variant="ghost"
             className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8"

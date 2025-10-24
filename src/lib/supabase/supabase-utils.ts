@@ -30,3 +30,13 @@ export async function removeFileFromSupabase(
     .remove([path]);
   if (error) throw new Error(`Remove file failed: ${error.message}`);
 }
+
+export async function removeFilesFromSupabase(
+  paths: string[],
+  bucketName: string,
+): Promise<void> {
+  const { error } = await supabaseClient.storage
+    .from(bucketName)
+    .remove(paths);
+  if (error) throw new Error(`Remove files failed: ${error.message}`);
+}

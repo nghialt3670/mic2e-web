@@ -2,52 +2,36 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  removeFileFromSupabase,
-  uploadFileToSupabase,
+  removeFilesFromSupabase,
 } from "@/lib/supabase/supabase-utils";
 import { clientEnv } from "@/utils/client/client-env";
-import { Upload } from "lucide-react";
+import { Loader2Icon, UploadIcon } from "lucide-react";
 import { useRef } from "react";
 
-import { useAttachmentStore } from "../../stores/attachment-store";
+import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
 
 export const AttachmentUpload = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
-    filenameToFileMap,
-    filenameToPathMap,
-    filenameToUrlMap,
-    setAttachments,
-    updateAttachmentUrl,
-  } = useAttachmentStore();
+    clearFiles,
+    setFiles,
+    getAttachments,
+    clearAttachments,
+  } = useUploadAttachmentStore();
+  const attachments = getAttachments();
+  const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
+  const isAllRead = attachments.every((attachment) => attachment.imageInfo);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    clearFiles();
     const files = Array.from(event.target.files || []);
+    const uploadedPaths = attachments.map((attachment) => attachment.uploadInfo?.path).filter((path): path is string => path !== undefined);
+    if (uploadedPaths.length > 0) {
+      await removeFilesFromSupabase(uploadedPaths, bucketName);
+    }
 
-    Object.keys(filenameToFileMap).forEach((filename) => {
-      const path = filenameToPathMap[filename];
-      const url = filenameToUrlMap[filename];
-      if (url) {
-        removeFileFromSupabase(
-          path,
-          clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME,
-        );
-      }
-    });
-
-    setAttachments(files);
-
-    files.forEach(async (file) => {
-      const path = `${Date.now()}.${file.name}`;
-      const uploadedUrl = await uploadFileToSupabase(
-        file,
-        path,
-        clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME,
-      );
-      if (uploadedUrl) {
-        updateAttachmentUrl(file.name, uploadedUrl);
-      }
-    });
+    setFiles(files);
+    clearAttachments();
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -74,8 +58,13 @@ export const AttachmentUpload = () => {
         onClick={handleClick}
         type="button"
         className="h-8 w-8"
+        disabled={!isAllRead}
       >
-        <Upload />
+        {isAllRead ? (
+          <UploadIcon />
+        ) : (
+          <Loader2Icon className="animate-spin" />
+        )}
       </Button>
     </>
   );
