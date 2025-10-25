@@ -5,18 +5,22 @@ import { removeFilesFromSupabase } from "@/lib/supabase/supabase-utils";
 import { clientEnv } from "@/utils/client/client-env";
 import { Loader2Icon, UploadIcon } from "lucide-react";
 import { useRef } from "react";
-
-import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
-import { MAXIMUM_FILE_SIZE, MAXIMUM_NUMBER_OF_FILES, SUPPORTED_FILE_TYPES } from "../../constants";
 import { toast } from "sonner";
+
+import {
+  MAXIMUM_FILE_SIZE,
+  MAXIMUM_NUMBER_OF_FILES,
+  SUPPORTED_FILE_TYPES,
+} from "../../constants";
+import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
 
 export const AttachmentUpload = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { clearFiles, setFiles, getAttachments, clearAttachments } =
+  const { clearFiles, setFiles, getAttachments, clearAttachments, isAllRead } =
     useUploadAttachmentStore();
   const attachments = getAttachments();
   const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
-  const isAllRead = attachments.every((attachment) => attachment.imageInfo);
+  const isReading = !isAllRead();
 
   const validateFiles = (files: File[]) => {
     if (files.length > MAXIMUM_NUMBER_OF_FILES) {
@@ -79,9 +83,9 @@ export const AttachmentUpload = () => {
         onClick={handleClick}
         type="button"
         className="h-8 w-8"
-        disabled={!isAllRead}
+        disabled={isReading}
       >
-        {isAllRead ? <UploadIcon /> : <Loader2Icon className="animate-spin" />}
+        {isReading ? <Loader2Icon className="animate-spin" /> : <UploadIcon />}
       </Button>
     </>
   );

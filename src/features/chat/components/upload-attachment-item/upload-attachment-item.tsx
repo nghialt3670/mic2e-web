@@ -7,6 +7,7 @@ import {
 import { removeFileFromSupabase, uploadFileToSupabase } from "@/lib/supabase";
 import { clientEnv } from "@/utils/client/client-env";
 import { getImageDimensions } from "@/utils/client/file-readers";
+import { createImageThumbnail } from "@/utils/client/image";
 import { AlertCircle, XIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -24,22 +25,23 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     removeAttachment,
     setAttachment,
     updateAttachmentUploadInfo,
+    updateAttachmentThumbnailInfo,
   } = useUploadAttachmentStore();
   const attachment = getAttachment(file.name);
   const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   useEffect(() => {
-    const createAttachment = async () => {
-      if (attachment) return;
+    const readAttachment = async () => {
+      if (attachment?.readInfo) return;
       const figJsonFile = await convertFileToFigJsonFile(file);
       const dataUrl = await readFigJsonFileAsDataURL(figJsonFile);
       const { width, height } = await getImageDimensions(file);
       setAttachment({
         type: "fabric-image-group",
         file: figJsonFile,
-        originalName: file.name,
-        imageInfo: {
+        originalFile: file,
+        readInfo: {
           dataUrl,
           width,
           height,
@@ -47,7 +49,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
       });
     };
     if (!attachment) {
-      createAttachment();
+      readAttachment();
     }
   }, [file]);
 
@@ -55,17 +57,24 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     const uploadAttachment = async () => {
       if (!attachment || attachment.uploadInfo) return;
       try {
-        const path = `figs/${Date.now()}_${attachment.file.name}`;
+        const timestamp = Date.now();
+
+        // Upload the fabric JSON file
+        const path = `figs/${timestamp}_${attachment.file.name}`;
         const url = await uploadFileToSupabase(
           attachment.file,
           path,
           bucketName,
         );
-        updateAttachmentUploadInfo(attachment.originalName, { path, url });
+
+        updateAttachmentUploadInfo(attachment.originalFile.name, {
+          path,
+          url,
+        });
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Upload failed";
-        updateAttachmentUploadInfo(attachment.originalName, {
+        updateAttachmentUploadInfo(attachment.originalFile.name, {
           path: "",
           url: "",
           error: errorMessage,
@@ -78,20 +87,40 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     }
   }, [attachment]);
 
+  useEffect(() => {
+    const thumbnailAttachment = async () => {
+      if (!attachment || attachment.thumbnailInfo) return;
+      const thumbnail = await createImageThumbnail(attachment.originalFile);
+      const timestamp = Date.now();
+      const path = `thumbnails/${timestamp}_${attachment.originalFile.name}`;
+      const url = await uploadFileToSupabase(thumbnail.file, path, bucketName);
+      updateAttachmentThumbnailInfo(attachment.originalFile.name, {
+        path,
+        url,
+        width: thumbnail.width,
+        height: thumbnail.height,
+      });
+    };
+    if (attachment && !attachment.thumbnailInfo) {
+      thumbnailAttachment();
+    }
+  }, [attachment]);
+
   const handleRemoveClick = () => {
     if (!attachment) return;
-    removeFile(attachment.originalName);
-    removeAttachment(attachment.originalName);
+    removeFile(attachment.originalFile.name);
+    removeAttachment(attachment.originalFile.name);
     if (attachment.uploadInfo) {
       removeFileFromSupabase(attachment.uploadInfo.path, bucketName);
     }
   };
 
-  if (!attachment?.imageInfo) {
+  if (!attachment?.readInfo) {
     return null;
   }
 
-  const hasError = !!attachment.uploadInfo?.error;
+  const hasError =
+    !!attachment.uploadInfo?.error || !!attachment.thumbnailInfo?.error;
 
   return (
     <>
@@ -128,11 +157,11 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
           onClick={() => setIsZoomOpen(true)}
         >
           <Image
-            src={attachment.imageInfo.dataUrl}
-            alt={attachment.originalName}
-            width={attachment.imageInfo.width}
-            height={attachment.imageInfo.height}
-            className={`object-contain max-h-full w-auto transition-all duration-200 group-hover:scale-101 rounded-md ${hasError ? "opacity-50" : ""}`}
+            src={attachment.readInfo.dataUrl}
+            alt={attachment.originalFile.name}
+            width={attachment.readInfo.width}
+            height={attachment.readInfo.height}
+            className={`object-contain max-h-full w-auto transition-all duration-500 group-hover:scale-102 rounded-md ${hasError ? "opacity-50" : ""}`}
             style={{
               width: "auto",
               height: "auto",
@@ -143,13 +172,15 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
 
       <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] size-fit p-0 overflow-hidden">
-          <DialogTitle className="sr-only">{attachment.originalName}</DialogTitle>
+          <DialogTitle className="sr-only">
+            {attachment.originalFile.name}
+          </DialogTitle>
           <div className="relative flex items-center justify-center">
             <Image
-              src={attachment.imageInfo.dataUrl}
-              alt={attachment.originalName}
-              width={attachment.imageInfo.width}
-              height={attachment.imageInfo.height}
+              src={attachment.readInfo.dataUrl}
+              alt={attachment.originalFile.name}
+              width={attachment.readInfo.width}
+              height={attachment.readInfo.height}
               className="object-contain max-w-full max-h-full"
               style={{
                 width: "auto",

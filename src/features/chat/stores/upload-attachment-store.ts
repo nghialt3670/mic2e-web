@@ -2,24 +2,33 @@ import { create } from "zustand";
 
 type UploadAttachmentType = "fabric-image-group" | "image";
 
+interface ReadInfo {
+  dataUrl: string;
+  width: number;
+  height: number;
+}
+
 interface UploadInfo {
   path: string;
   url: string;
   error?: string;
 }
 
-interface ImageInfo {
-  dataUrl: string;
+interface ThumbnailInfo {
+  path: string;
+  url: string;
   width: number;
   height: number;
+  error?: string;
 }
 
 interface UploadAttachment {
   type: UploadAttachmentType;
   file: File;
-  originalName: string;
+  originalFile: File;
+  readInfo?: ReadInfo;
   uploadInfo?: UploadInfo;
-  imageInfo?: ImageInfo;
+  thumbnailInfo?: ThumbnailInfo;
 }
 
 interface UploadAttachmentStore {
@@ -34,12 +43,18 @@ interface UploadAttachmentStore {
   setAttachment: (attachment: UploadAttachment) => void;
   getAttachment: (filename: string) => UploadAttachment | undefined;
   removeAttachment: (filename: string) => void;
+  updateAttachmentReadInfo: (filename: string, readInfo: ReadInfo) => void;
   updateAttachmentUploadInfo: (
     filename: string,
     uploadInfo: UploadInfo,
   ) => void;
-  updateAttachmentImageInfo: (filename: string, imageInfo: ImageInfo) => void;
+  updateAttachmentThumbnailInfo: (
+    filename: string,
+    thumbnailInfo: ThumbnailInfo,
+  ) => void;
+  isAllRead: () => boolean;
   isAllUploaded: () => boolean;
+  isAllThumbnailed: () => boolean;
 }
 
 export const useUploadAttachmentStore = create<UploadAttachmentStore>(
@@ -57,7 +72,7 @@ export const useUploadAttachmentStore = create<UploadAttachmentStore>(
         filenameToAttachmentMap: attachments.reduce(
           (acc, attachment) => ({
             ...acc,
-            [attachment.originalName]: attachment,
+            [attachment.originalFile.name]: attachment,
           }),
           {},
         ),
@@ -68,7 +83,7 @@ export const useUploadAttachmentStore = create<UploadAttachmentStore>(
       set((state) => ({
         filenameToAttachmentMap: {
           ...state.filenameToAttachmentMap,
-          [attachment.originalName]: attachment,
+          [attachment.originalFile.name]: attachment,
         },
       })),
     getAttachment: (filename: string) =>
@@ -81,6 +96,13 @@ export const useUploadAttachmentStore = create<UploadAttachmentStore>(
           ),
         ),
       })),
+    updateAttachmentReadInfo: (filename: string, readInfo: ReadInfo) =>
+      set((state) => ({
+        filenameToAttachmentMap: {
+          ...state.filenameToAttachmentMap,
+          [filename]: { ...state.filenameToAttachmentMap[filename], readInfo },
+        },
+      })),
     updateAttachmentUploadInfo: (filename: string, uploadInfo: UploadInfo) =>
       set((state) => ({
         filenameToAttachmentMap: {
@@ -91,19 +113,35 @@ export const useUploadAttachmentStore = create<UploadAttachmentStore>(
           },
         },
       })),
-    updateAttachmentImageInfo: (filename: string, imageInfo: ImageInfo) =>
+    updateAttachmentThumbnailInfo: (
+      filename: string,
+      thumbnailInfo: ThumbnailInfo,
+    ) =>
       set((state) => ({
         filenameToAttachmentMap: {
           ...state.filenameToAttachmentMap,
-          [filename]: { ...state.filenameToAttachmentMap[filename], imageInfo },
+          [filename]: {
+            ...state.filenameToAttachmentMap[filename],
+            thumbnailInfo,
+          },
         },
       })),
+    isAllRead: () =>
+      Object.keys(get().filenameToAttachmentMap).every(
+        (filename) =>
+          get().filenameToAttachmentMap[filename]?.readInfo !== undefined,
+      ),
     isAllUploaded: () =>
       Object.keys(get().filenameToAttachmentMap).every(
         (filename) =>
           get().filenameToAttachmentMap[filename]?.uploadInfo !== undefined &&
           get().filenameToAttachmentMap[filename]?.uploadInfo?.error ===
             undefined,
+      ),
+    isAllThumbnailed: () =>
+      Object.keys(get().filenameToAttachmentMap).every(
+        (filename) =>
+          get().filenameToAttachmentMap[filename]?.thumbnailInfo !== undefined,
       ),
   }),
 );

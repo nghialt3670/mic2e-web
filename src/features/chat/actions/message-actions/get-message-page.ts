@@ -1,15 +1,20 @@
 "use server";
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
-import { attachments, chats, messages } from "@/lib/drizzle/drizzle-schema";
+import { attachments, chats, messages, Thumbnail } from "@/lib/drizzle/drizzle-schema";
 import { type Attachment, type Message } from "@/lib/drizzle/drizzle-schema";
 import { Page } from "@/types/api-types";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, asc, count, eq } from "drizzle-orm";
 
+
+interface AttachmentWithThumbnail extends Attachment {
+  thumbnail?: Thumbnail;
+}
+
 interface MessageWithAttachments extends Message {
-  attachments?: Attachment[];
+  attachments?: AttachmentWithThumbnail[];
 }
 
 interface GetMessagePageRequest {
@@ -42,34 +47,25 @@ export const getMessagePage = withErrorHandler<
     .from(messages)
     .where(eq(messages.chatId, chatId));
 
-  const messagesData = await drizzleClient
-    .select()
-    .from(messages)
-    .where(eq(messages.chatId, chatId))
-    .orderBy(asc(messages.createdAt))
-    .limit(pageSize)
-    .offset((currentPage - 1) * pageSize);
-
-  // Fetch attachments for each message
-  const messagesWithAttachments: MessageWithAttachments[] = await Promise.all(
-    messagesData.map(async (message) => {
-      const messageAttachments = await drizzleClient
-        .select()
-        .from(attachments)
-        .where(eq(attachments.messageId, message.id));
-
-      return {
-        ...message,
-        attachments: messageAttachments,
-      };
-    }),
-  );
+  const messagesData: MessageWithAttachments[] = await drizzleClient.query.messages.findMany({
+    where: eq(messages.chatId, chatId),
+    orderBy: asc(messages.createdAt),
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize,
+    with: {
+      attachments: {
+        with: {
+          thumbnail: true,
+        },
+      },
+    },
+  }); 
 
   return {
     message: "Messages fetched successfully",
     code: 200,
     data: {
-      items: messagesWithAttachments,
+      items: messagesData,
       total,
       page: currentPage,
       size: pageSize,

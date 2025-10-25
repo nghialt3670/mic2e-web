@@ -1,20 +1,39 @@
 "use server";
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
-import { attachments, chats, messages } from "@/lib/drizzle/drizzle-schema";
+import {
+  Attachment,
+  Thumbnail,
+  attachments,
+  chats,
+  messages,
+  thumbnails,
+} from "@/lib/drizzle/drizzle-schema";
 import { type Message } from "@/lib/drizzle/drizzle-schema";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
+
+interface CreateThumbnailData
+  extends Omit<Thumbnail, "id" | "attachmentId" | "createdAt"> {}
+
+interface CreateAttachmentData
+  extends Omit<Attachment, "id" | "messageId" | "createdAt"> {
+  thumbnail?: CreateThumbnailData;
+}
+
+interface CreateMessageData
+  extends Omit<Message, "id" | "chatId" | "sender" | "createdAt"> {
+  attachments?: CreateAttachmentData[];
+}
 
 interface CreateMessageRequest {
   chatId: string;
-  message: Omit<Message, "id" | "chatId" | "sender" | "createdAt">;
-  attachmentUrls?: string[];
+  message: CreateMessageData;
 }
 
 export const createMessage = withErrorHandler<CreateMessageRequest, Message>(
-  async ({ chatId, message, attachmentUrls = [] }) => {
+  async ({ chatId, message }) => {
     const userId = await getSessionUserId();
     if (!userId) {
       return { message: "Unauthorized", code: 401 };
@@ -27,24 +46,53 @@ export const createMessage = withErrorHandler<CreateMessageRequest, Message>(
       return { message: "Chat not found", code: 404 };
     }
 
-    const createdMessage = await drizzleClient
-      .insert(messages)
-      .values({
-        chatId,
-        sender: "user",
-        text: message.text,
-      })
-      .returning()
-      .then((rows) => rows[0]);
+    const lastMessage = await drizzleClient.query.messages.findFirst({
+      where: and(eq(messages.chatId, chatId)),
+      orderBy: desc(messages.createdAt),
+    });
 
-    // Create attachments if any URLs provided
-    if (attachmentUrls.length > 0) {
-      const attachmentData = attachmentUrls.map((url) => ({
-        messageId: createdMessage.id,
-        url: url,
-      }));
+    const createdMessage =
+      lastMessage && lastMessage.sender === "user"
+        ? await drizzleClient
+            .update(messages)
+            .set({
+              text: message.text,
+            })
+            .where(eq(messages.id, lastMessage.id))
+            .returning()
+            .then((rows) => rows[0])
+        : await drizzleClient
+            .insert(messages)
+            .values({
+              chatId,
+              sender: "user",
+              text: message.text,
+            })
+            .returning()
+            .then((rows) => rows[0]);
 
-      await drizzleClient.insert(attachments).values(attachmentData);
+    if (message.attachments) {
+      const createdAttachments = await drizzleClient
+        .insert(attachments)
+        .values(
+          message.attachments.map((attachment) => ({
+            messageId: createdMessage.id,
+            url: attachment.url,
+          })),
+        )
+        .returning();
+
+      await drizzleClient.insert(thumbnails).values(
+        message.attachments
+          .map((attachment) => attachment.thumbnail)
+          .filter((thumbnail) => thumbnail !== undefined)
+          .map((thumbnail, i) => ({
+            attachmentId: createdAttachments[i].id,
+            url: thumbnail.url,
+            width: thumbnail.width,
+            height: thumbnail.height,
+          })),
+      );
     }
 
     await drizzleClient

@@ -59,6 +59,19 @@ export const attachments = pgTable("attachments", {
     .references(() => messages.id),
 });
 
+export const thumbnails = pgTable("thumbnails", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
+  url: text("url").notNull(),
+  width: integer("width").notNull(),
+  height: integer("height").notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+  attachmentId: text("attachmentId")
+    .notNull()
+    .references(() => attachments.id),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   chats: many(chats),
 }));
@@ -95,10 +108,22 @@ export const attachmentsRelations = relations(attachments, ({ one }) => ({
     fields: [attachments.messageId],
     references: [messages.id],
   }),
+  thumbnail: one(thumbnails, {
+    fields: [attachments.id],
+    references: [thumbnails.attachmentId],
+  }),
+}));
+
+export const thumbnailsRelations = relations(thumbnails, ({ one }) => ({
+  attachment: one(attachments, {
+    fields: [thumbnails.attachmentId],
+    references: [attachments.id],
+  }),
 }));
 
 export type User = typeof users.$inferSelect;
 export type Chat = typeof chats.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
+export type Thumbnail = typeof thumbnails.$inferSelect;
 export type Chat2editCycle = typeof chat2editCycles.$inferSelect;

@@ -18,12 +18,18 @@ export const MessageInput = () => {
   const [text, setText] = useState("");
   const { chat, setChat, addChat } = useChatStore();
   const { addMessage } = useMessageStore();
-  const { setAttachments, getAttachments, isAllUploaded } =
-    useUploadAttachmentStore();
+  const {
+    clearFiles,
+    clearAttachments,
+    getAttachments,
+    isAllRead,
+    isAllUploaded,
+    isAllThumbnailed,
+  } = useUploadAttachmentStore();
 
   const attachments = getAttachments();
-  const isAllRead = attachments.every((attachment) => attachment.imageInfo);
-  const canSubmit = text.trim() && isAllRead && isAllUploaded();
+  const canSubmit =
+    text.trim() && isAllRead() && isAllUploaded() && isAllThumbnailed();
 
   const getChatId = async () => {
     if (chat) {
@@ -56,17 +62,23 @@ export const MessageInput = () => {
       text,
     };
 
+    const attachmentData = attachments.map((attachment) => ({
+      type: attachment.type,
+      url: attachment.thumbnailInfo?.url || "",
+      width: attachment.thumbnailInfo?.width,
+      height: attachment.thumbnailInfo?.height,
+    }));
+
     const createdMessage = await withToastHandler(createMessage, {
       chatId,
       message: requestMessage,
-      attachmentUrls: attachments.map(
-        (attachment) => attachment.uploadInfo?.url,
-      ),
+      attachmentData,
     });
     if (createdMessage) {
       addMessage(createdMessage);
       setText("");
-      setAttachments([]);
+      clearFiles();
+      clearAttachments();
     }
 
     const responseMessage = await withToastHandler(getResponse, {
@@ -84,7 +96,7 @@ export const MessageInput = () => {
 
   return (
     <div className="relative w-full max-w-5xl">
-      {isAllRead && <UploadAttachmentList />}
+      {!isAllRead() && <UploadAttachmentList />}
       <form className="w-full" onSubmit={handleSubmit}>
         <div className="relative">
           <Input
