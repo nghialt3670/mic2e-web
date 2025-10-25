@@ -1,21 +1,14 @@
-import { Attachment, Message, Thumbnail } from "@/lib/drizzle/drizzle-schema";
+import { MessageDetail } from "../types";
 import { create } from "zustand";
 
-
-interface AttachmentWithThumbnail extends Attachment {
-  thumbnail?: Thumbnail;
-}
-interface MessageWithAttachments extends Message {
-  attachments?: AttachmentWithThumbnail[];
-}
 interface MessageStore {
   page: number;
   size: number;
-  messages: MessageWithAttachments[];
+  messages: MessageDetail[];
   setPage: (page: number) => void;
   setSize: (size: number) => void;
-  addMessage: (message: MessageWithAttachments) => void;
-  setMessages: (messages: MessageWithAttachments[]) => void;
+  addMessage: (message: MessageDetail) => void;
+  setMessages: (messages: MessageDetail[]) => void;
   clearMessages: () => void;
 }
 
@@ -25,8 +18,8 @@ export const useMessageStore = create<MessageStore>((set) => ({
   messages: [],
   setPage: (page: number) => set({ page }),
   setSize: (size: number) => set({ size }),
-  setMessages: (messages: MessageWithAttachments[]) => set({ messages }),
-  addMessage: (message: MessageWithAttachments) =>
+  setMessages: (messages: MessageDetail[]) => set({ messages }),
+  addMessage: (message: MessageDetail) =>
     set((state) => ({ messages: [...state.messages, message] })),
   clearMessages: () => set({ messages: [] }),
 }));

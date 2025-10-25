@@ -1,18 +1,13 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Attachment, Thumbnail } from "@/lib/drizzle/drizzle-schema";
+import { AttachmentDetail } from "../../types";
 import Image from "next/image";
-import { useState } from "react";
+import { FC, useState } from "react";
 
-interface AttachmentWithThumbnail extends Attachment {
-  thumbnail?: Thumbnail;
-}
 interface MessageAttachmentItemProps {
-  attachment: AttachmentWithThumbnail;
+  attachment: AttachmentDetail;
 }
 
-export const MessageAttachmentItem = ({
-  attachment,
-}: MessageAttachmentItemProps) => {
+export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({ attachment }) => {
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   if (!attachment.thumbnail || !attachment.url) {

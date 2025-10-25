@@ -1,19 +1,13 @@
-import { Attachment, Thumbnail } from "@/lib/drizzle/drizzle-schema";
+import { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { MessageAttachmentItem } from "../message-attachment-item";
-
-interface AttachmentWithThumbnail extends Attachment {
-  thumbnail?: Thumbnail;
-}
+import { AttachmentDetail } from "../../types";
 
 interface MessageAttachmentListProps {
-  attachments: AttachmentWithThumbnail[];
+  attachments: AttachmentDetail[];
 }
-
-export const MessageAttachmentList = ({
-  attachments,
-}: MessageAttachmentListProps) => {
+export const MessageAttachmentList: FC<MessageAttachmentListProps> = ({ attachments }) => {
   if (!attachments || attachments.length === 0) {
     return null;
   }

@@ -1,20 +1,12 @@
-import { Attachment, Message, Thumbnail } from "@/lib/drizzle/drizzle-schema";
-
 import { MessageAttachmentList } from "../message-attachment-list";
+import { MessageDetail } from "../../types";
+import { FC } from "react";
 
-interface AttachmentWithThumbnail extends Attachment {
-  thumbnail?: Thumbnail;
+interface MessageItemProps {
+  message: MessageDetail;
 }
 
-interface MessageWithAttachments extends Message {
-  attachments?: AttachmentWithThumbnail[];
-}
-
-export const MessageItem = ({
-  message,
-}: {
-  message: MessageWithAttachments;
-}) => {
+export const MessageItem: FC<MessageItemProps> = ({ message }) => {
   const createdAt = message.createdAt
     ? new Date(message.createdAt).toLocaleString()
     : "";

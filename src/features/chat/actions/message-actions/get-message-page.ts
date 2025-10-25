@@ -7,15 +7,8 @@ import { Page } from "@/types/api-types";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, asc, count, eq } from "drizzle-orm";
+import { MessageDetail } from "../../types";
 
-
-interface AttachmentWithThumbnail extends Attachment {
-  thumbnail?: Thumbnail;
-}
-
-interface MessageWithAttachments extends Message {
-  attachments?: AttachmentWithThumbnail[];
-}
 
 interface GetMessagePageRequest {
   chatId: string;
@@ -25,7 +18,7 @@ interface GetMessagePageRequest {
 
 export const getMessagePage = withErrorHandler<
   GetMessagePageRequest,
-  Page<MessageWithAttachments>
+  Page<MessageDetail>
 >(async ({ chatId, page, size }) => {
   const userId = await getSessionUserId();
   if (!userId) {
@@ -47,7 +40,7 @@ export const getMessagePage = withErrorHandler<
     .from(messages)
     .where(eq(messages.chatId, chatId));
 
-  const messagesData: MessageWithAttachments[] = await drizzleClient.query.messages.findMany({
+  const messagesDetails: MessageDetail[] = await drizzleClient.query.messages.findMany({
     where: eq(messages.chatId, chatId),
     orderBy: asc(messages.createdAt),
     limit: pageSize,
@@ -65,7 +58,7 @@ export const getMessagePage = withErrorHandler<
     message: "Messages fetched successfully",
     code: 200,
     data: {
-      items: messagesData,
+      items: messagesDetails,
       total,
       page: currentPage,
       size: pageSize,

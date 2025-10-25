@@ -13,6 +13,7 @@ import { type Message } from "@/lib/drizzle/drizzle-schema";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, desc, eq } from "drizzle-orm";
+import { MessageDetail } from "../../types";
 
 interface CreateThumbnailData
   extends Omit<Thumbnail, "id" | "attachmentId" | "createdAt"> {}
@@ -32,7 +33,7 @@ interface CreateMessageRequest {
   message: CreateMessageData;
 }
 
-export const createMessage = withErrorHandler<CreateMessageRequest, Message>(
+export const createMessage = withErrorHandler<CreateMessageRequest, MessageDetail>(
   async ({ chatId, message }) => {
     const userId = await getSessionUserId();
     if (!userId) {
@@ -103,10 +104,21 @@ export const createMessage = withErrorHandler<CreateMessageRequest, Message>(
       })
       .where(eq(chats.id, chatId));
 
+    const messageDetail = await drizzleClient.query.messages.findFirst({
+      where: eq(messages.id, createdMessage.id),
+      with: {
+        attachments: {
+          with: {
+            thumbnail: true,
+          },
+        },
+      },
+    });
+    
     return {
       message: "Message created successfully",
       code: 200,
-      data: createdMessage,
+      data: messageDetail,
     };
   },
 );
