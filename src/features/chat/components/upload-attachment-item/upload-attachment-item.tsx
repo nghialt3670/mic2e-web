@@ -91,7 +91,6 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     return null;
   }
 
-  const imageFilename = attachment.originalName.replace(".fig.json", "");
   const hasError = !!attachment.uploadInfo?.error;
 
   return (
@@ -130,7 +129,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
         >
           <Image
             src={attachment.imageInfo.dataUrl}
-            alt={imageFilename}
+            alt={attachment.originalName}
             width={attachment.imageInfo.width}
             height={attachment.imageInfo.height}
             className={`object-contain max-h-full w-auto transition-all duration-200 group-hover:scale-101 rounded-md ${hasError ? "opacity-50" : ""}`}
@@ -143,15 +142,15 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
       </div>
 
       <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden">
-          <DialogTitle className="sr-only">{imageFilename}</DialogTitle>
-          <div className="relative w-full h-full flex items-center justify-center">
+        <DialogContent className="max-w-[95vw] max-h-[95vh] size-fit p-0 overflow-hidden">
+          <DialogTitle className="sr-only">{attachment.originalName}</DialogTitle>
+          <div className="relative flex items-center justify-center">
             <Image
               src={attachment.imageInfo.dataUrl}
-              alt={imageFilename}
+              alt={attachment.originalName}
               width={attachment.imageInfo.width}
               height={attachment.imageInfo.height}
-              className="object-contain max-w-full max-h-[90vh]"
+              className="object-contain max-w-full max-h-full"
               style={{
                 width: "auto",
                 height: "auto",
