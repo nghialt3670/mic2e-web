@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { Send, WandSparkles } from "lucide-react";
 import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 
 import { createChat } from "../../actions/chat-actions/create-chat";
 import { getResponse } from "../../actions/chat-actions/get-response";
@@ -13,8 +12,11 @@ import { useMessageStore } from "../../stores/message-store";
 import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
 import { AttachmentUpload } from "../attachment-upload";
 import { UploadAttachmentList } from "../upload-attachment-list";
+import { usePathname } from "next/navigation";
+import { CreateAttachmentData } from "../../actions/message-actions/create-message";
 
 export const MessageInput = () => {
+  const pathname = usePathname();
   const [text, setText] = useState("");
   const { chat, setChat, addChat } = useChatStore();
   const { addMessage } = useMessageStore();
@@ -52,10 +54,14 @@ export const MessageInput = () => {
     const chatId = await getChatId();
     if (!chatId) return;
 
-    history.replaceState(null, "", `/chats/${chatId}`);
+    const createAttachmentDtos: CreateAttachmentData[] = attachments.map((attachment) => ({
+      type: attachment.type,
+      url: attachment.thumbnailInfo?.url || "",
+      width: attachment.thumbnailInfo?.width,
+      height: attachment.thumbnailInfo?.height,
+    }));
 
     const requestMessage = {
-      id: uuidv4(),
       chatId,
       createdAt: new Date(),
       sender: "user",
@@ -72,8 +78,8 @@ export const MessageInput = () => {
     const createdMessage = await withToastHandler(createMessage, {
       chatId,
       message: requestMessage,
-      attachmentData,
     });
+
     if (createdMessage) {
       addMessage(createdMessage);
       setText("");
@@ -92,11 +98,14 @@ export const MessageInput = () => {
         updatedAt: new Date(),
       });
     }
+    if (!pathname.includes(`/chats/${chatId}`)) {
+      history.replaceState(null, "", `/chats/${chatId}`);
+    }
   };
 
   return (
     <div className="relative w-full max-w-5xl">
-      {!isAllRead() && <UploadAttachmentList />}
+      {isAllRead() && <UploadAttachmentList />}
       <form className="w-full" onSubmit={handleSubmit}>
         <div className="relative">
           <Input

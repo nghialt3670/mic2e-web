@@ -11,6 +11,8 @@ export const MessageList = () => {
   const { chat } = useChatStore();
   const { page, size, messages, setMessages } = useMessageStore();
 
+  console.log(messages)
+
   useEffect(() => {
     const fetchMessages = async () => {
       const chatId = chat?.id;

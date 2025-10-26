@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { v4 as uuidv4 } from "uuid";
 
 export const users = pgTable("users", {
@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
 
+export const chatStatus = pgEnum("chat_status", ["idle", "requesting", "responding", "failed"]);
+
 export const chats = pgTable("chats", {
   id: text("id")
     .primaryKey()
@@ -21,6 +23,7 @@ export const chats = pgTable("chats", {
     .notNull()
     .references(() => users.id),
   title: text("title"),
+  status: chatStatus("status").notNull().default("idle"),
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });

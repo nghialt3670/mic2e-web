@@ -15,10 +15,10 @@ import { getSessionUserId } from "@/utils/server/session";
 import { and, desc, eq } from "drizzle-orm";
 import { MessageDetail } from "../../types";
 
-interface CreateThumbnailData
+export interface CreateThumbnailData
   extends Omit<Thumbnail, "id" | "attachmentId" | "createdAt"> {}
 
-interface CreateAttachmentData
+export interface CreateAttachmentData
   extends Omit<Attachment, "id" | "messageId" | "createdAt"> {
   thumbnail?: CreateThumbnailData;
 }
@@ -39,6 +39,7 @@ export const createMessage = withErrorHandler<CreateMessageRequest, MessageDetai
     if (!userId) {
       return { message: "Unauthorized", code: 401 };
     }
+    console.log("userId", userId);
 
     const chat = await drizzleClient.query.chats.findFirst({
       where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
@@ -46,7 +47,7 @@ export const createMessage = withErrorHandler<CreateMessageRequest, MessageDetai
     if (!chat) {
       return { message: "Chat not found", code: 404 };
     }
-
+    
     const lastMessage = await drizzleClient.query.messages.findFirst({
       where: and(eq(messages.chatId, chatId)),
       orderBy: desc(messages.createdAt),

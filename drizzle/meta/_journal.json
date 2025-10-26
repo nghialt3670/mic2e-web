@@ -71,6 +71,13 @@
       "when": 1761371881115,
       "tag": "0009_reflective_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1761488200968,
+      "tag": "0010_steep_talon",
+      "breakpoints": true
     }
   ]
 }

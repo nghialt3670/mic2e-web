@@ -42,6 +42,7 @@ export const AttachmentUpload = () => {
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     clearFiles();
+    clearAttachments();
     const files = Array.from(event.target.files || []);
 
     if (!validateFiles(files)) {
@@ -56,7 +57,6 @@ export const AttachmentUpload = () => {
     }
 
     setFiles(files);
-    clearAttachments();
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
