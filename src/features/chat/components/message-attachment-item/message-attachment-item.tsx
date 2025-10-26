@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AttachmentDetail } from "../../types";
 import Image from "next/image";
 import { FC, useState } from "react";
+import { AttachmentEditor } from "@/features/edit/components/attachment-editor";
 
 interface MessageAttachmentItemProps {
   attachment: AttachmentDetail;
@@ -23,7 +24,7 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({ attachme
         >
           <Image
             src={attachment.thumbnail.url}
-            alt={attachment.url}
+            alt={attachment.thumbnail.url}
             width={attachment.thumbnail.width}
             height={attachment.thumbnail.height}
             className="object-contain max-h-full w-auto transition-all duration-500 group-hover:scale-102 rounded-md"
@@ -36,21 +37,9 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({ attachme
       </div>
 
       <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] size-fit p-0 overflow-hidden">
+        <DialogContent className="w-[100vw] max-w-[100vw] sm:max-w-[100vw] h-[100vh] max-h-[100vh] p-0" showCloseButton={false}>
           <DialogTitle className="sr-only">{attachment.url}</DialogTitle>
-          <div className="relative flex items-center justify-center">
-            <Image
-              src={attachment.thumbnail.url}
-              alt={attachment.url}
-              width={attachment.thumbnail.width}
-              height={attachment.thumbnail.height}
-              className="object-contain max-w-full max-h-full"
-              style={{
-                width: "auto",
-                height: "auto",
-              }}
-            />
-          </div>
+          <AttachmentEditor attachment={attachment} onClose={() => setIsZoomOpen(false)} />
         </DialogContent>
       </Dialog>
     </>

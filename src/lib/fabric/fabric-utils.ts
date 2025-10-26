@@ -1,5 +1,5 @@
 import { readFileAsDataURL, readFileAsText } from "@/utils/client/file-readers";
-import { FabricImage, Group, StaticCanvas } from "fabric";
+import { Canvas, FabricImage, Group, StaticCanvas } from "fabric";
 
 export const convertFileToFigJsonFile = async (file: File): Promise<File> => {
   if (file.name.endsWith(".fig.json") && file.type === "application/json") {
@@ -54,4 +54,13 @@ export const readFigJsonFileAsDataURL = async (file: File): Promise<string> => {
     height: image.getScaledHeight(),
   });
   return canvas.toDataURL();
+};
+
+export const createFigFromUrl = async (url: string): Promise<Group> => {
+  const response = await fetch(url);
+  const text = await response.text();
+  const obj = JSON.parse(text);
+  const group = await Group.fromObject(obj);
+  group.selectable = false;
+  return group;
 };

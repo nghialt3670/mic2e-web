@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { createChat } from "../../actions/chat-actions/create-chat";
 import { getResponse } from "../../actions/chat-actions/get-response";
-import { createMessage } from "../../actions/message-actions/create-message";
+import { createMessage, CreateMessageData, CreateMessageRequest } from "../../actions/message-actions/create-message";
 import { useChatStore } from "../../stores/chat-store";
 import { useMessageStore } from "../../stores/message-store";
 import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
@@ -55,31 +55,25 @@ export const MessageInput = () => {
     if (!chatId) return;
 
     const createAttachmentDtos: CreateAttachmentData[] = attachments.map((attachment) => ({
-      type: attachment.type,
-      url: attachment.thumbnailInfo?.url || "",
-      width: attachment.thumbnailInfo?.width,
-      height: attachment.thumbnailInfo?.height,
+      url: attachment.uploadInfo?.url || "",
+      thumbnail: attachment.thumbnailInfo ? {
+        url: attachment.thumbnailInfo.url,
+        width: attachment.thumbnailInfo.width,
+        height: attachment.thumbnailInfo.height,
+      } : undefined,
     }));
 
-    const requestMessage = {
-      chatId,
-      createdAt: new Date(),
-      sender: "user",
+    const createMessageData: CreateMessageData = {
       text,
+      attachments: createAttachmentDtos,
     };
 
-    const attachmentData = attachments.map((attachment) => ({
-      type: attachment.type,
-      url: attachment.thumbnailInfo?.url || "",
-      width: attachment.thumbnailInfo?.width,
-      height: attachment.thumbnailInfo?.height,
-    }));
-
-    const createdMessage = await withToastHandler(createMessage, {
+    const createMessageRequest: CreateMessageRequest = {
       chatId,
-      message: requestMessage,
-    });
+      message: createMessageData,
+    };
 
+    const createdMessage = await withToastHandler(createMessage, createMessageRequest);
     if (createdMessage) {
       addMessage(createdMessage);
       setText("");

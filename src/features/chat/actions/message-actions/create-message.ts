@@ -23,12 +23,12 @@ export interface CreateAttachmentData
   thumbnail?: CreateThumbnailData;
 }
 
-interface CreateMessageData
+export interface CreateMessageData
   extends Omit<Message, "id" | "chatId" | "sender" | "createdAt"> {
   attachments?: CreateAttachmentData[];
 }
 
-interface CreateMessageRequest {
+export interface CreateMessageRequest {
   chatId: string;
   message: CreateMessageData;
 }
@@ -47,7 +47,7 @@ export const createMessage = withErrorHandler<CreateMessageRequest, MessageDetai
     if (!chat) {
       return { message: "Chat not found", code: 404 };
     }
-    
+
     const lastMessage = await drizzleClient.query.messages.findFirst({
       where: and(eq(messages.chatId, chatId)),
       orderBy: desc(messages.createdAt),
@@ -73,6 +73,8 @@ export const createMessage = withErrorHandler<CreateMessageRequest, MessageDetai
             .returning()
             .then((rows) => rows[0]);
 
+    console.log("createdMessage", message.attachments);
+
     if (message.attachments) {
       const createdAttachments = await drizzleClient
         .insert(attachments)
@@ -91,8 +93,8 @@ export const createMessage = withErrorHandler<CreateMessageRequest, MessageDetai
           .map((thumbnail, i) => ({
             attachmentId: createdAttachments[i].id,
             url: thumbnail.url,
-            width: thumbnail.width,
-            height: thumbnail.height,
+            width: Math.round(thumbnail.width),
+            height: Math.round(thumbnail.height),
           })),
       );
     }
