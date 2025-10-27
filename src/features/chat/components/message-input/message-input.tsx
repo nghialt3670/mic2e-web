@@ -119,8 +119,6 @@ export const MessageInput = () => {
   };
 
   return (
-    <div className="relative w-full max-w-5xl">
-      {isAllRead() && <UploadAttachmentList />}
       <form className="w-full" onSubmit={handleSubmit}>
         <div className="relative">
           <Input
@@ -156,6 +154,5 @@ export const MessageInput = () => {
           </Button>
         </div>
       </form>
-    </div>
   );
 };
