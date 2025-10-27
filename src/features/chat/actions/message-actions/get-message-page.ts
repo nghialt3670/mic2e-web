@@ -1,14 +1,19 @@
 "use server";
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
-import { attachments, chats, messages, Thumbnail } from "@/lib/drizzle/drizzle-schema";
+import {
+  Thumbnail,
+  attachments,
+  chats,
+  messages,
+} from "@/lib/drizzle/drizzle-schema";
 import { type Attachment, type Message } from "@/lib/drizzle/drizzle-schema";
 import { Page } from "@/types/api-types";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, asc, count, eq } from "drizzle-orm";
-import { MessageDetail } from "../../types";
 
+import { MessageDetail } from "../../types";
 
 interface GetMessagePageRequest {
   chatId: string;
@@ -40,21 +45,22 @@ export const getMessagePage = withErrorHandler<
     .from(messages)
     .where(eq(messages.chatId, chatId));
 
-  const messagesDetails: MessageDetail[] = await drizzleClient.query.messages.findMany({
-    where: eq(messages.chatId, chatId),
-    orderBy: asc(messages.createdAt),
-    limit: pageSize,
-    offset: (currentPage - 1) * pageSize,
-    with: {
-      attachments: {
-        with: {
-          thumbnail: true,
+  const messagesDetails: MessageDetail[] =
+    await drizzleClient.query.messages.findMany({
+      where: eq(messages.chatId, chatId),
+      orderBy: asc(messages.createdAt),
+      limit: pageSize,
+      offset: (currentPage - 1) * pageSize,
+      with: {
+        attachments: {
+          with: {
+            thumbnail: true,
+          },
         },
       },
-    },
-  }); 
+    });
 
-  console.log(messagesDetails)
+  console.log(messagesDetails);
 
   return {
     message: "Messages fetched successfully",

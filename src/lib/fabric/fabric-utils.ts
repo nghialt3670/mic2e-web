@@ -62,5 +62,19 @@ export const createFigFromUrl = async (url: string): Promise<Group> => {
   const obj = JSON.parse(text);
   const group = await Group.fromObject(obj);
   group.selectable = false;
+  group.set({
+    id: crypto.randomUUID(),
+  });
   return group;
+};
+
+export const calculateZoomToFit = (
+  imageWidth: number,
+  imageHeight: number,
+  containerWidth: number,
+  containerHeight: number,
+): number => {
+  const widthRatio = containerWidth / imageWidth;
+  const heightRatio = containerHeight / imageHeight;
+  return Math.min(widthRatio, heightRatio);
 };

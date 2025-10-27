@@ -1,4 +1,4 @@
-import { Chat, Message } from "@/lib/drizzle/drizzle-schema";
+import { Chat, ChatStatus, Message } from "@/lib/drizzle/drizzle-schema";
 import { create } from "zustand";
 
 interface ChatStore {
@@ -11,6 +11,7 @@ interface ChatStore {
   setChat: (chat?: Partial<Chat>) => void;
   addChat: (chat: Partial<Chat>) => void;
   setChats: (chats: Partial<Chat>[]) => void;
+  updateChatStatus: (status: ChatStatus) => void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -24,4 +25,6 @@ export const useChatStore = create<ChatStore>((set) => ({
   addChat: (chat: Partial<Chat>) =>
     set((state) => ({ chats: [...state.chats, chat] })),
   setChats: (chats: Partial<Chat>[]) => set({ chats }),
+  updateChatStatus: (status: ChatStatus) =>
+    set((state) => ({ chat: { ...state.chat, status } })),
 }));

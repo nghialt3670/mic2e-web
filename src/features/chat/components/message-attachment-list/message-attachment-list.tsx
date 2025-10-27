@@ -1,19 +1,21 @@
-import { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { FC } from "react";
 
-import { MessageAttachmentItem } from "../message-attachment-item";
 import { AttachmentDetail } from "../../types";
+import { MessageAttachmentItem } from "../message-attachment-item";
 
 interface MessageAttachmentListProps {
   attachments: AttachmentDetail[];
 }
-export const MessageAttachmentList: FC<MessageAttachmentListProps> = ({ attachments }) => {
+export const MessageAttachmentList: FC<MessageAttachmentListProps> = ({
+  attachments,
+}) => {
   if (!attachments || attachments.length === 0) {
     return null;
   }
 
   return (
-    <div className="flex flex-wrap gap-2 pb-2">
+    <div className="flex flex-wrap gap-2">
       <AnimatePresence mode="popLayout">
         {attachments.map((attachment) => (
           <motion.div
@@ -24,9 +26,7 @@ export const MessageAttachmentList: FC<MessageAttachmentListProps> = ({ attachme
             transition={{ duration: 0.2 }}
             layout
           >
-            <MessageAttachmentItem
-              attachment={attachment}
-            />
+            <MessageAttachmentItem attachment={attachment} />
           </motion.div>
         ))}
       </AnimatePresence>

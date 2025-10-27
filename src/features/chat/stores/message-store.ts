@@ -1,5 +1,6 @@
-import { MessageDetail } from "../types";
 import { create } from "zustand";
+
+import { MessageDetail } from "../types";
 
 interface MessageStore {
   page: number;

@@ -13,6 +13,7 @@ import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { serverEnv } from "@/utils/server/server-env";
 import { getSessionUserId } from "@/utils/server/session";
 import { and, desc, eq } from "drizzle-orm";
+
 import { MessageDetail } from "../../types";
 
 interface AttachmentResponse {
@@ -98,21 +99,30 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
       .then((rows) => rows[0]);
 
     if (newCycle.response.attachments) {
-      const createdAttachments = await drizzleClient.insert(attachments).values(
-        newCycle.response.attachments.map((attachment: AttachmentResponse) => ({
-          messageId: createdMessage.id,
-          url: attachment.url,
-        })),
-      ).returning();
-  
-      await drizzleClient.insert(thumbnails).values(
-        newCycle.response.attachments
-          .map((attachment: AttachmentResponse) => attachment.thumbnail)
-          .filter((thumbnail: Thumbnail | undefined) => thumbnail !== undefined)
-          .map((thumbnail: Thumbnail, i: number) => ({
-            attachmentId: createdAttachments[i].id,
-            url: thumbnail.url,
-            width: thumbnail.width,
+      const createdAttachments = await drizzleClient
+        .insert(attachments)
+        .values(
+          newCycle.response.attachments.map(
+            (attachment: AttachmentResponse) => ({
+              messageId: createdMessage.id,
+              url: attachment.url,
+            }),
+          ),
+        )
+        .returning();
+
+      await drizzleClient
+        .insert(thumbnails)
+        .values(
+          newCycle.response.attachments
+            .map((attachment: AttachmentResponse) => attachment.thumbnail)
+            .filter(
+              (thumbnail: Thumbnail | undefined) => thumbnail !== undefined,
+            )
+            .map((thumbnail: Thumbnail, i: number) => ({
+              attachmentId: createdAttachments[i].id,
+              url: thumbnail.url,
+              width: thumbnail.width,
               height: thumbnail.height,
             })),
         )
@@ -130,6 +140,10 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
       },
     });
 
-    return { message: "Response fetched successfully", code: 200, data: messageDetail };
+    return {
+      message: "Response fetched successfully",
+      code: 200,
+      data: messageDetail,
+    };
   },
 );

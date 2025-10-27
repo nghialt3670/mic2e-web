@@ -1,18 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { AttachmentEditor } from "@/features/edit/components/message-attachment-editor";
+import { useFigStore } from "@/features/edit/stores/fig-store";
 import {
   convertFileToFigJsonFile,
   readFigJsonFileAsDataURL,
 } from "@/lib/fabric";
 import { removeFileFromSupabase, uploadFileToSupabase } from "@/lib/supabase";
 import { clientEnv } from "@/utils/client/client-env";
-import { getImageDimensions } from "@/utils/client/file-readers";
+import {
+  getImageDimensions,
+  readFileAsText,
+} from "@/utils/client/file-readers";
 import { createImageThumbnail } from "@/utils/client/image";
 import { AlertCircle, XIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
+import { AttachmentDetail } from "../../types";
+import { UploadAttachmentDialog } from "../upload-attachment-dialog";
 
 interface UploadAttachmentItemProps {
   file: File;
@@ -26,16 +33,39 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     setAttachment,
     updateAttachmentUploadInfo,
     updateAttachmentThumbnailInfo,
+    setCurrentAttachment,
   } = useUploadAttachmentStore();
+  const { setFigObject, removeFigObject } = useFigStore();
   const attachment = getAttachment(file.name);
   const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+
+  const uploadedAttachment: AttachmentDetail | undefined =
+    attachment?.readInfo && attachment?.uploadInfo && attachment?.thumbnailInfo
+      ? {
+          messageId: "",
+          url: attachment.uploadInfo.url,
+          id: attachment.uploadInfo.path,
+          thumbnail: {
+            id: "",
+            attachmentId: "",
+            url: attachment.thumbnailInfo.url,
+            width: attachment.thumbnailInfo.width,
+            height: attachment.thumbnailInfo.height,
+            createdAt: new Date(),
+          },
+          createdAt: new Date(),
+        }
+      : undefined;
 
   useEffect(() => {
     const readAttachment = async () => {
       if (attachment?.readInfo) return;
       const figJsonFile = await convertFileToFigJsonFile(file);
       const dataUrl = await readFigJsonFileAsDataURL(figJsonFile);
+      const text = await readFileAsText(figJsonFile);
+      const obj = JSON.parse(text);
+      setFigObject(file.name, obj);
       const { width, height } = await getImageDimensions(file);
       setAttachment({
         type: "fabric-image-group",
@@ -59,7 +89,6 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
       try {
         const timestamp = Date.now();
 
-        // Upload the fabric JSON file
         const path = `figs/${timestamp}_${attachment.file.name}`;
         const url = await uploadFileToSupabase(
           attachment.file,
@@ -110,6 +139,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     if (!attachment) return;
     removeFile(attachment.originalFile.name);
     removeAttachment(attachment.originalFile.name);
+    removeFigObject(attachment.originalFile.name);
     if (attachment.uploadInfo) {
       removeFileFromSupabase(attachment.uploadInfo.path, bucketName);
     }
@@ -126,6 +156,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
     <>
       <div
         className={`group relative h-40 rounded-md border bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center cursor-pointer overflow-visible hover:z-10 ${hasError ? "border-red-400 hover:border-red-500" : ""}`}
+        onClick={() => setCurrentAttachment(attachment)}
       >
         <Button
           className="absolute top-1 right-1 z-10 bg-white/80 hover:bg-white size-6 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
@@ -170,26 +201,7 @@ export const UploadAttachmentItem = ({ file }: UploadAttachmentItemProps) => {
         </div>
       </div>
 
-      <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] size-fit p-0 overflow-hidden">
-          <DialogTitle className="sr-only">
-            {attachment.originalFile.name}
-          </DialogTitle>
-          <div className="relative flex items-center justify-center">
-            <Image
-              src={attachment.readInfo.dataUrl}
-              alt={attachment.originalFile.name}
-              width={attachment.readInfo.width}
-              height={attachment.readInfo.height}
-              className="object-contain max-w-full max-h-full"
-              style={{
-                width: "auto",
-                height: "auto",
-              }}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UploadAttachmentDialog />
     </>
   );
 };

@@ -34,6 +34,8 @@ interface UploadAttachment {
 interface UploadAttachmentStore {
   files: File[];
   filenameToAttachmentMap: Record<string, UploadAttachment>;
+  currentAttachment: UploadAttachment | undefined;
+  setCurrentAttachment: (attachment: UploadAttachment | undefined) => void;
   setFiles: (files: File[]) => void;
   removeFile: (filename: string) => void;
   clearFiles: () => void;
@@ -61,6 +63,9 @@ export const useUploadAttachmentStore = create<UploadAttachmentStore>(
   (set, get) => ({
     files: [],
     filenameToAttachmentMap: {},
+    currentAttachment: undefined,
+    setCurrentAttachment: (attachment: UploadAttachment | undefined) =>
+      set({ currentAttachment: attachment }),
     setFiles: (files: File[]) => set({ files }),
     removeFile: (filename: string) =>
       set((state) => ({
