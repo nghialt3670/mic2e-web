@@ -16,7 +16,7 @@ export const Header = () => {
   };
 
   return (
-    <div className="flex justify-between items-center px-4 py-2">
+    <div className="flex justify-between items-center px-4 py-2 border-b">
       <div className="flex items-center gap-2">
         <SidebarToggle />
         <h1 className="text-xl font-medium">

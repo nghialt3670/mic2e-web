@@ -29,7 +29,7 @@ export const MessageList = () => {
   }, [chat, page, size, setMessages]);
 
   return (
-    <div className="flex flex-col justify-start items-center gap-4 h-full w-full overflow-y-scroll pr-2 pl-6">
+    <div className="flex flex-col justify-start items-center h-full w-full overflow-y-scroll pr-2 pl-6">
       {messages.map((message) => (
         <div className="max-w-5xl w-full" key={message.id}>
           <MessageItem message={message} />
