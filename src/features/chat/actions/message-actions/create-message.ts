@@ -20,7 +20,7 @@ export interface CreateThumbnailData
   extends Omit<Thumbnail, "id" | "attachmentId" | "createdAt"> {}
 
 export interface CreateAttachmentData
-  extends Omit<Attachment, "id" | "messageId" | "createdAt"> {
+  extends Omit<Attachment, "id" | "messageId" | "contextPath" | "createdAt"> {
   thumbnail?: CreateThumbnailData;
 }
 
@@ -42,7 +42,6 @@ export const createMessage = withErrorHandler<
   if (!userId) {
     return { message: "Unauthorized", code: 401 };
   }
-  console.log("userId", userId);
 
   const chat = await drizzleClient.query.chats.findFirst({
     where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
@@ -76,15 +75,15 @@ export const createMessage = withErrorHandler<
           .returning()
           .then((rows) => rows[0]);
 
-  console.log("createdMessage", message.attachments);
-
   if (message.attachments) {
     const createdAttachments = await drizzleClient
       .insert(attachments)
       .values(
         message.attachments.map((attachment) => ({
           messageId: createdMessage.id,
+          originalFilename: attachment.originalFilename,
           url: attachment.url,
+          path: attachment.path,
         })),
       )
       .returning();

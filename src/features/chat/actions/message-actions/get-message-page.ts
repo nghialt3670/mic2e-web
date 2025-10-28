@@ -60,8 +60,6 @@ export const getMessagePage = withErrorHandler<
       },
     });
 
-  console.log(messagesDetails);
-
   return {
     message: "Messages fetched successfully",
     code: 200,

@@ -64,6 +64,8 @@ export const MessageInput = () => {
 
     const createAttachmentDtos: CreateAttachmentData[] = attachments.map(
       (attachment) => ({
+        originalFilename: attachment.originalFile.name,
+        path: attachment.uploadInfo?.path || "",
         url: attachment.uploadInfo?.url || "",
         thumbnail: attachment.thumbnailInfo
           ? {

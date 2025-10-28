@@ -15,11 +15,7 @@ import { getSessionUserId } from "@/utils/server/session";
 import { and, desc, eq } from "drizzle-orm";
 
 import { MessageDetail } from "../../types";
-
-interface AttachmentResponse {
-  url: string;
-  thumbnail?: Thumbnail;
-}
+import { CreateAttachmentData } from "../message-actions/create-message";
 
 interface GetResponseRequest {
   chatId: string;
@@ -61,14 +57,26 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
       method: "POST",
       body: JSON.stringify({
         message: {
-          text: lastMessage.text,
-          attachment_urls: lastMessage.attachments.map(
-            (attachment) => attachment.url,
-          ),
+          ...lastMessage,
+          attachments: lastMessage.attachments.map((attachment) => ({
+            ...attachment,
+            context_path: attachment.contextPath,
+          })),
         },
         history: cycles,
       }),
     });
+
+    console.log(JSON.stringify({
+      message: {
+        ...lastMessage,
+        attachments: lastMessage.attachments.map((attachment) => ({
+          ...attachment,
+          context_path: attachment.contextPath,
+        })),
+      },
+      history: cycles,
+    }))
 
     const payload = await response.json();
     const newCycle = payload.data;
@@ -103,9 +111,10 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
         .insert(attachments)
         .values(
           newCycle.response.attachments.map(
-            (attachment: AttachmentResponse) => ({
+            (attachment: CreateAttachmentData) => ({
               messageId: createdMessage.id,
               url: attachment.url,
+              path: attachment.path
             }),
           ),
         )
@@ -115,7 +124,7 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
         .insert(thumbnails)
         .values(
           newCycle.response.attachments
-            .map((attachment: AttachmentResponse) => attachment.thumbnail)
+            .map((attachment: CreateAttachmentData) => attachment.thumbnail)
             .filter(
               (thumbnail: Thumbnail | undefined) => thumbnail !== undefined,
             )

@@ -67,6 +67,9 @@ export const attachments = pgTable("attachments", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
+  originalFilename: text("originalFilename"),
+  contextPath: text("contextPath"),
+  path: text("path").notNull(),
   url: text("url").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
   messageId: text("messageId")
