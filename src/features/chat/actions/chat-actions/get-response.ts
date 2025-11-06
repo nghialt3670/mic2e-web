@@ -21,6 +21,19 @@ interface GetResponseRequest {
   chatId: string;
 }
 
+interface ChatResponse {
+  message: {
+    text: string;
+    attachments: {
+      filename: string;
+      upload_path: string;
+      upload_url: string;
+    }[];
+  };
+  cycle: Record<string, any>;
+  context_url: string;
+}
+
 export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
   async ({ chatId }) => {
     const sessionUserId = await getSessionUserId();
@@ -55,32 +68,38 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
 
     const response = await fetch(`${serverEnv.CHAT2EDIT_API_URL}/chat`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         message: {
-          ...lastMessage,
+          text: lastMessage.text,
           attachments: lastMessage.attachments.map((attachment) => ({
-            ...attachment,
-            context_path: attachment.contextPath,
+            filename: attachment.originalFilename || attachment.url?.split("/").pop() || "",
+            upload_path: attachment.path || "",
+            upload_url: attachment.url || "",
           })),
         },
-        history: cycles,
+        history: cycles.map((cycle) => cycle.data),
+        context_url: chat.contextUrl,
       }),
     });
 
     console.log(JSON.stringify({
       message: {
-        ...lastMessage,
+        text: lastMessage.text,
         attachments: lastMessage.attachments.map((attachment) => ({
-          ...attachment,
-          context_path: attachment.contextPath,
+          filename: attachment.originalFilename || attachment.url?.split("/").pop() || "",
+          upload_path: attachment.path || "",
+          upload_url: attachment.url || "",
         })),
       },
-      history: cycles,
+      history: cycles.map((cycle) => cycle.data),
     }))
 
     const payload = await response.json();
-    const newCycle = payload.data;
-    if (!newCycle.response) {
+    const chatResponse = payload.data as ChatResponse;
+    if (!chatResponse.message) {
       return {
         message: "There was an error processing the request.",
         code: 500,
@@ -91,7 +110,7 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
       .insert(chat2editCycles)
       .values({
         chatId,
-        data: newCycle,
+        data: chatResponse.cycle,
       })
       .returning()
       .then((rows) => rows[0]);
@@ -101,41 +120,24 @@ export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
       .values({
         chatId,
         sender: "assistant",
-        text: newCycle.response.text,
+        text: chatResponse.message.text,
       })
       .returning()
       .then((rows) => rows[0]);
 
-    if (newCycle.response.attachments) {
-      const createdAttachments = await drizzleClient
+    if (chatResponse.message.attachments) {
+       await drizzleClient
         .insert(attachments)
         .values(
-          newCycle.response.attachments.map(
-            (attachment: CreateAttachmentData) => ({
+          chatResponse.message.attachments.map(
+            (attachment) => ({
               messageId: createdMessage.id,
-              url: attachment.url,
-              path: attachment.path
+              originalFilename: attachment.filename,
+              path: attachment.upload_path,
+              url: attachment.upload_url,
             }),
           ),
         )
-        .returning();
-
-      await drizzleClient
-        .insert(thumbnails)
-        .values(
-          newCycle.response.attachments
-            .map((attachment: CreateAttachmentData) => attachment.thumbnail)
-            .filter(
-              (thumbnail: Thumbnail | undefined) => thumbnail !== undefined,
-            )
-            .map((thumbnail: Thumbnail, i: number) => ({
-              attachmentId: createdAttachments[i].id,
-              url: thumbnail.url,
-              width: thumbnail.width,
-              height: thumbnail.height,
-            })),
-        )
-        .returning();
     }
 
     const messageDetail = await drizzleClient.query.messages.findFirst({

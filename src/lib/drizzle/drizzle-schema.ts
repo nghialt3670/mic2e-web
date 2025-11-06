@@ -36,6 +36,7 @@ export const chats = pgTable("chats", {
     .references(() => users.id),
   title: text("title"),
   status: chatStatus("status").notNull().default("idle"),
+  contextUrl: text("contextUrl"),
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow(),
 });
@@ -68,7 +69,6 @@ export const attachments = pgTable("attachments", {
     .primaryKey()
     .$defaultFn(() => uuidv4()),
   originalFilename: text("originalFilename"),
-  contextPath: text("contextPath"),
   path: text("path").notNull(),
   url: text("url").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),

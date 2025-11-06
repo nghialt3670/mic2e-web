@@ -1,5 +1,8 @@
 import { readFileAsDataURL, readFileAsText } from "@/utils/client/file-readers";
-import { Canvas, FabricImage, Group, StaticCanvas } from "fabric";
+import { FabricImage, Group, StaticCanvas } from "fabric";
+import { dataURLToBlob } from "blob-util";
+import { v4 } from "uuid";
+
 
 export const convertFileToFigJsonFile = async (file: File): Promise<File> => {
   if (file.name.endsWith(".fig.json") && file.type === "application/json") {
@@ -66,6 +69,19 @@ export const createFigFromUrl = async (url: string): Promise<Group> => {
     id: crypto.randomUUID(),
   });
   return group;
+};
+
+export const createImageFileFromFig = async (fig: Group): Promise<File> => {
+  const image = fig.getObjects()[0] as FabricImage;
+  const canvas = new StaticCanvas();
+  canvas.add(fig);
+  canvas.setDimensions({
+    width: image.getScaledWidth(),
+    height: image.getScaledHeight(),
+  });
+  const dataUrl = canvas.toDataURL();
+  const blob = dataURLToBlob(dataUrl);
+  return new File([blob], v4() + ".png", { type: "image/png" });
 };
 
 export const calculateZoomToFit = (
