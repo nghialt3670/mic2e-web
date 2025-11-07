@@ -1,5 +1,11 @@
-import { Attachment, Thumbnail } from "@/lib/drizzle/drizzle-schema";
+import { drizzleClient } from "@/lib/drizzle";
 
-export interface AttachmentDetail extends Attachment {
-  thumbnail?: Thumbnail;
-}
+const attachmentDetail = drizzleClient.query.attachments.findFirst({
+  with: {
+    figUpload: true,
+    imageUpload: true,
+    thumbnailUpload: true,
+  },
+});
+
+export type AttachmentDetail = NonNullable<Awaited<typeof attachmentDetail>>;

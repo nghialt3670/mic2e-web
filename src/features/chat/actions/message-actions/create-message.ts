@@ -2,31 +2,36 @@
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
-  Attachment,
-  Thumbnail,
   attachments,
+  chatCycles,
   chats,
+  ImageUpload,
+  imageUploads,
   messages,
-  thumbnails,
 } from "@/lib/drizzle/drizzle-schema";
-import { type Message } from "@/lib/drizzle/drizzle-schema";
-import { withErrorHandler } from "@/utils/server/server-action-handlers";
-import { getSessionUserId } from "@/utils/server/session";
-import { and, desc, eq } from "drizzle-orm";
+import {
+  withAuthHandler,
+  withErrorHandler,
+} from "@/utils/server/server-action-handlers";
+import { desc, eq } from "drizzle-orm";
 
-import { MessageDetail } from "../../types";
+import { AttachmentDetail, MessageDetail } from "../../types";
 
-export interface CreateThumbnailData
-  extends Omit<Thumbnail, "id" | "attachmentId" | "createdAt"> {}
+export interface CreateImageUploadData extends Omit<ImageUpload, "id" | "createdAt" | "updatedAt"> {}
 
 export interface CreateAttachmentData
-  extends Omit<Attachment, "id" | "messageId" | "contextPath" | "createdAt"> {
-  thumbnail?: CreateThumbnailData;
+  extends Omit<AttachmentDetail, "id" | "messageId" | "figUploadId" | "imageUploadId" | "figUploadId" | "imageUploadId" | "thumbnailUploadId" | "figUpload" | "imageUpload" | "thumbnailUpload" | "createdAt" | "updatedAt"> {
+  figUpload?: CreateImageUploadData;
+  imageUpload?: CreateImageUploadData;
+  thumbnailUpload?: CreateImageUploadData;
 }
 
 export interface CreateMessageData
-  extends Omit<Message, "id" | "chatId" | "sender" | "createdAt"> {
-  attachments?: CreateAttachmentData[];
+  extends Omit<
+    MessageDetail,
+    "id" | "attachments" | "createdAt" | "updatedAt"
+  > {
+  attachments: CreateAttachmentData[];
 }
 
 export interface CreateMessageRequest {
@@ -34,95 +39,97 @@ export interface CreateMessageRequest {
   message: CreateMessageData;
 }
 
-export const createMessage = withErrorHandler<
-  CreateMessageRequest,
-  MessageDetail
->(async ({ chatId, message }) => {
-  const userId = await getSessionUserId();
-  if (!userId) {
-    return { message: "Unauthorized", code: 401 };
-  }
+export const createMessage = withErrorHandler(
+  withAuthHandler<CreateMessageRequest, MessageDetail>(
+    async ({ userId, chatId, message }) => {
+      const chat = await drizzleClient.query.chats.findFirst({
+        where: eq(chats.id, chatId),
+      });
+      if (!chat) {
+        return { message: "Chat not found", code: 404 };
+      }
+      if (chat.userId !== userId) {
+        return { message: "Unauthorized", code: 401 };
+      }
 
-  const chat = await drizzleClient.query.chats.findFirst({
-    where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
-  });
-  if (!chat) {
-    return { message: "Chat not found", code: 404 };
-  }
-
-  const lastMessage = await drizzleClient.query.messages.findFirst({
-    where: and(eq(messages.chatId, chatId)),
-    orderBy: desc(messages.createdAt),
-  });
-
-  const createdMessage =
-    lastMessage && lastMessage.sender === "user"
-      ? await drizzleClient
-          .update(messages)
-          .set({
-            text: message.text,
-          })
-          .where(eq(messages.id, lastMessage.id))
-          .returning()
-          .then((rows) => rows[0])
-      : await drizzleClient
-          .insert(messages)
-          .values({
-            chatId,
-            sender: "user",
-            text: message.text,
-          })
-          .returning()
-          .then((rows) => rows[0]);
-
-  if (message.attachments) {
-    const createdAttachments = await drizzleClient
-      .insert(attachments)
-      .values(
-        message.attachments.map((attachment) => ({
-          messageId: createdMessage.id,
-          originalFilename: attachment.originalFilename,
-          url: attachment.url,
-          path: attachment.path,
-        })),
-      )
-      .returning();
-
-    await drizzleClient.insert(thumbnails).values(
-      message.attachments
-        .map((attachment) => attachment.thumbnail)
-        .filter((thumbnail) => thumbnail !== undefined)
-        .map((thumbnail, i) => ({
-          attachmentId: createdAttachments[i].id,
-          url: thumbnail.url,
-          width: Math.round(thumbnail.width),
-          height: Math.round(thumbnail.height),
-        })),
-    );
-  }
-
-  await drizzleClient
-    .update(chats)
-    .set({
-      title: message.text,
-      updatedAt: new Date(),
-    })
-    .where(eq(chats.id, chatId));
-
-  const messageDetail = await drizzleClient.query.messages.findFirst({
-    where: eq(messages.id, createdMessage.id),
-    with: {
-      attachments: {
+      const lastChatCycle = await drizzleClient.query.chatCycles.findFirst({
+        where: eq(chatCycles.chatId, chatId),
+        orderBy: desc(chatCycles.createdAt),
         with: {
-          thumbnail: true,
+          requestMessage: true,
+          responseMessage: true,
         },
-      },
-    },
-  });
+      });
 
-  return {
-    message: "Message created successfully",
-    code: 200,
-    data: messageDetail,
-  };
-});
+      if (lastChatCycle && !lastChatCycle.responseMessage) {
+        return { message: "Last message is not a response", code: 400 };
+      }
+
+      const requestMessage = await drizzleClient
+        .insert(messages)
+        .values({ text: message.text })
+        .returning()
+        .then((rows) => rows[0]);
+
+      const attachmentRecords = await Promise.all(
+        message.attachments.map(async (attachment) => {
+          const figUpload = await drizzleClient
+            .insert(imageUploads)
+            .values(attachment.figUpload)
+            .returning()
+            .then((rows) => rows[0]);
+
+          const imageUpload = attachment.imageUpload
+            ? await drizzleClient
+                .insert(imageUploads)
+                .values(attachment.imageUpload)
+                .returning()
+                .then((rows) => rows[0])
+            : null;
+
+          const thumbnailUpload = attachment.thumbnailUpload
+            ? await drizzleClient
+                .insert(imageUploads)
+                .values(attachment.thumbnailUpload)
+                .returning()
+                .then((rows) => rows[0])
+            : null;
+
+          return {
+            messageId: requestMessage.id,
+            type: attachment.type,
+            figUploadId: figUpload.id,
+            imageUploadId: imageUpload?.id,
+            thumbnailUploadId: thumbnailUpload?.id,
+          };
+        }),
+      );
+
+      await drizzleClient.insert(attachments).values(attachmentRecords);
+
+      await drizzleClient.insert(chatCycles).values({
+        chatId,
+        requestMessageId: requestMessage.id,
+      });
+
+      const messageDetail = await drizzleClient.query.messages.findFirst({
+        where: eq(messages.id, requestMessage.id),
+        with: {
+          attachments: {
+            with: {
+              figUpload: true,
+              imageUpload: true,
+              thumbnailUpload: true,
+            },
+          },
+        },
+      });
+
+      return {
+        message: "Message created successfully",
+        code: 200,
+        data: messageDetail,
+      };
+    },
+  ),
+);

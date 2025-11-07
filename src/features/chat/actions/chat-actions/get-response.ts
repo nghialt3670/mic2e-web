@@ -3,19 +3,19 @@
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
   attachments,
-  chat2editCycles,
+  chatCycles,
   chats,
+  imageUploads,
   messages,
-  thumbnails,
 } from "@/lib/drizzle/drizzle-schema";
-import { Thumbnail } from "@/lib/drizzle/drizzle-schema";
-import { withErrorHandler } from "@/utils/server/server-action-handlers";
+import {
+  withAuthHandler,
+  withErrorHandler,
+} from "@/utils/server/server-action-handlers";
 import { serverEnv } from "@/utils/server/server-env";
-import { getSessionUserId } from "@/utils/server/session";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 import { MessageDetail } from "../../types";
-import { CreateAttachmentData } from "../message-actions/create-message";
 
 interface GetResponseRequest {
   chatId: string;
@@ -34,127 +34,141 @@ interface ChatResponse {
   context_url: string;
 }
 
-export const getResponse = withErrorHandler<GetResponseRequest, MessageDetail>(
-  async ({ chatId }) => {
-    const sessionUserId = await getSessionUserId();
-    if (!sessionUserId) {
-      return { message: "Unauthorized", code: 401 };
-    }
+export const getResponse = withErrorHandler(
+  withAuthHandler<GetResponseRequest, MessageDetail>(
+    async ({ userId, chatId }) => {
+      const chat = await drizzleClient.query.chats.findFirst({
+        where: eq(chats.id, chatId),
+      });
+      if (!chat) {
+        return { message: "Chat not found", code: 404 };
+      }
+      if (chat.userId !== userId) {
+        return { message: "Unauthorized", code: 401 };
+      }
 
-    const chat = await drizzleClient.query.chats.findFirst({
-      where: and(eq(chats.id, chatId), eq(chats.userId, sessionUserId)),
-    });
-    if (!chat) {
-      return { message: "Chat not found", code: 404 };
-    }
-
-    const lastMessage = await drizzleClient.query.messages.findFirst({
-      where: and(eq(messages.chatId, chatId)),
-      orderBy: desc(messages.createdAt),
-      with: {
-        attachments: true,
-      },
-    });
-    if (!lastMessage) {
-      return { message: "Last message not found", code: 404 };
-    }
-    if (lastMessage.sender === "assistant") {
-      return { message: "Last message is from assistant", code: 400 };
-    }
-
-    const cycles = await drizzleClient.query.chat2editCycles.findMany({
-      where: eq(chat2editCycles.chatId, chatId),
-    });
-
-    const response = await fetch(`${serverEnv.CHAT2EDIT_API_URL}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: {
-          text: lastMessage.text,
-          attachments: lastMessage.attachments.map((attachment) => ({
-            filename: attachment.originalFilename || attachment.url?.split("/").pop() || "",
-            upload_path: attachment.path || "",
-            upload_url: attachment.url || "",
-          })),
+      const lastChatCycle = await drizzleClient.query.chatCycles.findFirst({
+        where: eq(chatCycles.chatId, chatId),
+        orderBy: desc(chatCycles.createdAt),
+        with: {
+          requestMessage: {
+            with: {
+              attachments: {
+                with: {
+                  figUpload: true,
+                  imageUpload: true,
+                  thumbnailUpload: true,
+                },
+              },
+            },
+          },
+          responseMessage: true,
         },
-        history: cycles.map((cycle) => cycle.data),
-        context_url: chat.contextUrl,
-      }),
-    });
+      });
 
-    console.log(JSON.stringify({
-      message: {
-        text: lastMessage.text,
-        attachments: lastMessage.attachments.map((attachment) => ({
-          filename: attachment.originalFilename || attachment.url?.split("/").pop() || "",
-          upload_path: attachment.path || "",
-          upload_url: attachment.url || "",
-        })),
-      },
-      history: cycles.map((cycle) => cycle.data),
-    }))
+      if (!lastChatCycle) {
+        return { message: "No messages in chat", code: 404 };
+      }
+      if (lastChatCycle.responseMessage) {
+        return { message: "Last message already has a response", code: 400 };
+      }
 
-    const payload = await response.json();
-    const chatResponse = payload.data as ChatResponse;
-    if (!chatResponse.message) {
-      return {
-        message: "There was an error processing the request.",
-        code: 500,
-      };
-    }
+      const allCycles = await drizzleClient.query.chatCycles.findMany({
+        where: eq(chatCycles.chatId, chatId),
+        orderBy: desc(chatCycles.createdAt),
+      });
 
-    await drizzleClient
-      .insert(chat2editCycles)
-      .values({
-        chatId,
-        data: chatResponse.cycle,
-      })
-      .returning()
-      .then((rows) => rows[0]);
+      const response = await fetch(`${serverEnv.CHAT2EDIT_API_URL}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: {
+            text: lastChatCycle.requestMessage.text,
+            attachments: lastChatCycle.requestMessage.attachments
+              .filter((attachment) => attachment.figUpload)
+              .map((attachment) => ({
+                filename: attachment.figUpload!.filename,
+                upload_path: attachment.figUpload!.path,
+                upload_url: attachment.figUpload!.url,
+              })),
+          },
+          history: allCycles
+            .filter((cycle) => cycle.dataJson)
+            .map((cycle) => cycle.dataJson),
+          context_url: chat.contextUrl,
+        }),
+      });
 
-    const createdMessage = await drizzleClient
-      .insert(messages)
-      .values({
-        chatId,
-        sender: "assistant",
-        text: chatResponse.message.text,
-      })
-      .returning()
-      .then((rows) => rows[0]);
+      const payload = await response.json();
+      const chatResponse = payload.data as ChatResponse;
+      if (!chatResponse.message) {
+        return {
+          message: "There was an error processing the request.",
+          code: 500,
+        };
+      }
 
-    if (chatResponse.message.attachments) {
-       await drizzleClient
-        .insert(attachments)
-        .values(
-          chatResponse.message.attachments.map(
-            (attachment) => ({
-              messageId: createdMessage.id,
-              originalFilename: attachment.filename,
-              path: attachment.upload_path,
-              url: attachment.upload_url,
-            }),
-          ),
-        )
-    }
+      const responseMessage = await drizzleClient
+        .insert(messages)
+        .values({ text: chatResponse.message.text })
+        .returning()
+        .then((rows) => rows[0]);
 
-    const messageDetail = await drizzleClient.query.messages.findFirst({
-      where: eq(messages.id, createdMessage.id),
-      with: {
-        attachments: {
-          with: {
-            thumbnail: true,
+      if (chatResponse.message.attachments?.length > 0) {
+        const attachmentRecords = await Promise.all(
+          chatResponse.message.attachments.map(async (attachment) => {
+            const figUpload = await drizzleClient
+              .insert(imageUploads)
+              .values({
+                filename: attachment.filename,
+                path: attachment.upload_path,
+                url: attachment.upload_url,
+                width: 0,
+                height: 0,
+              })
+              .returning()
+              .then((rows) => rows[0]);
+
+            return {
+              messageId: responseMessage.id,
+              type: "fig" as const,
+              figUploadId: figUpload.id,
+            };
+          }),
+        );
+
+        await drizzleClient.insert(attachments).values(attachmentRecords);
+      }
+
+      await drizzleClient
+        .update(chatCycles)
+        .set({
+          responseMessageId: responseMessage.id,
+          contextUrl: chatResponse.context_url,
+          dataJson: chatResponse.cycle,
+        })
+        .where(eq(chatCycles.id, lastChatCycle.id));
+
+      const messageDetail = await drizzleClient.query.messages.findFirst({
+        where: eq(messages.id, responseMessage.id),
+        with: {
+          attachments: {
+            with: {
+              figUpload: true,
+              imageUpload: true,
+              thumbnailUpload: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    return {
-      message: "Response fetched successfully",
-      code: 200,
-      data: messageDetail,
-    };
-  },
+      return {
+        message: "Response fetched successfully",
+        code: 200,
+        data: messageDetail,
+      };
+    },
+  ),
 );

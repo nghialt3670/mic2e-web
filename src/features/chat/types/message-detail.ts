@@ -1,7 +1,15 @@
-import { Message } from "@/lib/drizzle/drizzle-schema";
+import { drizzleClient } from "@/lib/drizzle";
 
-import { AttachmentDetail } from "./attachment-detail";
+const messageDetail = drizzleClient.query.messages.findFirst({
+  with: {
+    attachments: {
+      with: {
+        figUpload: true,
+        imageUpload: true,
+        thumbnailUpload: true,
+      },
+    },
+  },
+});
 
-export interface MessageDetail extends Message {
-  attachments: AttachmentDetail[];
-}
+export type MessageDetail = NonNullable<Awaited<typeof messageDetail>>;

@@ -1,8 +1,7 @@
 import { readFileAsDataURL, readFileAsText } from "@/utils/client/file-readers";
-import { FabricImage, Group, StaticCanvas } from "fabric";
 import { dataURLToBlob } from "blob-util";
+import { FabricImage, Group, StaticCanvas } from "fabric";
 import { v4 } from "uuid";
-
 
 export const convertFileToFigJsonFile = async (file: File): Promise<File> => {
   if (file.name.endsWith(".fig.json") && file.type === "application/json") {
@@ -22,12 +21,19 @@ export const convertImageFileToFabricImageGroupFile = async (
   });
 };
 
-export const createFabricImageGroupObjectFromImageFile = async (
+export const createFigObjectFromImageFile = async (
   file: File,
-): Promise<any> => {
+): Promise<Record<string, any>> => {
   const dataUrl = await readFileAsDataURL(file);
   const image = await FabricImage.fromURL(dataUrl);
+  image.selectable = false;
   const group = new Group([image]);
+  group.set({
+    id: crypto.randomUUID(),
+    filename: file.name,
+    selectable: false,
+  });
+  group.selectable = false;
   return group.toJSON();
 };
 
@@ -82,6 +88,24 @@ export const createImageFileFromFig = async (fig: Group): Promise<File> => {
   const dataUrl = canvas.toDataURL();
   const blob = dataURLToBlob(dataUrl);
   return new File([blob], v4() + ".png", { type: "image/png" });
+};
+
+export const createFigFileFromObject = async (
+  obj: Record<string, any>,
+  filename: string,
+): Promise<File> => {
+  return new File([JSON.stringify(obj)], `${v4()}.fig.json`, {
+    type: "application/json",
+  });
+};
+
+export const getFigObjectDimensions = async (obj: Record<string, any>): Promise<{ width: number, height: number }> => {
+  const group = await Group.fromObject(obj);
+  const image = group.getObjects()[0] as FabricImage;
+  return {
+    width: image.getScaledWidth(),
+    height: image.getScaledHeight(),
+  };
 };
 
 export const calculateZoomToFit = (

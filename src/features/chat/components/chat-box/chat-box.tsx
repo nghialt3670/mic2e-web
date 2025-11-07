@@ -5,9 +5,7 @@ import { useEffect } from "react";
 
 import { useChatStore } from "../../stores/chat-store";
 import { MessageInput } from "../message-input";
-import { MessageList } from "../message-list";
-import { useUploadAttachmentStore } from "../../stores/upload-attachment-store";
-import { UploadAttachmentList } from "../upload-attachment-list";
+import { ChatCycleList } from "../chat-cycle-list";
 
 interface ChatBoxProps {
   chat?: Partial<Chat>;
@@ -15,7 +13,6 @@ interface ChatBoxProps {
 
 export const ChatBox = ({ chat }: ChatBoxProps) => {
   const { setChat } = useChatStore();
-  const { isAllRead } = useUploadAttachmentStore();
 
   useEffect(() => {
     setChat(chat);
@@ -23,16 +20,9 @@ export const ChatBox = ({ chat }: ChatBoxProps) => {
 
   return (
     <div className="flex flex-col items-center h-full">
-      <MessageList />
+      <ChatCycleList />
       <div className="relative w-full flex justify-center items-center max-w-5xl py-10">
-        {isAllRead() && (
-          <div className="absolute top-[-100%] w-full px-4">
-            <UploadAttachmentList />
-          </div>
-        )}
-        <div className="w-full px-4">
-          <MessageInput />
-        </div>
+        <MessageInput />
       </div>
     </div>
   );
