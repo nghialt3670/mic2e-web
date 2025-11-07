@@ -13,13 +13,17 @@ export const InputAttachmentItem = ({
   attachment,
 }: InputAttachmentItemProps) => {
   const { removeInputAttachment } = useInputAttachmentStore();
-  const { mode, targetAttachmentId } = useInteractionModeStore();
+  const { mode, targetAttachmentId, activeTagId, activeTagColor, clearMode } = useInteractionModeStore();
   const isMobile = useIsMobile();
 
   const isActive = targetAttachmentId === attachment.imageFile.name && mode !== "none";
 
   const handleRemove = () => {
     removeInputAttachment(attachment.imageFile.name);
+  };
+
+  const handleAnnotationComplete = () => {
+    clearMode();
   };
 
   switch (attachment.type) {
@@ -46,6 +50,9 @@ export const InputAttachmentItem = ({
             maxWidth={isMobile ? 240 : 480} 
             interactionMode={isActive ? mode : "none"}
             attachmentId={attachment.imageFile.name}
+            activeTagId={isActive ? activeTagId : null}
+            activeTagColor={isActive ? activeTagColor : null}
+            onAnnotationComplete={handleAnnotationComplete}
           />
           
           <Button

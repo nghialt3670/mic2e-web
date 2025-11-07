@@ -4,6 +4,7 @@ import { to } from "await-to-js";
 import { Canvas, FabricImage, Group, Rect, Circle } from "fabric";
 import { AlertCircleIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAnnotationStore } from "@/features/chat/stores/annotation-store";
 
 export type InteractionMode = "none" | "box" | "point" | "image";
 
@@ -13,6 +14,9 @@ interface FigCanvasProps {
   maxWidth?: number;
   interactionMode?: InteractionMode;
   attachmentId?: string;
+  activeTagId?: string | null;
+  activeTagColor?: string | null;
+  onAnnotationComplete?: () => void;
 }
 
 export const FigCanvas = ({
@@ -21,12 +25,16 @@ export const FigCanvas = ({
   maxWidth,
   interactionMode = "none",
   attachmentId,
+  activeTagId = null,
+  activeTagColor = null,
+  onAnnotationComplete,
 }: FigCanvasProps) => {
   const fabricCanvasRef = useRef<Canvas>(null);
   const canvasElementRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const { addAnnotation, getAnnotationsByAttachment, annotations } = useAnnotationStore();
 
   const resizeAndZoom = useCallback((canvas: Canvas) => {
     const objects = canvas.getObjects();
@@ -95,9 +103,18 @@ export const FigCanvas = ({
     const handleMouseDown = (e: MouseEvent) => {
       e.preventDefault();
       
+      if (!activeTagId || !activeTagColor || !attachmentId) return;
+      
       const pointer = getCanvasPointer(e);
       currentIsDrawing = true;
       currentStartPoint = { x: pointer.x, y: pointer.y };
+
+      const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      };
 
       if (interactionMode === "box") {
         const rect = new Rect({
@@ -105,12 +122,13 @@ export const FigCanvas = ({
           top: pointer.y,
           width: 0,
           height: 0,
-          fill: "rgba(59, 130, 246, 0.2)",
-          stroke: "#3b82f6",
+          fill: hexToRgba(activeTagColor, 0.2),
+          stroke: activeTagColor,
           strokeWidth: 2 / canvas.getZoom(),
           selectable: false,
           evented: false,
           objectCaching: false,
+          data: { annotationId: activeTagId },
         });
         canvas.add(rect);
         canvas.renderAll();
@@ -120,7 +138,7 @@ export const FigCanvas = ({
           left: pointer.x,
           top: pointer.y,
           radius: 5 / canvas.getZoom(),
-          fill: "#3b82f6",
+          fill: activeTagColor,
           stroke: "#ffffff",
           strokeWidth: 2 / canvas.getZoom(),
           selectable: false,
@@ -128,10 +146,28 @@ export const FigCanvas = ({
           originX: "center",
           originY: "center",
           objectCaching: false,
+          data: { annotationId: activeTagId },
         });
         canvas.add(circle);
         canvas.renderAll();
         currentIsDrawing = false;
+
+        // Save point annotation
+        addAnnotation({
+          id: activeTagId,
+          type: "point",
+          color: activeTagColor,
+          data: {
+            x: pointer.x,
+            y: pointer.y,
+          },
+          attachmentId,
+        });
+
+        // Notify completion
+        if (onAnnotationComplete) {
+          onAnnotationComplete();
+        }
       }
     };
 
@@ -152,10 +188,29 @@ export const FigCanvas = ({
     };
 
     const handleMouseUp = () => {
-      if (currentIsDrawing) {
+      if (currentIsDrawing && interactionMode === "box" && currentDrawingObject && currentStartPoint && activeTagId && activeTagColor && attachmentId) {
+        const rect = currentDrawingObject as Rect;
+        // Save box annotation
+        addAnnotation({
+          id: activeTagId,
+          type: "box",
+          color: activeTagColor,
+          data: {
+            x: rect.left || 0,
+            y: rect.top || 0,
+            width: rect.width || 0,
+            height: rect.height || 0,
+          },
+          attachmentId,
+        });
         currentIsDrawing = false;
         currentStartPoint = null;
         currentDrawingObject = null;
+
+        // Notify completion
+        if (onAnnotationComplete) {
+          onAnnotationComplete();
+        }
       }
     };
 
@@ -178,7 +233,68 @@ export const FigCanvas = ({
       canvasElement.removeEventListener('mouseup', handleMouseUp);
       canvasElement.style.cursor = "default";
     };
-  }, [interactionMode, isLoading]);
+  }, [interactionMode, isLoading, activeTagId, activeTagColor, attachmentId, addAnnotation]);
+
+  // Render annotations on canvas when they change
+  useEffect(() => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !attachmentId || isLoading) return;
+
+    const currentAnnotations = getAnnotationsByAttachment(attachmentId);
+    
+    // Remove all annotation objects
+    canvas.getObjects().forEach((obj) => {
+      const data = (obj as any).data;
+      if (data && data.annotationId) {
+        canvas.remove(obj);
+      }
+    });
+
+    // Render all annotations
+    currentAnnotations.forEach((annotation) => {
+      const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      };
+
+      if (annotation.type === "box") {
+        const rect = new Rect({
+          left: annotation.data.x,
+          top: annotation.data.y,
+          width: annotation.data.width || 0,
+          height: annotation.data.height || 0,
+          fill: hexToRgba(annotation.color, 0.2),
+          stroke: annotation.color,
+          strokeWidth: 2 / canvas.getZoom(),
+          selectable: false,
+          evented: false,
+          objectCaching: false,
+          data: { annotationId: annotation.id },
+        });
+        canvas.add(rect);
+      } else if (annotation.type === "point") {
+        const circle = new Circle({
+          left: annotation.data.x,
+          top: annotation.data.y,
+          radius: 5 / canvas.getZoom(),
+          fill: annotation.color,
+          stroke: "#ffffff",
+          strokeWidth: 2 / canvas.getZoom(),
+          selectable: false,
+          evented: false,
+          originX: "center",
+          originY: "center",
+          objectCaching: false,
+          data: { annotationId: annotation.id },
+        });
+        canvas.add(circle);
+      }
+    });
+
+    canvas.renderAll();
+  }, [annotations, attachmentId, isLoading, getAnnotationsByAttachment]);
 
   useEffect(() => {
     let isCancelled = false;

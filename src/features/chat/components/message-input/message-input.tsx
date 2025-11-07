@@ -5,8 +5,9 @@ import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { clientEnv } from "@/utils/client/client-env";
 import { Box, Loader2, MousePointer2, Image as ImageIcon, Send, WandSparkles, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { v4 } from "uuid";
+import { MentionsInput, Mention } from "react-mentions";
 
 import { createChat } from "../../actions/chat-actions/create-chat";
 import { getResponse } from "../../actions/chat-actions/get-response";
@@ -19,6 +20,7 @@ import { CreateAttachmentData } from "../../actions/message-actions/create-messa
 import { useChatStore } from "../../stores/chat-store";
 import { useInputAttachmentStore } from "../../stores/input-attachment-store";
 import { useInteractionModeStore, InteractionMode } from "../../stores/interaction-mode-store";
+import { useAnnotationStore, getNextColor, resetColorIndex } from "../../stores/annotation-store";
 import { AttachmentInput } from "../attachment-input";
 import { InputAttachmentList } from "../input-attachment-list";
 import { getImageDimensions } from "@/utils/client/file-readers";
@@ -26,119 +28,138 @@ import { createImageThumbnail } from "@/utils/client/image";
 import { useMessageStore } from "../../stores/message-store";
 
 type MentionOption = {
-  id: InteractionMode;
-  label: string;
+  id: string;
+  display: string;
+  type: Exclude<InteractionMode, "none" | "image">;
   icon: typeof Box;
   description: string;
+};
+
+type Tag = {
+  id: string;
+  type: Exclude<InteractionMode, "none" | "image">;
+  label: string;
+  color: string;
+  display: string;
 };
 
 const mentionOptions: MentionOption[] = [
   {
     id: "box",
-    label: "box",
+    display: "box",
+    type: "box",
     icon: Box,
     description: "Draw a bounding box on the image",
   },
   {
     id: "point",
-    label: "point",
+    display: "point",
+    type: "point",
     icon: MousePointer2,
     description: "Mark a point on the image",
-  },
-  {
-    id: "image",
-    label: "image",
-    icon: ImageIcon,
-    description: "Select an image region",
   },
 ];
 
 export const MessageInput = () => {
   const pathname = usePathname();
   const [text, setText] = useState("");
-  const [showMentions, setShowMentions] = useState(false);
-  const [mentionSearch, setMentionSearch] = useState("");
-  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const prevTextRef = useRef<string>("");
   const { chat, setChat, addChat, updateChatStatus } = useChatStore();
   const { addMessage } = useMessageStore();
   const { clearInputAttachments, getInputAttachments } =
     useInputAttachmentStore();
   const { mode, setMode, clearMode } = useInteractionModeStore();
+  const { removeAnnotation, clearAnnotations } = useAnnotationStore();
   const attachments = getInputAttachments();
   const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
   const isPending = chat?.status === "requesting" || chat?.status === "responding";
 
-  const filteredMentions = mentionOptions.filter((option) =>
-    option.label.toLowerCase().includes(mentionSearch.toLowerCase())
-  );
+  // Handle when a mention is added
+  const handleAdd = (id: string | number) => {
+    const option = mentionOptions.find((opt) => opt.id === id);
+    if (!option) return;
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setText(value);
+    // Create a new tag with unique ID and color
+    const newTag: Tag = {
+      id: v4(),
+      type: option.type,
+      label: option.display,
+      display: `@${option.display}`,
+      color: getNextColor(),
+    };
 
-    // Detect @ mentions
-    const cursorPos = e.target.selectionStart || 0;
-    const textBeforeCursor = value.slice(0, cursorPos);
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    setTags([...tags, newTag]);
 
-    if (mentionMatch) {
-      setMentionSearch(mentionMatch[1]);
-      setShowMentions(true);
-      setSelectedMentionIndex(0);
-    } else {
-      setShowMentions(false);
-      setMentionSearch("");
+    // Activate the interaction mode for this tag
+    if (attachments.length > 0) {
+      setMode(
+        option.type as InteractionMode,
+        attachments[attachments.length - 1].imageFile.name,
+        newTag.id,
+        newTag.color
+      );
     }
   };
 
-  const handleMentionSelect = (option: MentionOption) => {
-    const cursorPos = inputRef.current?.selectionStart || 0;
-    const textBeforeCursor = text.slice(0, cursorPos);
-    const textAfterCursor = text.slice(cursorPos);
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+  // Detect when mentions are removed from text and remove their annotations
+  useEffect(() => {
+    const currentText = text || "";
+    const prevText = prevTextRef.current;
 
-    if (mentionMatch) {
-      const beforeMention = textBeforeCursor.slice(0, -mentionMatch[0].length);
-      const newText = `${beforeMention}@${option.label} ${textAfterCursor}`;
-      setText(newText);
-      setShowMentions(false);
-      setMentionSearch("");
-      
-      // Activate the interaction mode
-      if (attachments.length > 0) {
-        setMode(option.id, attachments[attachments.length - 1].imageFile.name);
+    // Extract mention displays from current and previous text
+    // react-mentions format: @[display](id)
+    const extractMentionDisplays = (txt: string): Set<string> => {
+      const displays = new Set<string>();
+      const mentionRegex = /@\[([^\]]+)\]\([^)]+\)/g;
+      let match;
+      while ((match = mentionRegex.exec(txt)) !== null) {
+        displays.add(match[1]); // display is the first capture group
       }
-      
-      // Focus back on input
-      setTimeout(() => {
-        inputRef.current?.focus();
-        const newCursorPos = beforeMention.length + option.label.length + 2;
-        inputRef.current?.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
-    }
-  };
+      return displays;
+    };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showMentions || filteredMentions.length === 0) return;
+    const currentDisplays = extractMentionDisplays(currentText);
+    const prevDisplays = extractMentionDisplays(prevText);
 
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedMentionIndex((prev) => 
-        prev < filteredMentions.length - 1 ? prev + 1 : 0
+    // Find mentions that were in previous text but not in current (i.e., were removed)
+    const removedDisplays = Array.from(prevDisplays).filter(
+      (display) => !currentDisplays.has(display)
+    );
+
+    if (removedDisplays.length > 0) {
+      // Find and remove tags with matching labels
+      const tagsToRemove = tags.filter((tag) =>
+        removedDisplays.includes(tag.label)
       );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedMentionIndex((prev) => 
-        prev > 0 ? prev - 1 : filteredMentions.length - 1
-      );
-    } else if (e.key === "Enter" && showMentions) {
-      e.preventDefault();
-      handleMentionSelect(filteredMentions[selectedMentionIndex]);
-    } else if (e.key === "Escape") {
-      setShowMentions(false);
-      setMentionSearch("");
+
+      if (tagsToRemove.length > 0) {
+        // Remove tags from state
+        setTags((prevTags) =>
+          prevTags.filter((tag) => !tagsToRemove.includes(tag))
+        );
+
+        // Remove corresponding annotations from canvas
+        tagsToRemove.forEach((tag) => {
+          removeAnnotation(tag.id);
+        });
+
+        // Clear interaction mode if active
+        if (mode !== "none") {
+          clearMode();
+        }
+      }
     }
+
+    // Update previous text ref
+    prevTextRef.current = currentText;
+  }, [text, tags, removeAnnotation, mode, clearMode]);
+
+  // Extract plain text without markup for submission
+  const getPlainTextForSubmit = (): string => {
+    // Remove all @[display](id) markup and replace with @display
+    // react-mentions default format: @[display](id)
+    return (text || "").replace(/@\[([^\]]+)\]\([^)]+\)/g, '@$1');
   };
 
   const getChatId = async () => {
@@ -220,10 +241,18 @@ export const MessageInput = () => {
       }),
     );
 
+    // Get plain text for submission
+    const plainText = getPlainTextForSubmit();
+
     clearInputAttachments();
+    clearAnnotations();
+    setTags([]);
+    clearMode();
+    resetColorIndex();
+    setText(""); // Clear the mention input
 
     const createMessageData: CreateMessageData = {
-      text,
+      text: plainText,
       attachments: createAttachmentDtos,
     };
 
@@ -299,34 +328,6 @@ export const MessageInput = () => {
           </div>
         )}
         
-        {/* Mention suggestions dropdown */}
-        {showMentions && filteredMentions.length > 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border rounded-lg shadow-lg max-h-64 overflow-y-auto z-50">
-            {filteredMentions.map((option, index) => {
-              const Icon = option.icon;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 ${
-                    index === selectedMentionIndex ? "bg-gray-100" : ""
-                  }`}
-                  onClick={() => handleMentionSelect(option)}
-                  onMouseEnter={() => setSelectedMentionIndex(index)}
-                >
-                  <Icon className="size-5 mt-0.5 shrink-0" />
-                  <div className="flex-1 text-left">
-                    <div className="font-medium">@{option.label}</div>
-                    <div className="text-sm text-gray-500">
-                      {option.description}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-        
         {/* Input row with buttons */}
         <div className="flex items-center gap-2 px-3 py-2">
           {/* Left buttons */}
@@ -337,17 +338,84 @@ export const MessageInput = () => {
             <AttachmentInput />
           </div>
 
-          {/* Text input */}
-          <input
-            ref={inputRef}
-            type="text"
+          {/* Text input with mentions */}
+          <MentionsInput
             value={text}
-            onChange={handleTextChange}
-            onKeyDown={handleKeyDown}
+            onChange={(e: { target: { value: string } }) => setText(e.target.value)}
             placeholder="Type a message... (use @ for tools)"
-            className="flex-1 h-9 px-3 text-base bg-transparent outline-none"
             disabled={isPending}
-          />
+            className="flex-1"
+            style={{
+              control: {
+                fontSize: 16,
+                fontWeight: 'normal',
+              },
+              '&multiLine': {
+                control: {
+                  minHeight: 36,
+                },
+                highlighter: {
+                  padding: 6,
+                  border: '1px solid transparent',
+                },
+                input: {
+                  padding: 6,
+                  border: '1px solid transparent',
+                  outline: 0,
+                  minHeight: 36,
+                },
+              },
+              suggestions: {
+                list: {
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                  maxHeight: '16rem',
+                  overflow: 'auto',
+                },
+                item: {
+                  padding: '12px 16px',
+                  borderBottom: '1px solid #f3f4f6',
+                  '&focused': {
+                    backgroundColor: '#f9fafb',
+                  },
+                },
+              },
+            }}
+          >
+            <Mention
+              trigger="@"
+              data={mentionOptions.map((opt) => ({
+                id: opt.id,
+                display: opt.display,
+                type: opt.type,
+              }))}
+              onAdd={(id: string | number, display: string) => handleAdd(id)}
+              renderSuggestion={(
+                suggestion: { id: string | number; display?: string },
+                _search: string,
+                highlightedDisplay: React.ReactNode
+              ) => {
+                const option = mentionOptions.find((opt) => opt.id === suggestion.id);
+                const Icon = option?.icon || Box;
+                return (
+                  <div className="flex items-start gap-3">
+                    <Icon className="size-5 mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <div className="font-medium">{highlightedDisplay}</div>
+                      <div className="text-sm text-gray-500">{option?.description}</div>
+                    </div>
+                  </div>
+                );
+              }}
+              markup="@[__display__](__id__:__type__)"
+              displayTransform={(_id: string | number, display: string) => `@${display}`}
+              style={{
+                backgroundColor: '#3b82f6',
+              }}
+            />
+          </MentionsInput>
 
           {/* Submit button */}
           <Button
