@@ -91,11 +91,11 @@ export const MessageInput = () => {
 
     setTags([...tags, newTag]);
 
-    // Activate the interaction mode for this tag
+    // Activate the interaction mode - user can draw on any canvas directly
     if (attachments.length > 0) {
       setMode(
         option.type as InteractionMode,
-        attachments[attachments.length - 1].imageFile.name,
+        null, // No specific target - any canvas can be used
         newTag.id,
         newTag.color
       );

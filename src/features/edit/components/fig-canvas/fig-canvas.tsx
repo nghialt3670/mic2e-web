@@ -125,8 +125,8 @@ export const FigCanvas = ({
           fill: hexToRgba(activeTagColor, 0.2),
           stroke: activeTagColor,
           strokeWidth: 2 / canvas.getZoom(),
-          selectable: false,
-          evented: false,
+          selectable: true,
+          evented: true,
           objectCaching: false,
           data: { annotationId: activeTagId },
         });
@@ -141,8 +141,8 @@ export const FigCanvas = ({
           fill: activeTagColor,
           stroke: "#ffffff",
           strokeWidth: 2 / canvas.getZoom(),
-          selectable: false,
-          evented: false,
+          selectable: true,
+          evented: true,
           originX: "center",
           originY: "center",
           objectCaching: false,
@@ -233,7 +233,7 @@ export const FigCanvas = ({
       canvasElement.removeEventListener('mouseup', handleMouseUp);
       canvasElement.style.cursor = "default";
     };
-  }, [interactionMode, isLoading, activeTagId, activeTagColor, attachmentId, addAnnotation]);
+  }, [interactionMode, isLoading, activeTagId, activeTagColor, attachmentId, addAnnotation, onAnnotationComplete]);
 
   // Render annotations on canvas when they change
   useEffect(() => {
@@ -268,8 +268,8 @@ export const FigCanvas = ({
           fill: hexToRgba(annotation.color, 0.2),
           stroke: annotation.color,
           strokeWidth: 2 / canvas.getZoom(),
-          selectable: false,
-          evented: false,
+          selectable: true,
+          evented: true,
           objectCaching: false,
           data: { annotationId: annotation.id },
         });
@@ -282,8 +282,8 @@ export const FigCanvas = ({
           fill: annotation.color,
           stroke: "#ffffff",
           strokeWidth: 2 / canvas.getZoom(),
-          selectable: false,
-          evented: false,
+          selectable: true,
+          evented: true,
           originX: "center",
           originY: "center",
           objectCaching: false,
@@ -324,7 +324,7 @@ export const FigCanvas = ({
       }
       
       // Make fig non-selectable but keep evented so canvas events fire
-      fig.selectable = false;
+      fig.selectable = true;
       fig.hasControls = false;
       fig.hasBorders = false;
       fig.lockMovementX = true;
@@ -332,7 +332,7 @@ export const FigCanvas = ({
       fig.hoverCursor = 'default';
       
       fig.getObjects().forEach((obj) => {
-        obj.selectable = false;
+        obj.selectable = true;
         obj.hasControls = false;
         obj.hasBorders = false;
         obj.lockMovementX = true;

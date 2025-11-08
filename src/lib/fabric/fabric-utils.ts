@@ -26,14 +26,14 @@ export const createFigObjectFromImageFile = async (
 ): Promise<Record<string, any>> => {
   const dataUrl = await readFileAsDataURL(file);
   const image = await FabricImage.fromURL(dataUrl);
-  image.selectable = false;
+  image.selectable = true;
   const group = new Group([image]);
   group.set({
     id: crypto.randomUUID(),
     filename: file.name,
-    selectable: false,
+    selectable: true,
   });
-  group.selectable = false;
+  group.selectable = true;
   return group.toJSON();
 };
 
@@ -70,7 +70,7 @@ export const createFigFromUrl = async (url: string): Promise<Group> => {
   const text = await response.text();
   const obj = JSON.parse(text);
   const group = await Group.fromObject(obj);
-  group.selectable = false;
+  group.selectable = true;
   group.set({
     id: crypto.randomUUID(),
   });
