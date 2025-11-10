@@ -18,14 +18,16 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
 
       const { filename, url, width, height } = attachment.thumbnailUpload;
 
-      return <Image
-        src={url}
-        alt={filename}
-        width={width}
-        height={height}
-        className="object-contain h-full w-auto transition-transform duration-500 group-hover:scale-101 rounded-md"
-        unoptimized
-      />;
+      return (
+        <Image
+          src={url}
+          alt={filename}
+          width={width}
+          height={height}
+          className="object-contain h-full w-auto transition-transform duration-500 group-hover:scale-101 rounded-md"
+          unoptimized
+        />
+      );
     default:
       return null;
   }

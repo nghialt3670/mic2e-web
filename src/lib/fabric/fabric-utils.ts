@@ -1,105 +1,38 @@
-import { readFileAsDataURL, readFileAsText } from "@/utils/client/file-readers";
-import { dataURLToBlob } from "blob-util";
-import { FabricImage, Group, StaticCanvas } from "fabric";
+import { readFileAsDataURL } from "@/utils/client/file-readers";
+import { Canvas, FabricImage, Group } from "fabric";
 import { v4 } from "uuid";
-
-export const convertFileToFigJsonFile = async (file: File): Promise<File> => {
-  if (file.name.endsWith(".fig.json") && file.type === "application/json") {
-    return file;
-  }
-  return convertImageFileToFabricImageGroupFile(file);
-};
-
-export const convertImageFileToFabricImageGroupFile = async (
-  file: File,
-): Promise<File> => {
-  const dataUrl = await readFileAsDataURL(file);
-  const image = await FabricImage.fromURL(dataUrl);
-  const group = new Group([image]);
-  return new File([JSON.stringify(group.toJSON())], `${file.name}.fig.json`, {
-    type: "application/json",
-  });
-};
 
 export const createFigObjectFromImageFile = async (
   file: File,
 ): Promise<Record<string, any>> => {
   const dataUrl = await readFileAsDataURL(file);
   const image = await FabricImage.fromURL(dataUrl);
-  image.selectable = true;
+  image.selectable = false;
   const group = new Group([image]);
   group.set({
     id: crypto.randomUUID(),
-    filename: file.name,
-    selectable: true,
   });
-  group.selectable = true;
-  return group.toJSON();
-};
-
-export const convertFabricImageGroupObjectToDataURL = async (
-  obj: any,
-): Promise<string> => {
-  const group = await Group.fromObject(obj);
-  const image = group.getObjects()[0] as FabricImage;
-  const canvas = new StaticCanvas();
-  canvas.add(group);
-  canvas.setDimensions({
-    width: image.getScaledWidth(),
-    height: image.getScaledHeight(),
+  group.selectable = false;
+  group.hoverCursor = "default";
+  group.getObjects().forEach((obj, index) => {
+    obj.selectable = index !== 0;
+    obj.evented = true;
   });
-  return canvas.toDataURL();
-};
-
-export const readFigJsonFileAsDataURL = async (file: File): Promise<string> => {
-  const text = await readFileAsText(file);
-  const obj = JSON.parse(text);
-  const group = await Group.fromObject(obj);
-  const image = group.getObjects()[0] as FabricImage;
-  const canvas = new StaticCanvas();
-  canvas.add(group);
-  canvas.setDimensions({
-    width: image.getScaledWidth(),
-    height: image.getScaledHeight(),
-  });
-  return canvas.toDataURL();
-};
-
-export const createFigFromUrl = async (url: string): Promise<Group> => {
-  const response = await fetch(url);
-  const text = await response.text();
-  const obj = JSON.parse(text);
-  const group = await Group.fromObject(obj);
-  group.selectable = true;
-  group.set({
-    id: crypto.randomUUID(),
-  });
-  return group;
-};
-
-export const createImageFileFromFig = async (fig: Group): Promise<File> => {
-  const image = fig.getObjects()[0] as FabricImage;
-  const canvas = new StaticCanvas();
-  canvas.add(fig);
-  canvas.setDimensions({
-    width: image.getScaledWidth(),
-    height: image.getScaledHeight(),
-  });
-  const dataUrl = canvas.toDataURL();
-  const blob = dataURLToBlob(dataUrl);
-  return new File([blob], v4() + ".png", { type: "image/png" });
+  return group.toObject(["id", "selectable", "evented", "hoverCursor"] as any);
 };
 
 export const createFigFileFromObject = async (
   obj: Record<string, any>,
   filename: string,
 ): Promise<File> => {
-  return new File([JSON.stringify(obj)], `${v4()}.fig.json`, {
+  return new File([JSON.stringify(obj)], `${v4()}_${filename}.fig.json`, {
     type: "application/json",
   });
 };
 
-export const getFigObjectDimensions = async (obj: Record<string, any>): Promise<{ width: number, height: number }> => {
+export const getFigObjectDimensions = async (
+  obj: Record<string, any>,
+): Promise<{ width: number; height: number }> => {
   const group = await Group.fromObject(obj);
   const image = group.getObjects()[0] as FabricImage;
   return {
@@ -117,4 +50,53 @@ export const calculateZoomToFit = (
   const widthRatio = containerWidth / imageWidth;
   const heightRatio = containerHeight / imageHeight;
   return Math.min(widthRatio, heightRatio);
+};
+
+export const createFigFromObject = async (
+  obj: Record<string, any>,
+): Promise<Group> => {
+  const fig = await Group.fromObject(obj);
+
+  // Enable sub-target checking on the Group to allow selecting objects inside it
+  // Make the Group non-selectable but allow its children to be selected
+  fig.set({
+    subTargetCheck: true,
+    selectable: false,
+    evented: true,
+    interactive: true,
+  });
+
+  // Configure all objects in the group
+  // First object (index 0) is non-selectable, others are selectable
+  fig.getObjects().forEach((obj, index) => {
+    obj.set({
+      selectable: index !== 0,
+      evented: true,
+    });
+  });
+
+  return fig;
+};
+
+export const resizeAndZoomCanvas = (
+  canvas: Canvas,
+  maxWidth: number,
+  maxHeight: number,
+) => {
+  if (!canvas) return;
+  const objects = canvas.getObjects();
+  if (objects.length === 0) return;
+  const fig = objects[0] as Group;
+  const figObjects = fig.getObjects();
+  if (figObjects.length === 0) return;
+  const image = figObjects[0] as FabricImage;
+  const imageWidth = image.getScaledWidth();
+  const imageHeight = image.getScaledHeight();
+  const zoom = calculateZoomToFit(imageWidth, imageHeight, maxWidth, maxHeight);
+  canvas.setDimensions({
+    width: imageWidth * zoom,
+    height: imageHeight * zoom,
+  });
+  canvas.setZoom(zoom);
+  canvas.renderAll();
 };

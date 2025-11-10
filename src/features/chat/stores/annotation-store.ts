@@ -60,7 +60,6 @@ export const useAnnotationStore = create<AnnotationStore>((set, get) => ({
   clearAnnotations: () => set({ annotations: {} }),
   getAnnotationsByAttachment: (attachmentId) =>
     Object.values(get().annotations).filter(
-      (annotation) => annotation.attachmentId === attachmentId
+      (annotation) => annotation.attachmentId === attachmentId,
     ),
 }));
-

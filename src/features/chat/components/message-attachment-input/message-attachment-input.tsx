@@ -16,7 +16,7 @@ import {
   useInputAttachmentStore,
 } from "../../stores/input-attachment-store";
 
-export const AttachmentInput = () => {
+export const MessageAttachmentInput = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { clearInputAttachments, setInputAttachments } =
     useInputAttachmentStore();

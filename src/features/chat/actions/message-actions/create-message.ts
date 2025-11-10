@@ -2,10 +2,10 @@
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
+  ImageUpload,
   attachments,
   chatCycles,
   chats,
-  ImageUpload,
   imageUploads,
   messages,
 } from "@/lib/drizzle/drizzle-schema";
@@ -17,10 +17,25 @@ import { desc, eq } from "drizzle-orm";
 
 import { AttachmentDetail, MessageDetail } from "../../types";
 
-export interface CreateImageUploadData extends Omit<ImageUpload, "id" | "createdAt" | "updatedAt"> {}
+export interface CreateImageUploadData
+  extends Omit<ImageUpload, "id" | "createdAt" | "updatedAt"> {}
 
 export interface CreateAttachmentData
-  extends Omit<AttachmentDetail, "id" | "messageId" | "figUploadId" | "imageUploadId" | "figUploadId" | "imageUploadId" | "thumbnailUploadId" | "figUpload" | "imageUpload" | "thumbnailUpload" | "createdAt" | "updatedAt"> {
+  extends Omit<
+    AttachmentDetail,
+    | "id"
+    | "messageId"
+    | "figUploadId"
+    | "imageUploadId"
+    | "figUploadId"
+    | "imageUploadId"
+    | "thumbnailUploadId"
+    | "figUpload"
+    | "imageUpload"
+    | "thumbnailUpload"
+    | "createdAt"
+    | "updatedAt"
+  > {
   figUpload?: CreateImageUploadData;
   imageUpload?: CreateImageUploadData;
   thumbnailUpload?: CreateImageUploadData;

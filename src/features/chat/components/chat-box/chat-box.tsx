@@ -4,8 +4,8 @@ import { Chat } from "@/lib/drizzle/drizzle-schema";
 import { useEffect } from "react";
 
 import { useChatStore } from "../../stores/chat-store";
-import { MessageInput } from "../message-input";
 import { ChatCycleList } from "../chat-cycle-list";
+import { MessageInput } from "../message-input";
 
 interface ChatBoxProps {
   chat?: Partial<Chat>;

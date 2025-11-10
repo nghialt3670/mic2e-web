@@ -1,4 +1,5 @@
 import { create } from "zustand";
+
 import { ChatCycleDetail } from "../types";
 
 interface ChatCycleStore {
@@ -19,6 +20,7 @@ export const useChatCycleStore = create<ChatCycleStore>((set) => ({
   setPage: (page: number) => set({ page }),
   setSize: (size: number) => set({ size }),
   setChatCycles: (chatCycles: ChatCycleDetail[]) => set({ chatCycles }),
-  addChatCycle: (chatCycle: ChatCycleDetail) => set((state) => ({ chatCycles: [...state.chatCycles, chatCycle] })),
+  addChatCycle: (chatCycle: ChatCycleDetail) =>
+    set((state) => ({ chatCycles: [...state.chatCycles, chatCycle] })),
   clearChatCycles: () => set({ chatCycles: [] }),
 }));

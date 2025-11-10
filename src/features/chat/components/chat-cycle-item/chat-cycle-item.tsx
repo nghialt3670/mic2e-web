@@ -1,14 +1,14 @@
-import { ChatCycleDetail } from "../../types";
 import { FC } from "react";
+
+import { ChatCycleDetail } from "../../types";
 import { MessageItem } from "../message-item";
 
 interface ChatCycleItemProps {
   chatCycle: ChatCycleDetail;
 }
 
-
 export const ChatCycleItem: FC<ChatCycleItemProps> = ({ chatCycle }) => {
-    const { requestMessage, responseMessage } = chatCycle;
+  const { requestMessage, responseMessage } = chatCycle;
 
   return (
     <div className="flex flex-col justify-start items-center h-full w-full overflow-y-scroll pr-2 pl-6">

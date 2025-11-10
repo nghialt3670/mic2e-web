@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 
-import { useChatStore } from "../../stores/chat-store";
-import { useChatCycleStore } from "../../stores/chat-cycle-store";
 import { getChatCyclePage } from "../../actions/chat-cycle-actions";
+import { useChatCycleStore } from "../../stores/chat-cycle-store";
+import { useChatStore } from "../../stores/chat-store";
 import { ChatCycleItem } from "../chat-cycle-item";
 
 export const ChatCycleList = () => {
@@ -21,7 +21,7 @@ export const ChatCycleList = () => {
         size,
       });
       if (!chatCyclePage?.items) return;
-        setChatCycles(chatCyclePage.items);
+      setChatCycles(chatCyclePage.items);
     };
     fetchChatCycles();
   }, [chat, page, size, setChatCycles]);
