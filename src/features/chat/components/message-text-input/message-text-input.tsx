@@ -1,26 +1,39 @@
 "use client";
 
-import { Box, Icon, MousePointerClick, SquareDashedMousePointer, SquareMousePointer } from "lucide-react";
-import { Mention, MentionsInput, OnChangeHandlerFunc, SuggestionDataItem } from "react-mentions";
-import { InteractionType, useInteractionStore } from "../../stores/interaction-store";
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from "@/components/ui/item"
-import { useInputAttachmentStore } from "../../stores/input-attachment-store";
+} from "@/components/ui/item";
+import {
+  Box,
+  Icon,
+  MousePointerClick,
+  SquareDashedMousePointer,
+  SquareMousePointer,
+} from "lucide-react";
+import { useEffect, useRef } from "react";
+import {
+  Mention,
+  MentionsInput,
+  OnChangeHandlerFunc,
+  SuggestionDataItem,
+} from "react-mentions";
 import stringToColor from "string-to-color";
 import { v4 } from "uuid";
-import { useEffect, useRef } from "react";
+
+import { useInputAttachmentStore } from "../../stores/input-attachment-store";
+import {
+  InteractionType,
+  useInteractionStore,
+} from "../../stores/interaction-store";
 
 interface MessageTextInputProps {
   value: string;
   onChange: (value: string) => void;
 }
-
-
 
 const extractMentions = (text: string) => {
   const regex = /@\[([^\]]+)\]\(([^)]+)\)/g;
@@ -33,15 +46,51 @@ const extractMentions = (text: string) => {
 };
 
 const specialChars = [
-  "!", "\"", "#", "$", "%", "&", "'", "(", ")", "*",
-  "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?",
-  "@", "[", "\\", "]", "^", "_", "`", "{", "|", "}", "~",
-  " ", "\t", "\n", "\r", "\f", "\v", "\u00A0"
+  "!",
+  '"',
+  "#",
+  "$",
+  "%",
+  "&",
+  "'",
+  "(",
+  ")",
+  "*",
+  "+",
+  ",",
+  "-",
+  ".",
+  "/",
+  ":",
+  ";",
+  "<",
+  "=",
+  ">",
+  "?",
+  "@",
+  "[",
+  "\\",
+  "]",
+  "^",
+  "_",
+  "`",
+  "{",
+  "|",
+  "}",
+  "~",
+  " ",
+  "\t",
+  "\n",
+  "\r",
+  "\f",
+  "\v",
+  "\u00A0",
 ];
 
-
-
-export const MessageTextInput = ({ value, onChange }: MessageTextInputProps) => {
+export const MessageTextInput = ({
+  value,
+  onChange,
+}: MessageTextInputProps) => {
   const { getInputAttachments } = useInputAttachmentStore();
   const inputAttachments = getInputAttachments();
   const { updateCurrentType, getReferences } = useInteractionStore();
@@ -63,7 +112,10 @@ export const MessageTextInput = ({ value, onChange }: MessageTextInputProps) => 
           // Only replace the last occurrence (most recent mention)
           const lastMatch = matches[matches.length - 1];
           const newMarkup = `${specialChars[prevIndex]}[${lastMatch[1]}](${lastMatch[2]})`;
-          const newValue = value.substring(0, lastMatch.index!) + newMarkup + value.substring(lastMatch.index! + lastMatch[0].length);
+          const newValue =
+            value.substring(0, lastMatch.index!) +
+            newMarkup +
+            value.substring(lastMatch.index! + lastMatch[0].length);
           onChange(newValue);
         }
       }
@@ -78,21 +130,26 @@ export const MessageTextInput = ({ value, onChange }: MessageTextInputProps) => 
     }
   };
 
-  const handleChange: OnChangeHandlerFunc = (event, newValue, newPlainTextValue, mentions) => {
+  const handleChange: OnChangeHandlerFunc = (
+    event,
+    newValue,
+    newPlainTextValue,
+    mentions,
+  ) => {
     onChange(event.target.value);
     mentionsRef.current = mentions.map((mention) => mention.id as string);
   };
 
   const renderSuggestion = (suggestion: SuggestionDataItem) => {
-    const option = currentReference.options.find((opt) => opt.id === suggestion.id);
+    const option = currentReference.options.find(
+      (opt) => opt.id === suggestion.id,
+    );
     const Icon = option?.icon || Box;
     return (
       <Item variant="outline">
         <ItemContent>
           <ItemTitle>{`@${option?.display}`}</ItemTitle>
-          <ItemDescription>
-            {option?.description}
-          </ItemDescription>
+          <ItemDescription>{option?.description}</ItemDescription>
         </ItemContent>
         <ItemActions>
           <Icon className="size-5" />
@@ -106,12 +163,13 @@ export const MessageTextInput = ({ value, onChange }: MessageTextInputProps) => 
   };
 
   const renderMentions = () => {
-    console.log(references);
     return references.map((reference, index) => {
-      const suggestions = allowMention ? reference.options.map((opt) => ({
-        id: opt.id,
-        display: opt.display,
-      })) : [];
+      const suggestions = allowMention
+        ? reference.options.map((opt) => ({
+            id: opt.id,
+            display: opt.display,
+          }))
+        : [];
       if (index === references.length - 1) {
         return (
           <Mention
@@ -126,7 +184,7 @@ export const MessageTextInput = ({ value, onChange }: MessageTextInputProps) => 
               backgroundColor: reference.color,
             }}
           />
-        )
+        );
       }
       return (
         <Mention
@@ -141,9 +199,9 @@ export const MessageTextInput = ({ value, onChange }: MessageTextInputProps) => 
             backgroundColor: reference.color,
           }}
         />
-      )
-    })
-  }
+      );
+    });
+  };
 
   return (
     <MentionsInput
@@ -155,19 +213,19 @@ export const MessageTextInput = ({ value, onChange }: MessageTextInputProps) => 
       style={{
         control: {
           fontSize: 16,
-          fontWeight: 'normal',
+          fontWeight: "normal",
         },
-        '&multiLine': {
+        "&multiLine": {
           control: {
             minHeight: 36,
           },
           highlighter: {
             padding: 6,
-            border: '1px solid transparent',
+            border: "1px solid transparent",
           },
           input: {
             padding: 6,
-            border: '1px solid transparent',
+            border: "1px solid transparent",
             outline: 0,
             minHeight: 36,
           },

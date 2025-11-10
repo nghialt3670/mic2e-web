@@ -1,20 +1,37 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { InteractionType } from "@/features/chat/stores/interaction-store";
 import {
   createFigFromObject,
   resizeAndZoomCanvas,
 } from "@/lib/fabric/fabric-utils";
 import { to } from "await-to-js";
-import { Canvas, Circle, Group, TPointerEvent, TPointerEventInfo } from "fabric";
+import {
+  Canvas,
+  Circle,
+  Group,
+  TPointerEvent,
+  TPointerEventInfo,
+} from "fabric";
 import { AlertCircleIcon } from "lucide-react";
 import { FC } from "react";
 import { useEffect, useRef, useState } from "react";
-import { InteractionType } from "@/features/chat/stores/interaction-store";
+
 interface FigCanvasProps {
   value: Record<string, any>;
   onChange?: (value: Record<string, any>) => void;
-  onMouseDown?: (canvas: Canvas, event: TPointerEventInfo<TPointerEvent>) => void;
-  onMouseUp?: (canvas: Canvas, event1: TPointerEventInfo<TPointerEvent>, event2: TPointerEventInfo<TPointerEvent>) => void;
-  onMouseMove?: (canvas: Canvas, event: TPointerEventInfo<TPointerEvent>) => void;
+  onMouseDown?: (
+    canvas: Canvas,
+    event: TPointerEventInfo<TPointerEvent>,
+  ) => void;
+  onMouseUp?: (
+    canvas: Canvas,
+    event1: TPointerEventInfo<TPointerEvent>,
+    event2: TPointerEventInfo<TPointerEvent>,
+  ) => void;
+  onMouseMove?: (
+    canvas: Canvas,
+    event: TPointerEventInfo<TPointerEvent>,
+  ) => void;
   maxWidth?: number;
   maxHeight?: number;
 }
@@ -29,10 +46,12 @@ export const FigCanvas: FC<FigCanvasProps> = ({
   maxHeight = 600,
 }) => {
   const canvasElementRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvasRef = useRef<Canvas | null>(null);  
+  const fabricCanvasRef = useRef<Canvas | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const mouseDownEventRef = useRef<TPointerEventInfo<TPointerEvent> | null>(null);
+  const mouseDownEventRef = useRef<TPointerEventInfo<TPointerEvent> | null>(
+    null,
+  );
   const mouseUpEventRef = useRef<TPointerEventInfo<TPointerEvent> | null>(null);
 
   useEffect(() => {

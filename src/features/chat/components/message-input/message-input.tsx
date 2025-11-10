@@ -5,16 +5,12 @@ import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { clientEnv } from "@/utils/client/client-env";
 import { getImageDimensions } from "@/utils/client/file-readers";
 import { createImageThumbnail } from "@/utils/client/image";
-import {
-  Box,
-  Loader2,
-  MousePointer2,
-  Send,
-  WandSparkles,
-} from "lucide-react";
+import { to } from "await-to-js";
+import { Box, Loader2, MousePointer2, Send, WandSparkles } from "lucide-react";
+import { MentionData, MentionInput, MentionOption } from "mentis";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { MentionOption, MentionData, MentionInput } from "mentis";
+import { toast } from "sonner";
 import { v4 } from "uuid";
 
 import { createChat } from "../../actions/chat-actions/create-chat";
@@ -31,13 +27,14 @@ import {
   useAnnotationStore,
 } from "../../stores/annotation-store";
 import { useChatStore } from "../../stores/chat-store";
-import { InputAttachment, useInputAttachmentStore } from "../../stores/input-attachment-store";
-import { useMessageStore } from "../../stores/message-store";
-import { MessageAttachmentInput } from "../message-attachment-input";
-import { InputAttachmentList } from "../input-attachment-list";
-import { to } from "await-to-js";
-import { toast } from "sonner";
+import {
+  InputAttachment,
+  useInputAttachmentStore,
+} from "../../stores/input-attachment-store";
 import { useInteractionStore } from "../../stores/interaction-store";
+import { useMessageStore } from "../../stores/message-store";
+import { InputAttachmentList } from "../input-attachment-list";
+import { MessageAttachmentInput } from "../message-attachment-input";
 import { MessageTextInput } from "../message-text-input";
 
 const mentionOptions: MentionOption[] = [
@@ -52,7 +49,7 @@ const mentionOptions: MentionOption[] = [
   {
     label: "image",
     value: "image",
-  }
+  },
 ];
 
 export const MessageInput = () => {
@@ -63,7 +60,7 @@ export const MessageInput = () => {
   const { clearInputAttachments, getInputAttachments } =
     useInputAttachmentStore();
   const attachments = getInputAttachments();
-  const isPending = 
+  const isPending =
     chat?.status === "requesting" || chat?.status === "responding";
   const canSend = text.trim() !== "" && !isPending;
 
@@ -87,7 +84,9 @@ export const MessageInput = () => {
     const chatId = await getChatId();
     if (!chatId) return;
 
-    const [error, uploadedAttachments] = await to(uploadInputAttachments(attachments));
+    const [error, uploadedAttachments] = await to(
+      uploadInputAttachments(attachments),
+    );
     if (error) {
       toast.error("Failed to upload attachments");
       return;
@@ -183,7 +182,9 @@ export const MessageInput = () => {
   );
 };
 
-const uploadInputAttachments = async (attachments: InputAttachment[]): Promise<CreateAttachmentData[]> => {
+const uploadInputAttachments = async (
+  attachments: InputAttachment[],
+): Promise<CreateAttachmentData[]> => {
   const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
   return await Promise.all(
     attachments.map(async (attachment) => {

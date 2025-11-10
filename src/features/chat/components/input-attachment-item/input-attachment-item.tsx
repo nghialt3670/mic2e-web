@@ -1,13 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { FigCanvas } from "@/features/edit/components/fig-canvas/fig-canvas";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Canvas,
+  Circle,
+  FabricImage,
+  Group,
+  Rect,
+  TPointerEvent,
+  TPointerEventInfo,
+} from "fabric";
 import { Box, Image as ImageIcon, MousePointer2, X } from "lucide-react";
 
 import {
   InputAttachment,
   useInputAttachmentStore,
 } from "../../stores/input-attachment-store";
-import { Canvas, Group, Rect, Circle, TPointerEvent, TPointerEventInfo, FabricImage } from "fabric";
 import { useInteractionStore } from "../../stores/interaction-store";
 
 interface InputAttachmentItemProps {
@@ -17,7 +25,8 @@ interface InputAttachmentItemProps {
 export const InputAttachmentItem = ({
   attachment,
 }: InputAttachmentItemProps) => {
-  const { removeInputAttachment, setInputAttachment } = useInputAttachmentStore();
+  const { removeInputAttachment, setInputAttachment } =
+    useInputAttachmentStore();
   const { getCurrentReference, addReference } = useInteractionStore();
   const isMobile = useIsMobile();
   const { type, color } = getCurrentReference();
@@ -27,8 +36,11 @@ export const InputAttachmentItem = ({
   const handleRemove = () => {
     removeInputAttachment(attachment.imageFile.name);
   };
-  
-  const handleMouseDown = (canvas: Canvas, event: TPointerEventInfo<TPointerEvent>) => {
+
+  const handleMouseDown = (
+    canvas: Canvas,
+    event: TPointerEventInfo<TPointerEvent>,
+  ) => {
     const fig = canvas.getObjects()[0] as Group;
     if (type === "point") {
       const point = new Circle({
@@ -48,7 +60,7 @@ export const InputAttachmentItem = ({
       const rect = new Rect({
         left: 0,
         top: 0,
-        width: image.width  - strokeWidth,
+        width: image.width - strokeWidth,
         height: image.height - strokeWidth,
         fill: "transparent",
         stroke: color,
@@ -63,7 +75,11 @@ export const InputAttachmentItem = ({
     }
   };
 
-  const handleMouseUp = (canvas: Canvas, event1: TPointerEventInfo<TPointerEvent>, event2: TPointerEventInfo<TPointerEvent>) => {
+  const handleMouseUp = (
+    canvas: Canvas,
+    event1: TPointerEventInfo<TPointerEvent>,
+    event2: TPointerEventInfo<TPointerEvent>,
+  ) => {
     if (type !== "box") return;
     const rect = new Rect({
       left: event1.scenePoint.x,
@@ -81,11 +97,10 @@ export const InputAttachmentItem = ({
   };
 
   const handleFigObjectChange = (figObject: Record<string, any>) => {
-    // console.log(figObject);
-    // setInputAttachment(attachment.imageFile.name, {
-    //   ...attachment,
-    //   figObject,
-    // });
+    setInputAttachment(attachment.imageFile.name, {
+      ...attachment,
+      figObject,
+    });
   };
 
   switch (attachment.type) {
