@@ -1,6 +1,7 @@
 import { drizzleClient } from "@/lib/drizzle";
 
-const attachmentDetail = drizzleClient.query.attachments.findFirst({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _attachmentDetail = drizzleClient.query.attachments.findFirst({
   with: {
     figUpload: true,
     imageUpload: true,
@@ -8,4 +9,6 @@ const attachmentDetail = drizzleClient.query.attachments.findFirst({
   },
 });
 
-export type AttachmentDetail = NonNullable<Awaited<typeof attachmentDetail>>;
+export type AttachmentDetail = NonNullable<
+  Awaited<typeof _attachmentDetail>
+>;

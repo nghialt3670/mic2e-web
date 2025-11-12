@@ -1,5 +1,4 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { InteractionType } from "@/features/chat/stores/interaction-store";
 import {
   createFigFromObject,
   resizeAndZoomCanvas,
@@ -7,14 +6,12 @@ import {
 import { to } from "await-to-js";
 import {
   Canvas,
-  Circle,
   Group,
   TPointerEvent,
   TPointerEventInfo,
 } from "fabric";
 import { AlertCircleIcon } from "lucide-react";
-import { FC } from "react";
-import { useEffect, useRef, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 
 interface FigCanvasProps {
   value: Record<string, any>;
@@ -89,7 +86,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
     }
 
     return disposeCanvas;
-  }, [figObject]);
+  }, [figObject, maxWidth, maxHeight]);
 
   useEffect(() => {
     if (!fabricCanvasRef.current) return;
@@ -125,7 +122,8 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       canvas.off("mouse:up", handleMouseUp);
       canvas.off("mouse:move", handleMouseMove);
     };
-  }, [fabricCanvasRef.current, onFigObjectChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onFigObjectChange]);
 
   return (
     <div className="w-full h-full bg-slate-100 relative flex items-center justify-center overflow-hidden">

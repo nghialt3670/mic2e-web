@@ -110,7 +110,7 @@ export const FigCanvasItem: FC<FigCanvasItemProps> = ({ figObject }) => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, [canvasRef.current, containerRef.current]);
+  }, []);
 
   return (
     <div className="w-full h-full bg-slate-100 relative flex items-center justify-center overflow-hidden">

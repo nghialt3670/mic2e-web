@@ -1,5 +1,4 @@
 import { supabaseClient } from "@/lib/supabase/supabase-client";
-import { clientEnv } from "@/utils/client/client-env";
 
 export async function uploadFileToSupabase(
   file: File,

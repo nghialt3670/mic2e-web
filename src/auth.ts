@@ -21,7 +21,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             .update(users)
             .set({
               name: user.name,
-              image: user.image,
+              imageUrl: user.image,
               updatedAt: new Date(),
             })
             .where(eq(users.email, user.email!))
@@ -33,7 +33,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             .values({
               email: user.email!,
               name: user.name,
-              image: user.image,
+              imageUrl: user.image,
             })
             .returning();
           dbUser = newUser;

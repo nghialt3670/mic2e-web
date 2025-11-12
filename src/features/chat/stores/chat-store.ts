@@ -1,4 +1,4 @@
-import { Chat, ChatStatus, Message } from "@/lib/drizzle/drizzle-schema";
+import { Chat, ChatStatus } from "@/lib/drizzle/drizzle-schema";
 import { create } from "zustand";
 
 interface ChatStore {

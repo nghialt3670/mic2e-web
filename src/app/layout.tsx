@@ -1,6 +1,3 @@
-import { Footer } from "@/components/common/footer";
-import { Header } from "@/components/common/header";
-import { Sidebar } from "@/components/common/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";

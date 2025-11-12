@@ -1,6 +1,7 @@
 import { drizzleClient } from "@/lib/drizzle";
 
-const messageDetail = drizzleClient.query.messages.findFirst({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _messageDetail = drizzleClient.query.messages.findFirst({
   with: {
     attachments: {
       with: {
@@ -12,4 +13,4 @@ const messageDetail = drizzleClient.query.messages.findFirst({
   },
 });
 
-export type MessageDetail = NonNullable<Awaited<typeof messageDetail>>;
+export type MessageDetail = NonNullable<Awaited<typeof _messageDetail>>;

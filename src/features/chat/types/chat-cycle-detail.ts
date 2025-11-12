@@ -1,6 +1,7 @@
 import { drizzleClient } from "@/lib/drizzle";
 
-const chatCycleDetail = drizzleClient.query.chatCycles.findFirst({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _chatCycleDetail = drizzleClient.query.chatCycles.findFirst({
   with: {
     requestMessage: {
       with: {
@@ -27,4 +28,6 @@ const chatCycleDetail = drizzleClient.query.chatCycles.findFirst({
   },
 });
 
-export type ChatCycleDetail = NonNullable<Awaited<typeof chatCycleDetail>>;
+export type ChatCycleDetail = NonNullable<
+  Awaited<typeof _chatCycleDetail>
+>;

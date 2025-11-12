@@ -17,8 +17,10 @@ import { desc, eq } from "drizzle-orm";
 
 import { AttachmentDetail, MessageDetail } from "../../types";
 
-export interface CreateImageUploadData
-  extends Omit<ImageUpload, "id" | "createdAt" | "updatedAt"> {}
+export type CreateImageUploadData = Omit<
+  ImageUpload,
+  "id" | "createdAt" | "updatedAt"
+>;
 
 export interface CreateAttachmentData
   extends Omit<
@@ -88,9 +90,14 @@ export const createMessage = withErrorHandler(
 
       const attachmentRecords = await Promise.all(
         message.attachments.map(async (attachment) => {
+          if (!attachment.figUpload) {
+            throw new Error("figUpload is required for fig attachments");
+          }
+
+          const figUploadData = attachment.figUpload;
           const figUpload = await drizzleClient
             .insert(imageUploads)
-            .values(attachment.figUpload)
+            .values(figUploadData)
             .returning()
             .then((rows) => rows[0]);
 

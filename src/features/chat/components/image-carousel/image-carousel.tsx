@@ -20,7 +20,7 @@ export const ImageCarousel = ({
   images,
   onRemoveImage,
 }: ImageCarouselProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [, setCurrentIndex] = useState(0);
 
   if (images.length === 0) return null;
 
@@ -50,6 +50,7 @@ export const ImageCarousel = ({
               return (
                 <CarouselItem key={index} className="pl-1 basis-1/3">
                   <div className="relative group aspect-square">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={imageSrc}
                       alt={`Upload ${index + 1}`}

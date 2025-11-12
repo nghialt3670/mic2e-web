@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { LogInIcon } from "lucide-react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export const Login = () => {

@@ -6,51 +6,28 @@ import { clientEnv } from "@/utils/client/client-env";
 import { getImageDimensions } from "@/utils/client/file-readers";
 import { createImageThumbnail } from "@/utils/client/image";
 import { to } from "await-to-js";
-import { Box, Loader2, MousePointer2, Send, WandSparkles } from "lucide-react";
-import { MentionData, MentionInput, MentionOption } from "mentis";
+import { Loader2, Send, WandSparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { v4 } from "uuid";
 
 import { createChat } from "../../actions/chat-actions/create-chat";
 import { getResponse } from "../../actions/chat-actions/get-response";
 import {
-  CreateMessageData,
   CreateMessageRequest,
   createMessage,
 } from "../../actions/message-actions/create-message";
 import { CreateAttachmentData } from "../../actions/message-actions/create-message";
-import {
-  getNextColor,
-  resetColorIndex,
-  useAnnotationStore,
-} from "../../stores/annotation-store";
 import { useChatStore } from "../../stores/chat-store";
 import {
   InputAttachment,
   useInputAttachmentStore,
 } from "../../stores/input-attachment-store";
-import { useInteractionStore } from "../../stores/interaction-store";
 import { useMessageStore } from "../../stores/message-store";
 import { InputAttachmentList } from "../input-attachment-list";
 import { MessageAttachmentInput } from "../message-attachment-input";
 import { MessageTextInput } from "../message-text-input";
-
-const mentionOptions: MentionOption[] = [
-  {
-    label: "box",
-    value: "box",
-  },
-  {
-    label: "point",
-    value: "point",
-  },
-  {
-    label: "image",
-    value: "image",
-  },
-];
 
 export const MessageInput = () => {
   const pathname = usePathname();
@@ -130,10 +107,6 @@ export const MessageInput = () => {
     if (!pathname.includes(`/chats/${chatId}`)) {
       history.replaceState(null, "", `/chats/${chatId}`);
     }
-  };
-
-  const handleMentionChange = (value: MentionData) => {
-    setText(value.dataValue);
   };
 
   return (

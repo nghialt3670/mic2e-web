@@ -2,7 +2,7 @@ import { ApiResponse } from "@/types/api-types";
 
 import { getSessionUserId } from "./session";
 
-export function withErrorHandler<TArgs extends any, TReturn>(
+export function withErrorHandler<TArgs, TReturn>(
   action: (args: TArgs) => Promise<ApiResponse<TReturn>>,
 ): (args: TArgs) => Promise<ApiResponse<TReturn>> {
   return async (args: TArgs) => {

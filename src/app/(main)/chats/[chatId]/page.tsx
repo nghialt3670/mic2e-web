@@ -1,4 +1,3 @@
-import { auth } from "@/auth";
 import { ChatBox } from "@/features/chat/components/chat-box";
 import { ChatNotFound } from "@/features/chat/components/chat-not-found";
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";

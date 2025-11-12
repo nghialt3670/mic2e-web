@@ -7,13 +7,7 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
-import {
-  Box,
-  Icon,
-  MousePointerClick,
-  SquareDashedMousePointer,
-  SquareMousePointer,
-} from "lucide-react";
+import { Box } from "lucide-react";
 import { useEffect, useRef } from "react";
 import {
   Mention,
@@ -21,29 +15,14 @@ import {
   OnChangeHandlerFunc,
   SuggestionDataItem,
 } from "react-mentions";
-import stringToColor from "string-to-color";
-import { v4 } from "uuid";
 
 import { useInputAttachmentStore } from "../../stores/input-attachment-store";
-import {
-  InteractionType,
-  useInteractionStore,
-} from "../../stores/interaction-store";
+import { useInteractionStore } from "../../stores/interaction-store";
 
 interface MessageTextInputProps {
   value: string;
   onChange: (value: string) => void;
 }
-
-const extractMentions = (text: string) => {
-  const regex = /@\[([^\]]+)\]\(([^)]+)\)/g;
-  const mentions: { display: string; id: string }[] = [];
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    mentions.push({ display: match[1], id: match[2] });
-  }
-  return mentions;
-};
 
 const specialChars = [
   "!",
@@ -133,10 +112,10 @@ export const MessageTextInput = ({
   const handleChange: OnChangeHandlerFunc = (
     event,
     newValue,
-    newPlainTextValue,
+    _newPlainTextValue,
     mentions,
   ) => {
-    onChange(event.target.value);
+    onChange(newValue);
     mentionsRef.current = mentions.map((mention) => mention.id as string);
   };
 
@@ -173,6 +152,7 @@ export const MessageTextInput = ({
       if (index === references.length - 1) {
         return (
           <Mention
+            key={`mention-${index}`}
             trigger="@"
             data={suggestions}
             onAdd={handleAdd}
@@ -188,6 +168,7 @@ export const MessageTextInput = ({
       }
       return (
         <Mention
+          key={`mention-${index}`}
           trigger={specialChars[index]}
           data={[]}
           onAdd={handleAdd}
