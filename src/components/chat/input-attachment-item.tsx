@@ -17,6 +17,8 @@ import {
   useInputAttachmentStore,
 } from "../../stores/input-attachment-store";
 import { useInteractionStore } from "../../stores/interaction-store";
+import { useReferenceStore } from "@/stores/reference-store";
+import { v4 } from "uuid";
 
 interface InputAttachmentItemProps {
   attachment: InputAttachment;
@@ -27,9 +29,10 @@ export const InputAttachmentItem = ({
 }: InputAttachmentItemProps) => {
   const { removeInputAttachment, setInputAttachment } =
     useInputAttachmentStore();
-  const { getCurrentReference, addReference } = useInteractionStore();
+  const { type } = useInteractionStore();
+  const { getCurrentReference, setCurrentReferenceTargetId } = useReferenceStore();
+  const currentReference = getCurrentReference();
   const isMobile = useIsMobile();
-  const { type, color } = getCurrentReference();
 
   const isInteractive = type !== "none";
 
@@ -41,9 +44,13 @@ export const InputAttachmentItem = ({
     canvas: Canvas,
     event: TPointerEventInfo<TPointerEvent>,
   ) => {
+    if (!currentReference) return;
+    const { color } = currentReference;
     const fig = canvas.getObjects()[0] as Group;
     if (type === "point") {
+      const pointId = v4();
       const point = new Circle({
+        id: pointId,
         left: event.scenePoint.x,
         top: event.scenePoint.y,
         radius: 5 / canvas.getZoom(),
@@ -52,12 +59,13 @@ export const InputAttachmentItem = ({
         originY: "center",
       });
       fig.add(point);
-      addReference();
+      setCurrentReferenceTargetId(pointId);
       canvas.renderAll();
     } else if (type === "image") {
+      const figId = fig.get("id") as string;
       const image = fig.getObjects()[0] as FabricImage;
       const strokeWidth = Math.ceil(5 / canvas.getZoom());
-      const rect = new Rect({
+      const frame = new Rect({
         left: 0,
         top: 0,
         width: image.width - strokeWidth,
@@ -69,8 +77,9 @@ export const InputAttachmentItem = ({
         ry: 12,
         selectable: false,
       });
-      fig.add(rect);
-      addReference();
+      // Insert rect as the second object (after the base image at index 0)
+      fig.insertAt(1, frame);
+      setCurrentReferenceTargetId(figId);
       canvas.renderAll();
     }
   };
@@ -80,8 +89,12 @@ export const InputAttachmentItem = ({
     event1: TPointerEventInfo<TPointerEvent>,
     event2: TPointerEventInfo<TPointerEvent>,
   ) => {
+    if (!currentReference) return;
+    const { color } = currentReference;
     if (type !== "box") return;
-    const rect = new Rect({
+    const boxId = v4();
+    const box = new Rect({
+      id: boxId,
       left: event1.scenePoint.x,
       top: event1.scenePoint.y,
       width: event2.scenePoint.x - event1.scenePoint.x,
@@ -91,9 +104,9 @@ export const InputAttachmentItem = ({
       strokeWidth: 5 / canvas.getZoom(),
     });
     const fig = canvas.getObjects()[0] as Group;
-    fig.add(rect);
+    fig.add(box);
+    setCurrentReferenceTargetId(boxId);
     canvas.renderAll();
-    addReference();
   };
 
   const handleFigObjectChange = (figObject: Record<string, any>) => {

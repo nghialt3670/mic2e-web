@@ -7,17 +7,21 @@ import {
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
-import { Box } from "lucide-react";
+import { Box, LucideIcon, MousePointerClick, SquareDashedMousePointer, SquareMousePointer } from "lucide-react";
 import { useEffect, useRef } from "react";
 import {
   Mention,
+  MentionItem,
   MentionsInput,
   OnChangeHandlerFunc,
   SuggestionDataItem,
 } from "react-mentions";
 
 import { useInputAttachmentStore } from "../../stores/input-attachment-store";
-import { useInteractionStore } from "../../stores/interaction-store";
+import { InteractionType, useInteractionStore } from "../../stores/interaction-store";
+import { useReferenceStore } from "@/stores/reference-store";
+import stringToColor from "string-to-color";
+import { v4 } from "uuid";
 
 interface MessageTextInputProps {
   value: string;
@@ -66,23 +70,58 @@ const specialChars = [
   "\u00A0",
 ];
 
+interface InteractionOption {
+  id: string;
+  display: string;
+  type: InteractionType;
+  icon: LucideIcon;
+  description: string;
+}
+
+const createInteractionOptions = (): InteractionOption[] => {
+  const id = v4();
+  return [
+    {
+      id: `box_${id}`,
+      display: "box",
+      type: "box",
+      icon: SquareDashedMousePointer,
+      description: "Draw a bounding box on the image",
+    },
+    {
+      id: `point_${id}`,
+      display: "point",
+      type: "point",
+      icon: MousePointerClick,
+      description: "Mark a point on the image",
+    },
+    {
+      id: `image_${id}`,
+      display: "image",
+      type: "image",
+      icon: SquareMousePointer,
+      description: "Select an image",
+    },
+  ];
+}
+
 export const MessageTextInput = ({
   value,
   onChange,
 }: MessageTextInputProps) => {
-  const { getInputAttachments } = useInputAttachmentStore();
+  const { getInputAttachments, removeObjectById } = useInputAttachmentStore();
   const inputAttachments = getInputAttachments();
-  const { updateCurrentType, getReferences } = useInteractionStore();
-  const allowMention = inputAttachments.length > 0;
-  const mentionsRef = useRef<string[]>([]);
-  const references = getReferences();
-  const currentReference = references[references.length - 1];
+  const { color, setType, setColor } = useInteractionStore();
+  const { references, addReference, getCurrentReference, getReferenceById, removeReferenceById } = useReferenceStore();
   const prevReferencesLengthRef = useRef(references.length);
+  const allowMention = inputAttachments.length > 0;
+  const mentionsRef = useRef<MentionItem[]>([]);
+  const options = createInteractionOptions();
 
   // When a new reference is added, update the markup of the previous latest mention
   useEffect(() => {
     if (references.length > prevReferencesLengthRef.current) {
-      const prevIndex = references.length - 2;
+      const prevIndex = references.length - 1;
       if (prevIndex >= 0 && prevIndex < specialChars.length) {
         // Replace the old @ markup with the special character markup for the previous reference
         const oldMarkup = /@\[([^\]]+)\]\(([^)]+)\)/g;
@@ -103,24 +142,40 @@ export const MessageTextInput = ({
   }, [references.length, value, onChange]);
 
   const handleAdd = (id: string | number) => {
-    const option = currentReference.options.find((opt) => opt.id === id);
+    const option = options.find((opt) => opt.id === id);
     if (option) {
-      updateCurrentType(option.type);
+      setType(option.type);
+      addReference({
+        id: option.id,
+        display: option.display,
+        color: String(color),
+      });
+      setColor(stringToColor(v4()));
     }
   };
 
   const handleChange: OnChangeHandlerFunc = (
-    event,
+    _event,
     newValue,
     _newPlainTextValue,
     mentions,
   ) => {
     onChange(newValue);
-    mentionsRef.current = mentions.map((mention) => mention.id as string);
+    if (mentions.length < mentionsRef.current.length) {
+      const removedMention = mentionsRef.current.find((mention) => !mentions.some((m) => m.id === mention.id));
+      if (removedMention) {
+        const reference = getReferenceById(removedMention.id);
+        if (reference?.targetId) {
+          removeObjectById(reference.targetId);
+        }
+        removeReferenceById(removedMention.id);
+      }
+    }
+    mentionsRef.current = mentions
   };
 
   const renderSuggestion = (suggestion: SuggestionDataItem) => {
-    const option = currentReference.options.find(
+    const option = options.find(
       (opt) => opt.id === suggestion.id,
     );
     const Icon = option?.icon || Box;
@@ -142,46 +197,38 @@ export const MessageTextInput = ({
   };
 
   const renderMentions = () => {
+    const suggestions = allowMention ? options : [];
     return references.map((reference, index) => {
-      const suggestions = allowMention
-        ? reference.options.map((opt) => ({
-            id: opt.id,
-            display: opt.display,
-          }))
-        : [];
-      if (index === references.length - 1) {
-        return (
-          <Mention
-            key={`mention-${index}`}
-            trigger="@"
-            data={suggestions}
-            onAdd={handleAdd}
-            renderSuggestion={renderSuggestion}
-            markup="@[__display__](__id__)"
-            displayTransform={displayTransform}
-            appendSpaceOnAdd={true}
-            style={{
-              backgroundColor: reference.color,
-            }}
-          />
-        );
-      }
+      const trigger = specialChars[index];
+      const color = (!reference.targetId && index !== references.length - 1) ? "transparent" : reference.color;
       return (
         <Mention
           key={`mention-${index}`}
-          trigger={specialChars[index]}
+          trigger={trigger}
           data={[]}
-          onAdd={handleAdd}
           renderSuggestion={renderSuggestion}
-          markup={`${specialChars[index]}[__display__](__id__)`}
+          markup={`${trigger}[__display__](__id__)`}
           displayTransform={displayTransform}
-          appendSpaceOnAdd={true}
           style={{
-            backgroundColor: reference.color,
+            backgroundColor: color,
           }}
         />
       );
-    });
+    }).concat(
+      <Mention
+        key={`mention-initial`}
+        trigger="@"
+        data={suggestions}
+        onAdd={handleAdd}
+        renderSuggestion={renderSuggestion}
+        markup="@[__display__](__id__)"
+        displayTransform={displayTransform}
+        appendSpaceOnAdd={true}
+        style={{
+          backgroundColor: color,
+        }}
+      />
+    );
   };
 
   return (

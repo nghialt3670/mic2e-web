@@ -106,7 +106,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       mouseUpEventRef.current = event;
       onMouseUp?.(canvas, event, mouseDownEventRef.current ?? event);
       const fig = canvas.getObjects()[0] as Group;
-      onFigObjectChange?.(fig.toObject());
+      onFigObjectChange?.(fig.toObject(["id"] as any));
     };
 
     const handleMouseMove = (event: TPointerEventInfo<TPointerEvent>) => {
