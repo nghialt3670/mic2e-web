@@ -1,5 +1,5 @@
-import { ChatBox } from "@/features/chat/components/chat-box";
-import { ChatNotFound } from "@/features/chat/components/chat-not-found";
+import { ChatBox } from "@/components/chat/chat-box";
+import { ChatNotFound } from "@/components/chat/chat-not-found";
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import { chats } from "@/lib/drizzle/drizzle-schema";
 import { getSessionUserId } from "@/utils/server/session";
