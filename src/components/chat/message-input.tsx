@@ -54,6 +54,8 @@ export const MessageInput = () => {
     return "";
   };
 
+  console.log(text)
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     updateChatStatus("requesting");

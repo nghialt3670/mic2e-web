@@ -43,8 +43,6 @@ export const useInputAttachmentStore = create<InputAttachmentStore>(
     removeObjectById: (id: string) =>
       set((state) => {
         const updatedMap = { ...state.inputAttachmentMap };
-
-        console.log(updatedMap);
         
         // Iterate through all attachments
         Object.entries(updatedMap).forEach(([key, attachment]) => {

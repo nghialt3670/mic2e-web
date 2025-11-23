@@ -57,22 +57,11 @@ export const createFigFromObject = async (
 ): Promise<Group> => {
   const fig = await Group.fromObject(obj);
 
-  // Enable sub-target checking on the Group to allow selecting objects inside it
-  // Make the Group non-selectable but allow its children to be selected
   fig.set({
     subTargetCheck: true,
     selectable: false,
-    evented: true,
+    evented: false,
     interactive: true,
-  });
-
-  // Configure all objects in the group
-  // First object (index 0) is non-selectable, others are selectable
-  fig.getObjects().forEach((obj, index) => {
-    obj.set({
-      selectable: index !== 0,
-      evented: true,
-    });
   });
 
   return fig;
