@@ -5,6 +5,7 @@ export interface Reference {
     value: string;
     label: string;
     color: string;
+    figId: string;
 }
 
 interface ReferenceStore {

@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  createFigFromObject,
   resizeAndZoomCanvas,
 } from "@/lib/fabric/fabric-utils";
 import { to } from "await-to-js";
@@ -16,12 +15,17 @@ import {
 } from "fabric";
 import { AlertCircleIcon } from "lucide-react";
 import { FC, useEffect, useRef, useState } from "react";
-import { canvasToFigCoords, createBox, createFigFrame, createPoint, createScribble } from "./fig-canvas.helper";
+import { canvasToFigCoords, createBox, createFigFrame, createPoint, createScribble, createFigFromObject } from "./fig-canvas.helper";
 
 interface FigCanvasProps {
   color: string;
   value: Record<string, any>;
   onChange?: (value: Record<string, any>) => void;
+  onPointAdded?: (point: Circle) => void;
+  onBoxAdded?: (box: Rect) => void;
+  onFigSelected?: (fig: Group) => void;
+  onScribbleAdded?: (scribble: Path) => void;
+  onObjectRemoved?: (object: Circle | Rect | Path) => void;
   maxWidth?: number;
   maxHeight?: number;
 }
@@ -30,6 +34,10 @@ export const FigCanvas: FC<FigCanvasProps> = ({
   color,
   value: figObject,
   onChange: onFigObjectChange,
+  onPointAdded,
+  onBoxAdded,
+  onFigSelected,
+  onScribbleAdded,
   maxWidth = 800,
   maxHeight = 600,
 }) => {
@@ -86,7 +94,8 @@ export const FigCanvas: FC<FigCanvasProps> = ({
         state.isArmedDraw = false;
         
         // Double click: create canvas-sized box
-        createFigFrame(canvas, color);
+        const figFrame = createFigFrame(canvas, color);
+        onFigSelected?.(figFrame);
         handleFigChange();
         return;
       }
@@ -202,12 +211,14 @@ export const FigCanvas: FC<FigCanvasProps> = ({
         // Drawing action completed
         if (state.isArmedDraw && state.startPoint) {
           // Armed draw: create box
-          createBox(state.startPoint, e.pointer, canvas, color);
+          const box = createBox(state.startPoint, e.pointer, canvas, color);
+          onBoxAdded?.(box);
           handleFigChange();
           state.isArmedDraw = false; // Disarm after creating box
         } else if (state.pathPoints.length >= 2) {
           // Direct draw: create scribble
-          createScribble(state.pathPoints, canvas, color);
+          const scribble = createScribble(state.pathPoints, canvas, color);
+          onScribbleAdded?.(scribble);
           handleFigChange();
         }
         
@@ -223,7 +234,8 @@ export const FigCanvas: FC<FigCanvasProps> = ({
         state.singleClickTimeout = setTimeout(() => {
           // Only create point if we didn't start a new interaction
           if (state.startPoint === clickPoint && !state.hasMoved && state.lastClickTime > 0) {
-            createPoint(clickPoint, canvas, color);
+            const point = createPoint(clickPoint, canvas, color);
+            onPointAdded?.(point);
             handleFigChange();
             state.isArmedDraw = true;
           }

@@ -1,4 +1,21 @@
 import { Canvas, Circle, FabricImage, Group, Path, Point, Rect } from "fabric";
+import { v4 } from "uuid";
+
+export const createFigFromObject = async (
+  obj: Record<string, any>,
+): Promise<Group> => {
+  const fig = await Group.fromObject(obj);
+
+  fig.set({
+    id: obj.id,
+    subTargetCheck: true,
+    selectable: false,
+    evented: false,
+    interactive: true,
+  });
+
+  return fig;
+};
 
 export const canvasToFigCoords = (point: Point, canvas: Canvas) => {
   const zoom = canvas.getZoom();
@@ -17,6 +34,7 @@ export const createPoint = (point: Point, canvas: Canvas, color: string) => {
   const zoom = canvas.getZoom();
 
   const circle = new Circle({
+    id: v4(),
     left: figCoords.x,
     top: figCoords.y,
     radius: 5 / zoom,
@@ -24,28 +42,22 @@ export const createPoint = (point: Point, canvas: Canvas, color: string) => {
     originX: "center",
     originY: "center",
     pointerEvents: "none",
-  });
-  circle.set("selectable", false);
-  circle.set("evented", false);
-  
+  });  
   fig.add(circle);
   canvas.requestRenderAll();
+  return circle;
 };
 
 export const createFigFrame = (canvas: Canvas, color: string) => {
   const fig = canvas.getObjects()[0] as Group;
   const zoom = canvas.getZoom();
-  
-  // Get the first object (the image) from the fig
-  const image = fig.getObjects()[0] as FabricImage;
-  if (!image) return;
-  
-  // Use the image's dimensions
+  const image = fig.getObjects()[0] as FabricImage;  
   const strokeWidth = 5 / zoom;
   const width = image.getScaledWidth() - strokeWidth;
   const height = image.getScaledHeight() - strokeWidth;
   
   const rect = new Rect({
+    id: v4(),
     left: 0,
     top: 0,
     width: width,
@@ -54,17 +66,13 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
     stroke: color,
     strokeWidth: 5 / zoom,
   });
-  rect.set("selectable", false);
-  rect.set("evented", false);
-  rect.set("pointerEvents", "none");
   fig.add(rect);
   canvas.requestRenderAll();
+  return fig;
 };
 
 export const createScribble = (points: Point[], canvas: Canvas, color: string) => {
-  const fig = canvas.getObjects()[0] as Group;
-  if (points.length < 2) return;
-  
+  const fig = canvas.getObjects()[0] as Group;  
   const figPoints = points.map(p => canvasToFigCoords(p, canvas));
   
   // Build SVG path string with smooth curves
@@ -85,16 +93,16 @@ export const createScribble = (points: Point[], canvas: Canvas, color: string) =
   
   const zoom = canvas.getZoom();
   const path = new Path(pathString, {
+    id: v4(),
     stroke: color,
     strokeWidth: 10 / zoom,
     fill: "",
     strokeLineCap: "round",
     strokeLineJoin: "round",
   });
-  path.set("selectable", false);
-  path.set("evented", false);
   fig.add(path);
   canvas.requestRenderAll();
+  return path;
 };
 
 export const createBox = (start: Point, end: Point, canvas: Canvas, color: string) => {
@@ -108,6 +116,7 @@ export const createBox = (start: Point, end: Point, canvas: Canvas, color: strin
   const height = Math.abs(figEnd.y - figStart.y);
   const zoom = canvas.getZoom();
   const rect = new Rect({
+    id: v4(),
     left,
     top,
     width,
@@ -115,10 +124,8 @@ export const createBox = (start: Point, end: Point, canvas: Canvas, color: strin
     fill: "transparent",
     stroke: color,
     strokeWidth: 5 / zoom,
-    selectable: true,
   });
-  rect.set("selectable", false);
-  rect.set("evented", false);
   fig.add(rect);
   canvas.requestRenderAll();
+  return rect;
 };

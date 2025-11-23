@@ -52,21 +52,6 @@ export const calculateZoomToFit = (
   return Math.min(widthRatio, heightRatio);
 };
 
-export const createFigFromObject = async (
-  obj: Record<string, any>,
-): Promise<Group> => {
-  const fig = await Group.fromObject(obj);
-
-  fig.set({
-    subTargetCheck: true,
-    selectable: false,
-    evented: false,
-    interactive: true,
-  });
-
-  return fig;
-};
-
 export const resizeAndZoomCanvas = (
   canvas: Canvas,
   maxWidth: number,

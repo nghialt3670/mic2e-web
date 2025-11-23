@@ -5,8 +5,10 @@ import { useInteractionStore } from "../../stores/interaction-store";
 import { useReferenceStore } from "@/stores/reference-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FigCanvas } from "../edit/fig-canvas";
-import { Canvas, FabricObject } from "fabric";
+import { Canvas, Circle, FabricObject, Group, Path, Rect } from "fabric";
 import { FC } from "react";
+import stringToColor from "string-to-color";
+import { v4 } from "uuid";
 
 interface InputAttachmentItemProps {
   attachment: InputAttachment; // keep same shape you already have
@@ -14,34 +16,38 @@ interface InputAttachmentItemProps {
 
 export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({ attachment }) => {
   const { removeInputAttachment, setInputAttachment } = useInputAttachmentStore();
-  const { addReference, getReferences, removeReferenceById } = useReferenceStore();
-  const { color, type } = useInteractionStore();
+  const { addReference, removeReferenceById } = useReferenceStore();
+  const { color, setColor } = useInteractionStore();
   const isMobile = useIsMobile();
 
   const handleRemove = () => removeInputAttachment(attachment.imageFile.name);
 
-  const onPointAdded = (id: string, meta?: { left: number; top: number }) => {
-    addReference({ value: id, label: "point", color });
+  const onPointAdded = (point: Circle) => {
+    addReference({ value: point.get("id"), label: "point", color, figId: attachment.figObject.id });
+    setColor(stringToColor(v4()));
   };
 
-  const onBoxAdded = (id: string, meta?: { left: number; top: number; width: number; height: number }) => {
-    addReference({ value: id, label: "box", color });
+  const onBoxAdded = (box: Rect) => {
+    addReference({ value: box.get("id"), label: "box", color, figId: attachment.figObject.id });
+    setColor(stringToColor(v4()));
   };
 
-  const onFigSelected = (figId: string) => {
-    addReference({ value: figId, label: "image", color });
-  };
+  const onFigSelected = (fig: Group) => {
+    addReference({ value: fig.get("id"), label: "image", color, figId: attachment.figObject.id });
+    setColor(stringToColor(v4()));
+  }
 
-  const onScribbleAdded = (id: string, meta?: { points: { x: number; y: number }[] }) => {
-    addReference({ value: id, label: "scribble", color });
+  const onScribbleAdded = (scribble: Path) => {
+    addReference({ value: scribble.get("id"), label: "scribble", color, figId: attachment.figObject.id });
+    setColor(stringToColor(v4()));
   };
 
   const onFigChanged = (figObject: Record<string, any>) => {
     setInputAttachment(attachment.imageFile.name, { ...attachment, figObject });
   };
 
-  const onObjectRemoved = (objectId: string) => {
-    removeReferenceById(objectId);
+  const onObjectRemoved = (object: Circle | Rect | Path) => {
+    removeReferenceById(object.get("id"));
   };
 
   if (attachment.type !== "fig") return null;
@@ -58,7 +64,6 @@ export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({ attachment }
         onFigSelected={onFigSelected}
         onScribbleAdded={onScribbleAdded}
         onObjectRemoved={onObjectRemoved}
-        interactive={true}
         color={color}
       />
 
