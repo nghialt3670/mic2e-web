@@ -1,5 +1,6 @@
 import { readFileAsDataURL } from "@/utils/client/file-readers";
-import { Canvas, FabricImage, Group } from "fabric";
+import { createImageFileFromDataURL } from "@/utils/client/image";
+import { Canvas, FabricImage, Group, StaticCanvas } from "fabric";
 import { v4 } from "uuid";
 
 export const createFigObjectFromImageFile = async (
@@ -28,6 +29,22 @@ export const createFigFileFromObject = async (
   return new File([JSON.stringify(obj)], `${v4()}_${filename}.fig.json`, {
     type: "application/json",
   });
+};
+
+export const createImageFileFromFigObject = async (
+  obj: Record<string, any>,
+): Promise<File> => {
+  const group = await Group.fromObject(obj);
+  const image = group.getObjects()[0] as FabricImage;
+  const canvas = new StaticCanvas();
+  canvas.add(group);
+  canvas.renderAll();
+  canvas.setDimensions({
+    width: image.getScaledWidth(),
+    height: image.getScaledHeight(),
+  });
+  const dataUrl = canvas.toDataURL();
+  return await createImageFileFromDataURL(dataUrl);
 };
 
 export const getFigObjectDimensions = async (

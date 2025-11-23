@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { createFigFileFromObject, getFigObjectDimensions } from "@/lib/fabric";
+import { createFigFileFromObject, createImageFileFromFigObject, getFigObjectDimensions } from "@/lib/fabric";
 import { uploadFileToSupabase } from "@/lib/supabase/supabase-utils";
 import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { clientEnv } from "@/utils/client/client-env";
@@ -188,11 +188,12 @@ const uploadInputAttachments = async (
       );
 
       const thumbnailFilename = `${v4()}_${attachment.imageFile.name}.jpeg`;
+      const imageFile = await createImageFileFromFigObject(attachment.figObject);
       const {
         file: thumbnailFile,
         width: thumbnailWidth,
         height: thumbnailHeight,
-      } = await createImageThumbnail(attachment.imageFile);
+      } = await createImageThumbnail(imageFile);
       const thumbnailUploadPath = `thumbnails/${thumbnailFilename}`;
       const thumbnailUploadUrl = await uploadFileToSupabase(
         thumbnailFile,

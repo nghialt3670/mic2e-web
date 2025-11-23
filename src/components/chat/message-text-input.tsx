@@ -31,7 +31,7 @@ export const MessageTextInput = ({
 
     // Check for removed mentions and clean up stores
     // Extract the reference values from mention IDs (format: value@figId)
-    const currentMentionIds = mentions.map(m => m.id?.split('@')[0]).filter(Boolean);
+    const currentMentionIds = mentions.map(m => m.id?.split(':')[0]).filter(Boolean);
     references.forEach(ref => {
       if (!currentMentionIds.includes(ref.value)) {
         removeReferenceById(ref.value);
