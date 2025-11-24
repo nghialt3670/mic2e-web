@@ -5,15 +5,15 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useChatStore } from "../../stores/chat-store";
-import { useMessageStore } from "../../stores/message-store";
+import { useChatCycleStore } from "@/stores/chat-cycle-store";
 
 export const NewChat = () => {
   const router = useRouter();
   const { setChat } = useChatStore();
-  const { clearMessages } = useMessageStore();
+  const { clearChatCycles } = useChatCycleStore();
 
   const handleNewChatClick = () => {
-    clearMessages();
+    clearChatCycles();
     setChat(undefined);
     router.push("/");
   };
