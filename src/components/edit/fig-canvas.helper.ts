@@ -57,7 +57,7 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
   const height = image.getScaledHeight() - strokeWidth;
   
   const rect = new Rect({
-    id: v4(),
+    id: fig.get("id"), // Use the fig's id so we can identify this frame later
     left: 0,
     top: 0,
     width: width,
@@ -66,7 +66,17 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
     stroke: color,
     strokeWidth: 5 / zoom,
   });
-  fig.add(rect);
+  
+  // Insert the frame at index 1 (right after the base image at index 0)
+  const objects = fig.getObjects();
+  fig.remove(...objects);
+  fig.add(objects[0]); // Add back the base image
+  fig.add(rect); // Add the frame at index 1
+  // Add back all other objects
+  for (let i = 1; i < objects.length; i++) {
+    fig.add(objects[i]);
+  }
+  
   canvas.requestRenderAll();
   return fig;
 };

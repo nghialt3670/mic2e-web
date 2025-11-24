@@ -48,13 +48,14 @@ export const useInputAttachmentStore = create<InputAttachmentStore>(
         Object.entries(updatedMap).forEach(([key, attachment]) => {
           const figObject = attachment.figObject;
           
-          // Check if the group itself has the id
+          // Check if the group itself has the id (frame case)
+          // When a frame is created, it's always at index 1 (second position)
           if (figObject?.id === id) {
-            // If the group itself matches, remove the rect at index 1 (the border rect)
+            // Remove the frame rect at index 1 (the border rect)
             if (figObject?.objects && Array.isArray(figObject.objects) && figObject.objects.length > 1) {
               const updatedObjects = [
                 figObject.objects[0], // Keep the base image
-                ...figObject.objects.slice(2), // Keep everything after the rect at index 1
+                ...figObject.objects.slice(2), // Keep everything after the frame at index 1
               ];
               
               updatedMap[key] = {
@@ -67,17 +68,14 @@ export const useInputAttachmentStore = create<InputAttachmentStore>(
             }
             return;
           }
-
-          console.log(figObject);
           
           // Check if figObject has objects array (it's a Group)
+          // This handles removal of individual objects (points, boxes, scribbles)
           if (figObject?.objects && Array.isArray(figObject.objects)) {
             // Filter out objects with matching id
             const filteredObjects = figObject.objects.filter(
               (obj: any) => obj.id !== id
             );
-
-            console.log(filteredObjects);
             
             // Only update if we actually removed something
             if (filteredObjects.length !== figObject.objects.length) {
