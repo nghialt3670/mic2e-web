@@ -112,7 +112,7 @@ export const MessageInput = () => {
   };
 
   return (
-    <form className="w-full" onSubmit={handleSubmit}>
+    <form className="w-full p-4" onSubmit={handleSubmit}>
       <div className="relative border rounded-2xl bg-white shadow-sm">
         {/* Attachments inside the input */}
         {attachments.length > 0 && (

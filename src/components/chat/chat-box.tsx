@@ -21,7 +21,7 @@ export const ChatBox = ({ chat }: ChatBoxProps) => {
   return (
     <div className="flex flex-col items-center h-full">
       <ChatCycleList />
-      <div className="relative w-full flex justify-center items-center max-w-5xl py-10">
+      <div className="relative w-full flex justify-center items-center max-w-5xl pb-10">
         <MessageInput />
       </div>
     </div>
