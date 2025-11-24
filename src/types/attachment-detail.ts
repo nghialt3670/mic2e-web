@@ -9,6 +9,4 @@ const _attachmentDetail = drizzleClient.query.attachments.findFirst({
   },
 });
 
-export type AttachmentDetail = NonNullable<
-  Awaited<typeof _attachmentDetail>
->;
+export type AttachmentDetail = NonNullable<Awaited<typeof _attachmentDetail>>;

@@ -1,21 +1,27 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  resizeAndZoomCanvas,
-} from "@/lib/fabric/fabric-utils";
+import { resizeAndZoomCanvas } from "@/lib/fabric/fabric-utils";
 import { to } from "await-to-js";
 import {
   Canvas,
   Circle,
-  Rect,
-  Path,
-  Point,
+  FabricImage,
   FabricObject,
   Group,
-  FabricImage,
+  Path,
+  Point,
+  Rect,
 } from "fabric";
 import { AlertCircleIcon } from "lucide-react";
 import { FC, useEffect, useRef, useState } from "react";
-import { canvasToFigCoords, createBox, createFigFrame, createPoint, createScribble, createFigFromObject } from "./fig-canvas.helper";
+
+import {
+  canvasToFigCoords,
+  createBox,
+  createFigFrame,
+  createFigFromObject,
+  createPoint,
+  createScribble,
+} from "./fig-canvas.helper";
 
 interface FigCanvasProps {
   color: string;
@@ -76,73 +82,77 @@ export const FigCanvas: FC<FigCanvasProps> = ({
     // Mouse down handler
     canvas.on("mouse:down", (e: any) => {
       if (!e.pointer) return;
-      
+
       const now = Date.now();
       const timeSinceLastClick = now - state.lastClickTime;
-      
+
       // Clear any pending single click timeout
       if (state.singleClickTimeout) {
         clearTimeout(state.singleClickTimeout);
         state.singleClickTimeout = null;
       }
-      
+
       // Check for double click (within 300ms) - but only if not armed
-      if (timeSinceLastClick < 300 && timeSinceLastClick > 0 && !state.isArmedDraw) {
+      if (
+        timeSinceLastClick < 300 &&
+        timeSinceLastClick > 0 &&
+        !state.isArmedDraw
+      ) {
         state.lastClickTime = 0;
         state.startPoint = null;
         state.hasMoved = false;
         state.isArmedDraw = false;
-        
+
         // Double click: create canvas-sized box
         const figFrame = createFigFrame(canvas, color);
         onFigSelected?.(figFrame);
         handleFigChange();
         return;
       }
-      
+
       // Start tracking for potential draw
       state.startPoint = e.pointer;
       state.pathPoints = [e.pointer];
       state.lastClickTime = now;
       state.hasMoved = false;
       state.isDrawing = false;
-      
+
       // Don't reset isArmedDraw here - it might already be armed from previous click
     });
 
     // Mouse move handler
     canvas.on("mouse:move", (e: any) => {
       if (!e.pointer || !state.startPoint) return;
-      
+
       const dx = e.pointer.x - state.startPoint.x;
       const dy = e.pointer.y - state.startPoint.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
       // If moved more than 5 pixels, it's a drag
       if (distance > 5 && !state.hasMoved) {
         state.hasMoved = true;
         state.isDrawing = true;
-        
+
         // Clear single click timeout since we're now dragging
         if (state.singleClickTimeout) {
           clearTimeout(state.singleClickTimeout);
           state.singleClickTimeout = null;
         }
       }
-      
+
       if (state.isDrawing) {
         state.pathPoints.push(e.pointer);
-        
+
         // Visual feedback: draw temporary path
         if (state.tempObject) {
           fig.remove(state.tempObject);
         }
-        
+
         if (state.isArmedDraw) {
           // Armed draw: show box preview
           const figStart = canvasToFigCoords(state.startPoint, canvas);
           const figEnd = canvasToFigCoords(e.pointer, canvas);
-          
+
           const left = Math.min(figStart.x, figEnd.x);
           const top = Math.min(figStart.y, figEnd.y);
           const width = Math.abs(figEnd.x - figStart.x);
@@ -163,22 +173,24 @@ export const FigCanvas: FC<FigCanvasProps> = ({
           fig.add(state.tempObject);
         } else {
           // Direct draw: show scribble preview with smooth brush effect
-          const figPoints = state.pathPoints.map(p => canvasToFigCoords(p, canvas));
+          const figPoints = state.pathPoints.map((p) =>
+            canvasToFigCoords(p, canvas),
+          );
           let pathString = `M ${figPoints[0].x} ${figPoints[0].y}`;
-          
+
           // Use quadratic curves for smoother lines
           for (let i = 1; i < figPoints.length; i++) {
             const xc = (figPoints[i].x + figPoints[i - 1].x) / 2;
             const yc = (figPoints[i].y + figPoints[i - 1].y) / 2;
             pathString += ` Q ${figPoints[i - 1].x} ${figPoints[i - 1].y} ${xc} ${yc}`;
           }
-          
+
           // Add the last point
           if (figPoints.length > 1) {
             const lastPoint = figPoints[figPoints.length - 1];
             pathString += ` L ${lastPoint.x} ${lastPoint.y}`;
           }
-          
+
           const zoom = canvas.getZoom();
           state.tempObject = new Path(pathString, {
             stroke: color,
@@ -191,7 +203,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
           });
           fig.add(state.tempObject);
         }
-        
+
         canvas.requestRenderAll();
       }
     });
@@ -199,14 +211,14 @@ export const FigCanvas: FC<FigCanvasProps> = ({
     // Mouse up handler
     canvas.on("mouse:up", (e: any) => {
       if (!e.pointer) return;
-      
+
       // Remove temporary object
       if (state.tempObject) {
         fig.remove(state.tempObject);
         state.tempObject = null;
         canvas.requestRenderAll();
       }
-      
+
       if (state.isDrawing && state.hasMoved) {
         // Drawing action completed
         if (state.isArmedDraw && state.startPoint) {
@@ -221,7 +233,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
           onScribbleAdded?.(scribble);
           handleFigChange();
         }
-        
+
         // Reset state
         state.isDrawing = false;
         state.startPoint = null;
@@ -230,10 +242,14 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       } else if (state.startPoint && !state.hasMoved && !state.isDrawing) {
         // Single click without drag - schedule point creation and arming
         const clickPoint = state.startPoint;
-        
+
         state.singleClickTimeout = setTimeout(() => {
           // Only create point if we didn't start a new interaction
-          if (state.startPoint === clickPoint && !state.hasMoved && state.lastClickTime > 0) {
+          if (
+            state.startPoint === clickPoint &&
+            !state.hasMoved &&
+            state.lastClickTime > 0
+          ) {
             const point = createPoint(clickPoint, canvas, color);
             onPointAdded?.(point);
             handleFigChange();
@@ -248,13 +264,13 @@ export const FigCanvas: FC<FigCanvasProps> = ({
   useEffect(() => {
     const disposeCanvas = () => {
       const state = interactionStateRef.current;
-      
+
       // Clear any pending timeout
       if (state.singleClickTimeout) {
         clearTimeout(state.singleClickTimeout);
         state.singleClickTimeout = null;
       }
-      
+
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
@@ -279,10 +295,10 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       fabricCanvasRef.current = fabricCanvas;
       fabricCanvas.add(fig);
       resizeAndZoomCanvas(fabricCanvas, maxWidth, maxHeight);
-      
+
       // Setup interaction handlers
       setupInteractions(fabricCanvas);
-      
+
       fabricCanvas.requestRenderAll();
       setIsLoading(false);
     };

@@ -1,5 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { createFigFileFromObject, createImageFileFromFigObject, getFigObjectDimensions } from "@/lib/fabric";
+import {
+  createFigFileFromObject,
+  createImageFileFromFigObject,
+  getFigObjectDimensions,
+} from "@/lib/fabric";
 import { uploadFileToSupabase } from "@/lib/supabase/supabase-utils";
 import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { clientEnv } from "@/utils/client/client-env";
@@ -53,8 +57,6 @@ export const MessageInput = () => {
     }
     return "";
   };
-
-  console.log(text)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -188,7 +190,9 @@ const uploadInputAttachments = async (
       );
 
       const thumbnailFilename = `${v4()}_${attachment.imageFile.name}.jpeg`;
-      const imageFile = await createImageFileFromFigObject(attachment.figObject);
+      const imageFile = await createImageFileFromFigObject(
+        attachment.figObject,
+      );
       const {
         file: thumbnailFile,
         width: thumbnailWidth,

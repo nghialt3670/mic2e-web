@@ -28,6 +28,4 @@ const _chatCycleDetail = drizzleClient.query.chatCycles.findFirst({
   },
 });
 
-export type ChatCycleDetail = NonNullable<
-  Awaited<typeof _chatCycleDetail>
->;
+export type ChatCycleDetail = NonNullable<Awaited<typeof _chatCycleDetail>>;

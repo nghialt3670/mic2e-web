@@ -1,3 +1,5 @@
+import { ChatList } from "@/components/chat/chat-list";
+import { NewChat } from "@/components/chat/new-chat";
 import {
   SidebarContent,
   SidebarFooter,
@@ -5,8 +7,6 @@ import {
   SidebarHeader,
   Sidebar as SidebarUI,
 } from "@/components/ui/sidebar";
-import { ChatList } from "@/components/chat/chat-list";
-import { NewChat } from "@/components/chat/new-chat";
 
 export const Sidebar = () => {
   return (

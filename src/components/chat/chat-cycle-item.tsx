@@ -1,6 +1,6 @@
+import { ChatCycleDetail } from "@/types/chat-cycle-detail";
 import { FC } from "react";
 
-import { ChatCycleDetail } from "@/types/chat-cycle-detail";
 import { MessageItem } from "./message-item";
 
 interface ChatCycleItemProps {

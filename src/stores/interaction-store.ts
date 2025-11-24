@@ -1,7 +1,6 @@
-
-import { create } from "zustand";
 import stringToColor from "string-to-color";
 import { v4 } from "uuid";
+import { create } from "zustand";
 
 export interface InteractionStore {
   color: string;

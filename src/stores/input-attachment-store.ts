@@ -43,21 +43,25 @@ export const useInputAttachmentStore = create<InputAttachmentStore>(
     removeObjectById: (id: string) =>
       set((state) => {
         const updatedMap = { ...state.inputAttachmentMap };
-        
+
         // Iterate through all attachments
         Object.entries(updatedMap).forEach(([key, attachment]) => {
           const figObject = attachment.figObject;
-          
+
           // Check if the group itself has the id (frame case)
           // When a frame is created, it's always at index 1 (second position)
           if (figObject?.id === id) {
             // Remove the frame rect at index 1 (the border rect)
-            if (figObject?.objects && Array.isArray(figObject.objects) && figObject.objects.length > 1) {
+            if (
+              figObject?.objects &&
+              Array.isArray(figObject.objects) &&
+              figObject.objects.length > 1
+            ) {
               const updatedObjects = [
                 figObject.objects[0], // Keep the base image
                 ...figObject.objects.slice(2), // Keep everything after the frame at index 1
               ];
-              
+
               updatedMap[key] = {
                 ...attachment,
                 figObject: {
@@ -68,15 +72,15 @@ export const useInputAttachmentStore = create<InputAttachmentStore>(
             }
             return;
           }
-          
+
           // Check if figObject has objects array (it's a Group)
           // This handles removal of individual objects (points, boxes, scribbles)
           if (figObject?.objects && Array.isArray(figObject.objects)) {
             // Filter out objects with matching id
             const filteredObjects = figObject.objects.filter(
-              (obj: any) => obj.id !== id
+              (obj: any) => obj.id !== id,
             );
-            
+
             // Only update if we actually removed something
             if (filteredObjects.length !== figObject.objects.length) {
               updatedMap[key] = {
@@ -89,7 +93,7 @@ export const useInputAttachmentStore = create<InputAttachmentStore>(
             }
           }
         });
-        
+
         return { inputAttachmentMap: updatedMap };
       }),
     clearInputAttachments: () => set({ inputAttachmentMap: {} }),

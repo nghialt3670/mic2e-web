@@ -1,20 +1,19 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { createFigObjectFromImageFile } from "@/lib/fabric/fabric-utils";
-import { UploadIcon } from "lucide-react";
-import { useRef } from "react";
-import { toast } from "sonner";
-
 import {
   MAXIMUM_FILE_SIZE,
   MAXIMUM_NUMBER_OF_FILES,
   SUPPORTED_FILE_TYPES,
 } from "@/constants/upload-constants";
+import { createFigObjectFromImageFile } from "@/lib/fabric/fabric-utils";
 import {
   InputAttachment,
   useInputAttachmentStore,
 } from "@/stores/input-attachment-store";
+import { UploadIcon } from "lucide-react";
+import { useRef } from "react";
+import { toast } from "sonner";
 
 export const MessageAttachmentInput = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);

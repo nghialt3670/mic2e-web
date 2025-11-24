@@ -1,9 +1,10 @@
 "use client";
 
-import { useInputAttachmentStore } from "../../stores/input-attachment-store";
 import { useReferenceStore } from "@/stores/reference-store";
 import { useEffect, useRef, useState } from "react";
-import { MentionsInput, Mention, SuggestionDataItem } from 'react-mentions';
+import { Mention, MentionsInput, SuggestionDataItem } from "react-mentions";
+
+import { useInputAttachmentStore } from "../../stores/input-attachment-store";
 
 interface MessageTextInputProps {
   value: string;
@@ -15,7 +16,8 @@ export const MessageTextInput = ({
   onChange,
 }: MessageTextInputProps) => {
   const { removeObjectById } = useInputAttachmentStore();
-  const { references, getCurrentReference, removeReferenceById } = useReferenceStore();
+  const { references, getCurrentReference, removeReferenceById } =
+    useReferenceStore();
   const [localValue, setLocalValue] = useState(value);
   const mentionsInputRef = useRef<HTMLDivElement>(null);
 
@@ -24,15 +26,17 @@ export const MessageTextInput = ({
     event: any,
     newValue: string,
     newPlainTextValue: string,
-    mentions: any[]
+    mentions: any[],
   ) => {
     setLocalValue(newValue);
     onChange(newValue);
 
     // Check for removed mentions and clean up stores
     // Extract the reference values from mention IDs (format: value@figId)
-    const currentMentionIds = mentions.map(m => m.id?.split(':')[0]).filter(Boolean);
-    references.forEach(ref => {
+    const currentMentionIds = mentions
+      .map((m) => m.id?.split(":")[0])
+      .filter(Boolean);
+    references.forEach((ref) => {
       if (!currentMentionIds.includes(ref.value)) {
         removeReferenceById(ref.value);
         removeObjectById(ref.value);
@@ -54,7 +58,7 @@ export const MessageTextInput = ({
 
     const trigger = getTriggerForRef(currentRef.value);
     const mentionText = `${trigger}[${currentRef.label}](${currentRef.value}:${currentRef.color}@${currentRef.figId})`;
-    
+
     // Check if reference is already in the value
     if (!localValue.includes(mentionText)) {
       const separator = localValue && !localValue.endsWith(" ") ? " " : "";
@@ -80,30 +84,30 @@ export const MessageTextInput = ({
         className="mentions-input"
         style={{
           input: {
-            padding: '0px 0px',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: '6px',
-            fontSize: '14px',
-            lineHeight: '1.5',
-            fontFamily: 'inherit',
+            padding: "0px 0px",
+            border: "1px solid hsl(var(--border))",
+            borderRadius: "6px",
+            fontSize: "14px",
+            lineHeight: "1.5",
+            fontFamily: "inherit",
             fontWeight: 400,
-            letterSpacing: 'normal',
-            outline: 'none',
-            overflow: 'auto',
-            boxSizing: 'border-box',
+            letterSpacing: "normal",
+            outline: "none",
+            overflow: "auto",
+            boxSizing: "border-box",
           },
           highlighter: {
-            padding: '0px 0px',
-            border: '1px solid transparent',
-            borderRadius: '6px',
-            boxSizing: 'border-box',
-            lineHeight: '1.5',
-            fontSize: '14px',
-            fontFamily: 'inherit',
+            padding: "0px 0px",
+            border: "1px solid transparent",
+            borderRadius: "6px",
+            boxSizing: "border-box",
+            lineHeight: "1.5",
+            fontSize: "14px",
+            fontFamily: "inherit",
             fontWeight: 400,
-            letterSpacing: 'normal',
+            letterSpacing: "normal",
             margin: 0,
-            overflow: 'hidden',
+            overflow: "hidden",
           },
         }}
       >
@@ -111,7 +115,7 @@ export const MessageTextInput = ({
           references.map((ref) => {
             const trigger = getTriggerForRef(ref.value);
             const mentionData: SuggestionDataItem[] = [];
-            
+
             return (
               <Mention
                 key={ref.value}
@@ -122,14 +126,14 @@ export const MessageTextInput = ({
                 style={{
                   backgroundColor: `${ref.color}20`,
                   color: ref.color,
-                  borderRadius: '4px',
+                  borderRadius: "4px",
                   padding: 0,
                   margin: 0,
                   fontWeight: 400,
-                  display: 'inline',
-                  verticalAlign: 'baseline',
-                  lineHeight: 'inherit',
-                  letterSpacing: 'inherit',
+                  display: "inline",
+                  verticalAlign: "baseline",
+                  lineHeight: "inherit",
+                  letterSpacing: "inherit",
                 }}
                 appendSpaceOnAdd
               />
@@ -143,8 +147,8 @@ export const MessageTextInput = ({
             markup="@[__display__](__id__)"
             displayTransform={(id, display) => `@${display}`}
             style={{
-              backgroundColor: 'transparent',
-              color: 'inherit',
+              backgroundColor: "transparent",
+              color: "inherit",
             }}
             appendSpaceOnAdd
           />

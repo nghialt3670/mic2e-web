@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useChatCycleStore } from "@/stores/chat-cycle-store";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useChatStore } from "../../stores/chat-store";
-import { useChatCycleStore } from "@/stores/chat-cycle-store";
 
 export const NewChat = () => {
   const router = useRouter();

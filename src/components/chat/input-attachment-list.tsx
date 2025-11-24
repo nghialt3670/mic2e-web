@@ -8,7 +8,10 @@ export const InputAttachmentList = () => {
   return (
     <div className="flex flex-wrap gap-2">
       {attachments.map((attachment) => (
-        <InputAttachmentItem key={attachment.imageFile.name} attachment={attachment} />
+        <InputAttachmentItem
+          key={attachment.imageFile.name}
+          attachment={attachment}
+        />
       ))}
     </div>
   );

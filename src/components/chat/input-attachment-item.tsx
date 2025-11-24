@@ -1,21 +1,28 @@
 import { Button } from "@/components/ui/button";
-import { Box, X } from "lucide-react";
-import { InputAttachment, useInputAttachmentStore } from "../../stores/input-attachment-store";
-import { useInteractionStore } from "../../stores/interaction-store";
-import { useReferenceStore } from "@/stores/reference-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { FigCanvas } from "../edit/fig-canvas";
+import { useReferenceStore } from "@/stores/reference-store";
 import { Canvas, Circle, FabricObject, Group, Path, Rect } from "fabric";
+import { Box, X } from "lucide-react";
 import { FC } from "react";
 import stringToColor from "string-to-color";
 import { v4 } from "uuid";
+
+import {
+  InputAttachment,
+  useInputAttachmentStore,
+} from "../../stores/input-attachment-store";
+import { useInteractionStore } from "../../stores/interaction-store";
+import { FigCanvas } from "../edit/fig-canvas";
 
 interface InputAttachmentItemProps {
   attachment: InputAttachment; // keep same shape you already have
 }
 
-export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({ attachment }) => {
-  const { removeInputAttachment, setInputAttachment } = useInputAttachmentStore();
+export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({
+  attachment,
+}) => {
+  const { removeInputAttachment, setInputAttachment } =
+    useInputAttachmentStore();
   const { addReference, removeReferenceById } = useReferenceStore();
   const { color, setColor } = useInteractionStore();
   const isMobile = useIsMobile();
@@ -23,22 +30,42 @@ export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({ attachment }
   const handleRemove = () => removeInputAttachment(attachment.imageFile.name);
 
   const onPointAdded = (point: Circle) => {
-    addReference({ value: point.get("id"), label: "point", color, figId: attachment.figObject.id });
+    addReference({
+      value: point.get("id"),
+      label: "point",
+      color,
+      figId: attachment.figObject.id,
+    });
     setColor(stringToColor(v4()));
   };
 
   const onBoxAdded = (box: Rect) => {
-    addReference({ value: box.get("id"), label: "box", color, figId: attachment.figObject.id });
+    addReference({
+      value: box.get("id"),
+      label: "box",
+      color,
+      figId: attachment.figObject.id,
+    });
     setColor(stringToColor(v4()));
   };
 
   const onFigSelected = (fig: Group) => {
-    addReference({ value: fig.get("id"), label: "image", color, figId: attachment.figObject.id });
+    addReference({
+      value: fig.get("id"),
+      label: "image",
+      color,
+      figId: attachment.figObject.id,
+    });
     setColor(stringToColor(v4()));
-  }
+  };
 
   const onScribbleAdded = (scribble: Path) => {
-    addReference({ value: scribble.get("id"), label: "scribble", color, figId: attachment.figObject.id });
+    addReference({
+      value: scribble.get("id"),
+      label: "scribble",
+      color,
+      figId: attachment.figObject.id,
+    });
     setColor(stringToColor(v4()));
   };
 
@@ -67,7 +94,12 @@ export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({ attachment }
         color={color}
       />
 
-      <Button size="icon" variant="outline" className="absolute top-1 right-1 h-6 w-6" onClick={handleRemove}>
+      <Button
+        size="icon"
+        variant="outline"
+        className="absolute top-1 right-1 h-6 w-6"
+        onClick={handleRemove}
+      >
         <X className="size-4" />
       </Button>
     </div>

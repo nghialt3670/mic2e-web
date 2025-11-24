@@ -20,11 +20,11 @@ export const createFigFromObject = async (
 export const canvasToFigCoords = (point: Point, canvas: Canvas) => {
   const zoom = canvas.getZoom();
   const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
-  
+
   // Account for viewport transform and zoom
   const x = (point.x - vpt[4]) / zoom;
   const y = (point.y - vpt[5]) / zoom;
-  
+
   return new Point(x, y);
 };
 
@@ -42,7 +42,7 @@ export const createPoint = (point: Point, canvas: Canvas, color: string) => {
     originX: "center",
     originY: "center",
     pointerEvents: "none",
-  });  
+  });
   fig.add(circle);
   canvas.requestRenderAll();
   return circle;
@@ -51,11 +51,11 @@ export const createPoint = (point: Point, canvas: Canvas, color: string) => {
 export const createFigFrame = (canvas: Canvas, color: string) => {
   const fig = canvas.getObjects()[0] as Group;
   const zoom = canvas.getZoom();
-  const image = fig.getObjects()[0] as FabricImage;  
+  const image = fig.getObjects()[0] as FabricImage;
   const strokeWidth = 5 / zoom;
   const width = image.getScaledWidth() - strokeWidth;
   const height = image.getScaledHeight() - strokeWidth;
-  
+
   const rect = new Rect({
     id: fig.get("id"), // Use the fig's id so we can identify this frame later
     left: 0,
@@ -66,7 +66,7 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
     stroke: color,
     strokeWidth: 5 / zoom,
   });
-  
+
   // Insert the frame at index 1 (right after the base image at index 0)
   const objects = fig.getObjects();
   fig.remove(...objects);
@@ -76,31 +76,35 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
   for (let i = 1; i < objects.length; i++) {
     fig.add(objects[i]);
   }
-  
+
   canvas.requestRenderAll();
   return fig;
 };
 
-export const createScribble = (points: Point[], canvas: Canvas, color: string) => {
-  const fig = canvas.getObjects()[0] as Group;  
-  const figPoints = points.map(p => canvasToFigCoords(p, canvas));
-  
+export const createScribble = (
+  points: Point[],
+  canvas: Canvas,
+  color: string,
+) => {
+  const fig = canvas.getObjects()[0] as Group;
+  const figPoints = points.map((p) => canvasToFigCoords(p, canvas));
+
   // Build SVG path string with smooth curves
   let pathString = `M ${figPoints[0].x} ${figPoints[0].y}`;
-  
+
   // Use quadratic curves for smoother brush-like effect
   for (let i = 1; i < figPoints.length; i++) {
     const xc = (figPoints[i].x + figPoints[i - 1].x) / 2;
     const yc = (figPoints[i].y + figPoints[i - 1].y) / 2;
     pathString += ` Q ${figPoints[i - 1].x} ${figPoints[i - 1].y} ${xc} ${yc}`;
   }
-  
+
   // Add the last point
   if (figPoints.length > 1) {
     const lastPoint = figPoints[figPoints.length - 1];
     pathString += ` L ${lastPoint.x} ${lastPoint.y}`;
   }
-  
+
   const zoom = canvas.getZoom();
   const path = new Path(pathString, {
     id: v4(),
@@ -115,11 +119,16 @@ export const createScribble = (points: Point[], canvas: Canvas, color: string) =
   return path;
 };
 
-export const createBox = (start: Point, end: Point, canvas: Canvas, color: string) => {
+export const createBox = (
+  start: Point,
+  end: Point,
+  canvas: Canvas,
+  color: string,
+) => {
   const fig = canvas.getObjects()[0] as Group;
   const figStart = canvasToFigCoords(start, canvas);
   const figEnd = canvasToFigCoords(end, canvas);
-  
+
   const left = Math.min(figStart.x, figEnd.x);
   const top = Math.min(figStart.y, figEnd.y);
   const width = Math.abs(figEnd.x - figStart.x);
