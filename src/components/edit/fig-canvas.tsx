@@ -21,6 +21,8 @@ import {
   createFigFromObject,
   createPoint,
   createScribble,
+  hasFigFrame,
+  removeFigFrame,
 } from "./fig-canvas.helper";
 
 interface FigCanvasProps {
@@ -30,6 +32,7 @@ interface FigCanvasProps {
   onPointAdded?: (point: Circle) => void;
   onBoxAdded?: (box: Rect) => void;
   onFigSelected?: (fig: Group) => void;
+  onFigUnselected?: (fig: Group) => void;
   onScribbleAdded?: (scribble: Path) => void;
   onObjectRemoved?: (object: Circle | Rect | Path) => void;
   maxWidth?: number;
@@ -43,6 +46,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
   onPointAdded,
   onBoxAdded,
   onFigSelected,
+  onFigUnselected,
   onScribbleAdded,
   maxWidth = 800,
   maxHeight = 600,
@@ -103,9 +107,17 @@ export const FigCanvas: FC<FigCanvasProps> = ({
         state.hasMoved = false;
         state.isArmedDraw = false;
 
-        // Double click: create canvas-sized box
-        const figFrame = createFigFrame(canvas, color);
-        onFigSelected?.(figFrame);
+        // Double click: toggle frame
+        if (hasFigFrame(canvas)) {
+          // Remove the frame
+          const fig = removeFigFrame(canvas);
+          onFigUnselected?.(fig);
+        } else {
+          // Create canvas-sized frame
+          const figFrame = createFigFrame(canvas, color);
+          onFigSelected?.(figFrame);
+        }
+        
         handleFigChange();
         return;
       }

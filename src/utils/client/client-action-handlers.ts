@@ -10,6 +10,7 @@ export async function withToastHandler<T>(
   const response = await action(args);
 
   if (response.code !== 200) {
+    console.error(response);
     toast.error(response.message, {
       description: `Code: ${response.code}`,
     });

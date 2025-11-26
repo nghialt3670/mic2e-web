@@ -13,7 +13,7 @@ interface ParsedMention {
 
 export const MessageTextDisplay: FC<MessageTextDisplayProps> = ({ text }) => {
   // Parse text and extract mentions with their colors
-  // Format: @{value}:[label](value:color@figId)
+  // Format: #colorCode[label](value@figId)
   const parseMentions = (text: string) => {
     const parts: Array<{
       type: "text" | "mention";
@@ -21,8 +21,9 @@ export const MessageTextDisplay: FC<MessageTextDisplayProps> = ({ text }) => {
       mention?: ParsedMention;
     }> = [];
 
-    // Regex to match the mention pattern: @{value}:[label](value:color@figId)
-    const mentionRegex = /@([^:]+):\[([^\]]+)\]\(([^:]+):([^@]+)@([^)]+)\)/g;
+    // Regex to match the mention pattern: #colorCode[label](value@figId)
+    // Matches: #2f88a2[box](8fe4e0c7-ef83-4897-9007-89b26cf952f8@deeaaac2-a474-4e30-a42c-2838b2cc5713)
+    const mentionRegex = /#([a-zA-Z0-9_]+)\[([^\]]+)\]\(([^@]+)@([^)]+)\)/g;
 
     let lastIndex = 0;
     let match;
@@ -36,6 +37,10 @@ export const MessageTextDisplay: FC<MessageTextDisplayProps> = ({ text }) => {
         });
       }
 
+      // Extract color code and add # prefix for styling
+      const colorCode = match[1];
+      const color = `#${colorCode}`;
+
       // Add mention
       parts.push({
         type: "mention",
@@ -43,8 +48,8 @@ export const MessageTextDisplay: FC<MessageTextDisplayProps> = ({ text }) => {
         mention: {
           label: match[2],
           value: match[3],
-          color: match[4],
-          figId: match[5],
+          color: color,
+          figId: match[4],
         },
       });
 

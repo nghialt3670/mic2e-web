@@ -84,7 +84,7 @@ export const createMessage = withErrorHandler(
 
       const requestMessage = await drizzleClient
         .insert(messages)
-        .values({ text: message.text })
+        .values([{ text: message.text }])
         .returning()
         .then((rows) => rows[0]);
 
@@ -97,14 +97,14 @@ export const createMessage = withErrorHandler(
           const figUploadData = attachment.figUpload;
           const figUpload = await drizzleClient
             .insert(imageUploads)
-            .values(figUploadData)
+            .values([figUploadData])
             .returning()
             .then((rows) => rows[0]);
 
           const imageUpload = attachment.imageUpload
             ? await drizzleClient
                 .insert(imageUploads)
-                .values(attachment.imageUpload)
+                .values([attachment.imageUpload])
                 .returning()
                 .then((rows) => rows[0])
             : null;
@@ -112,7 +112,7 @@ export const createMessage = withErrorHandler(
           const thumbnailUpload = attachment.thumbnailUpload
             ? await drizzleClient
                 .insert(imageUploads)
-                .values(attachment.thumbnailUpload)
+                .values([attachment.thumbnailUpload])
                 .returning()
                 .then((rows) => rows[0])
             : null;
@@ -127,12 +127,14 @@ export const createMessage = withErrorHandler(
         }),
       );
 
-      await drizzleClient.insert(attachments).values(attachmentRecords);
+      if (attachmentRecords.length > 0) {
+        await drizzleClient.insert(attachments).values(attachmentRecords);
+      }
 
-      await drizzleClient.insert(chatCycles).values({
+      await drizzleClient.insert(chatCycles).values([{
         chatId,
         requestMessageId: requestMessage.id,
-      });
+      }]);
 
       const messageDetail = await drizzleClient.query.messages.findFirst({
         where: eq(messages.id, requestMessage.id),

@@ -6,6 +6,7 @@ import { Mention, MentionsInput, SuggestionDataItem } from "react-mentions";
 
 import { useInputAttachmentStore } from "../../stores/input-attachment-store";
 
+
 interface MessageTextInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -20,6 +21,7 @@ export const MessageTextInput = ({
     useReferenceStore();
   const [localValue, setLocalValue] = useState(value);
   const mentionsInputRef = useRef<HTMLDivElement>(null);
+  const previousReferencesRef = useRef(references);
 
   // Handle change from MentionsInput
   const handleChange = (
@@ -32,32 +34,45 @@ export const MessageTextInput = ({
     onChange(newValue);
 
     // Check for removed mentions and clean up stores
-    // Extract the reference values from mention IDs (format: value@figId)
+    // Extract the reference values from mention IDs
+    // Format: "value@figId"
     const currentMentionIds = mentions
-      .map((m) => m.id?.split(":")[0])
+      .map((m) => {
+        if (!m.id) return null;
+        // Extract the value part before @
+        const value = m.id.split("@")[0];
+        return value;
+      })
       .filter(Boolean);
+
+    // Check which references were removed
     references.forEach((ref) => {
       if (!currentMentionIds.includes(ref.value)) {
+        // Remove from reference store
         removeReferenceById(ref.value);
-        removeObjectById(ref.value);
+        
+        // Remove from canvas - if it's the fig itself (label "image"), pass the figId
+        // Otherwise pass the object's own id
+        if (ref.label === "image") {
+          // For frame/image selection, use the figId to remove the frame at index 1
+          removeObjectById(ref.figId);
+        } else {
+          // For other objects (point, box, scribble), use the value (object's id)
+          removeObjectById(ref.value);
+        }
       }
     });
-  };
-
-  // Generate a unique trigger character for a reference
-  const getTriggerForRef = (refValue: string) => {
-    // Use the reference value to generate a unique trigger
-    // We'll use @ followed by a unique identifier
-    return `@${refValue}:`;
   };
 
   // Auto-insert new reference when added to store
   useEffect(() => {
     const currentRef = getCurrentReference();
     if (!currentRef) return;
-
-    const trigger = getTriggerForRef(currentRef.value);
-    const mentionText = `${trigger}[${currentRef.label}](${currentRef.value}:${currentRef.color}@${currentRef.figId})`;
+    const { color, label, value, figId } = currentRef;
+    // Extract color code without # prefix for the format
+    const colorCode = color.startsWith("#") ? color.slice(1) : color;
+    // Format: #colorCode[label](value@figId) - backend expects # prefix with alphanumeric
+    const mentionText = `#${colorCode}[${label}](${value}@${figId})`;
 
     // Check if reference is already in the value
     if (!localValue.includes(mentionText)) {
@@ -66,7 +81,50 @@ export const MessageTextInput = ({
       setLocalValue(newValue);
       onChange(newValue);
     }
-  }, [references, getCurrentReference]);
+  }, [references, getCurrentReference, localValue]);
+
+  // Remove mention text when reference is removed (e.g., when frame is unselected)
+  useEffect(() => {
+    const previousRefs = previousReferencesRef.current;
+    
+    // Find removed references
+    const removedRefs = previousRefs.filter(
+      (prevRef) => !references.find((ref) => ref.value === prevRef.value)
+    );
+
+    if (removedRefs.length > 0) {
+      let updatedValue = localValue;
+      
+      // Remove each mention text from the input
+      removedRefs.forEach((removedRef) => {
+        // Extract color code without # prefix
+        const colorCode = removedRef.color.startsWith("#") 
+          ? removedRef.color.slice(1) 
+          : removedRef.color;
+        // Escape special regex characters
+        const escapedLabel = removedRef.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedValue = removedRef.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedColorCode = colorCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedFigId = removedRef.figId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Format: #colorCode[label](value@figId)
+        const mentionPattern = `#${escapedColorCode}\\[${escapedLabel}\\]\\(${escapedValue}@${escapedFigId}\\)`;
+        const regex = new RegExp(mentionPattern, 'g');
+        updatedValue = updatedValue.replace(regex, '').trim();
+        // Clean up extra spaces
+        updatedValue = updatedValue.replace(/\s+/g, ' ');
+      });
+
+      if (updatedValue !== localValue) {
+        setLocalValue(updatedValue);
+        onChange(updatedValue);
+      }
+    }
+
+    // Update the ref for next comparison
+    previousReferencesRef.current = references;
+  }, [references]);
+
+  console.log(value)
 
   // Sync external value changes
   useEffect(() => {
@@ -113,15 +171,18 @@ export const MessageTextInput = ({
       >
         {references.length > 0 ? (
           references.map((ref) => {
-            const trigger = getTriggerForRef(ref.value);
+            const { color, label, value, figId } = ref;
             const mentionData: SuggestionDataItem[] = [];
-
+            // Extract color code without # prefix for the format
+            const colorCode = color.startsWith("#") ? color.slice(1) : color;
+            // Format: #colorCode[label](value@figId) to match backend pattern
+            
             return (
               <Mention
                 key={ref.value}
-                trigger={trigger}
+                trigger="#"
                 data={mentionData}
-                markup={`${trigger}[__display__](__id__)`}
+                markup={`#${colorCode}[__display__](__id__)`}
                 displayTransform={(id, display) => `@${display}`}
                 style={{
                   backgroundColor: `${ref.color}20`,

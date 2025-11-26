@@ -103,71 +103,74 @@ export const getResponse = withErrorHandler(
 
       const payload = await response.json();
       const chatResponse = payload.data as ChatResponse;
-      if (!chatResponse.message) {
-        return {
-          message: "There was an error processing the request.",
-          code: 500,
-        };
-      }
 
-      const responseMessage = await drizzleClient
-        .insert(messages)
-        .values({ text: chatResponse.message.text })
-        .returning()
-        .then((rows) => rows[0]);
+      const responseMessagePayload = chatResponse.message;
+      let responseMessageId: string | null = null;
 
-      if (chatResponse.message.attachments?.length > 0) {
-        const attachmentRecords = await Promise.all(
-          chatResponse.message.attachments.map(async (attachment) => {
-            const figUpload = await drizzleClient
-              .insert(imageUploads)
-              .values({
-                filename: attachment.filename,
-                path: attachment.upload_path,
-                url: attachment.upload_url,
-                width: 0,
-                height: 0,
-              })
-              .returning()
-              .then((rows) => rows[0]);
+      if (responseMessagePayload) {
+        const insertedMessage = await drizzleClient
+          .insert(messages)
+          .values({ text: responseMessagePayload.text })
+          .returning()
+          .then((rows) => rows[0]);
+        responseMessageId = insertedMessage.id;
 
-            return {
-              messageId: responseMessage.id,
-              type: "fig" as const,
-              figUploadId: figUpload.id,
-            };
-          }),
-        );
+        if (responseMessagePayload.attachments?.length > 0) {
+          const attachmentRecords = await Promise.all(
+            responseMessagePayload.attachments.map(async (attachment) => {
+              const figUpload = await drizzleClient
+                .insert(imageUploads)
+                .values({
+                  filename: attachment.filename,
+                  path: attachment.upload_path,
+                  url: attachment.upload_url,
+                  width: 0,
+                  height: 0,
+                })
+                .returning()
+                .then((rows) => rows[0]);
 
-        await drizzleClient.insert(attachments).values(attachmentRecords);
+              return {
+                messageId: responseMessageId!,
+                type: "fig" as const,
+                figUploadId: figUpload.id,
+              };
+            }),
+          );
+
+          await drizzleClient.insert(attachments).values(attachmentRecords);
+        }
       }
 
       await drizzleClient
         .update(chatCycles)
         .set({
-          responseMessageId: responseMessage.id,
           contextUrl: chatResponse.context_url,
           dataJson: chatResponse.cycle,
+          ...(responseMessageId ? { responseMessageId } : {}),
         })
         .where(eq(chatCycles.id, lastChatCycle.id));
 
-      const messageDetail = await drizzleClient.query.messages.findFirst({
-        where: eq(messages.id, responseMessage.id),
-        with: {
-          attachments: {
-            with: {
-              figUpload: true,
-              imageUpload: true,
-              thumbnailUpload: true,
+      let messageDetail: MessageDetail | undefined;
+      if (responseMessageId) {
+        messageDetail = await drizzleClient.query.messages.findFirst({
+          where: eq(messages.id, responseMessageId),
+          with: {
+            attachments: {
+              with: {
+                figUpload: true,
+                imageUpload: true,
+                thumbnailUpload: true,
+              },
             },
           },
-        },
-      });
+        });
+      }
 
       return {
         message: "Response fetched successfully",
         code: 200,
-        data: messageDetail,
+        ...(messageDetail ? { data: messageDetail } : {}),
       };
     },
   ),

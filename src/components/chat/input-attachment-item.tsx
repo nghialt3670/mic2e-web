@@ -59,6 +59,10 @@ export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({
     setColor(stringToColor(v4()));
   };
 
+  const onFigUnselected = (fig: Group) => {
+    removeReferenceById(fig.get("id"));
+  };
+
   const onScribbleAdded = (scribble: Path) => {
     addReference({
       value: scribble.get("id"),
@@ -89,6 +93,7 @@ export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({
         onPointAdded={onPointAdded}
         onBoxAdded={onBoxAdded}
         onFigSelected={onFigSelected}
+        onFigUnselected={onFigUnselected}
         onScribbleAdded={onScribbleAdded}
         onObjectRemoved={onObjectRemoved}
         color={color}
