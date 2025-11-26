@@ -1,14 +1,24 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
+  AlertCircle,
+  ArrowLeftRight,
+  Ban,
   CheckCircle,
   ChevronDown,
   ChevronRight,
-  Code,
-  Terminal,
+  CircleCheck,
+  CircleDot,
+  Copy,
+  Play,
+  RefreshCcw,
   XCircle,
 } from "lucide-react";
 import { FC, useState } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { toast } from "sonner";
 
 interface PromptError {
   message: string;
@@ -66,10 +76,22 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
   cycle,
   cycleIndex,
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [expandedExchanges, setExpandedExchanges] = useState<Set<string>>(
     new Set(),
   );
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
+  const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedAnswers, setExpandedAnswers] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  };
 
   const toggleExchange = (exchangeIdx: number) => {
     const key = `${cycleIndex}-${exchangeIdx}`;
@@ -97,198 +119,465 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
     });
   };
 
+  const togglePrompt = (exchangeIdx: number) => {
+    const key = `${cycleIndex}-${exchangeIdx}-prompt`;
+    setExpandedPrompts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAnswer = (exchangeIdx: number, answerIdx: number) => {
+    const key = `${cycleIndex}-${exchangeIdx}-answer-${answerIdx}`;
+    setExpandedAnswers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  const hasErrors =
+    cycle.exchanges.some((ex) => ex.error) ||
+    cycle.blocks.some((block) => block.error);
+
+  const hasFeedback = cycle.blocks.some((block) => block.feedback);
+  const hasResponse = cycle.blocks.some((block) => block.response);
+
   return (
-    <div className="mb-6 last:mb-0">
-      {cycle.exchanges.length > 0 && (
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-            <Code className="h-4 w-4" />
-            LLM Exchanges
-          </h4>
-          {cycle.exchanges.map((exchange, exchangeIdx) => {
-            const key = `${cycleIndex}-${exchangeIdx}`;
-            const isExpanded = expandedExchanges.has(key);
-
-            return (
-              <div
-                key={exchangeIdx}
-                className="mb-3 border rounded-lg p-3 bg-background"
-              >
-                <button
-                  onClick={() => toggleExchange(exchangeIdx)}
-                  className="w-full flex items-start justify-between text-left"
-                >
-                  <div className="flex items-start gap-2 flex-1">
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 mt-1 flex-shrink-0" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 mt-1 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">
-                        Exchange {exchangeIdx + 1}
-                      </div>
-                      {exchange.error && (
-                        <div className="text-xs text-destructive flex items-center gap-1 mt-1">
-                          <XCircle className="h-3 w-3" />
-                          {exchange.error.message}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {exchange.answers.length} answer(s)
-                  </div>
-                </button>
-
-                {isExpanded && (
-                  <div className="mt-3 space-y-3">
-                    <div>
-                      <div className="text-xs font-medium text-muted-foreground mb-1">
-                        Prompt:
-                      </div>
-                      <pre className="text-xs bg-muted p-2 rounded overflow-x-auto whitespace-pre-wrap">
-                        {exchange.prompt.text}
-                      </pre>
-                    </div>
-
-                    {exchange.answers.map((answer, answerIdx) => (
-                      <div key={answerIdx}>
-                        <div className="text-xs font-medium text-muted-foreground mb-1">
-                          Answer {answerIdx + 1}:
-                        </div>
-                        <pre className="text-xs bg-muted p-2 rounded overflow-x-auto whitespace-pre-wrap">
-                          {answer.text}
-                        </pre>
-                      </div>
-                    ))}
-
-                    {exchange.code && (
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-1">
-                          Generated Code:
-                        </div>
-                        <pre className="text-xs bg-slate-900 text-slate-100 p-2 rounded overflow-x-auto">
-                          {exchange.code}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+    <div className="border rounded-lg bg-background">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 text-left hover:bg-accent transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <motion.div
+            animate={{ rotate: isOpen ? 90 : 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="flex-shrink-0"
+          >
+            <RefreshCcw className="size-4" />
+          </motion.div>
+          <span className="font-medium text-sm">
+            Prompt Cycle {cycleIndex + 1}
+          </span>
         </div>
-      )}
+        {hasErrors && <AlertCircle className="h-4 w-4 text-destructive" />}
+        {hasFeedback && <CircleDot className="h-4 w-4 text-yellow-600" />}
+        {hasResponse && <CircleCheck className="h-4 w-4 text-green-600" />}
+      </button>
 
-      {cycle.blocks.length > 0 && (
-        <div>
-          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-            <Terminal className="h-4 w-4" />
-            Execution Blocks
-          </h4>
-          {cycle.blocks.map((block, blockIdx) => {
-            const key = `${cycleIndex}-${blockIdx}`;
-            const isExpanded = expandedBlocks.has(key);
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="border-t bg-muted/30 overflow-hidden"
+          >
+            <div className="p-3 pb-0">
+              {cycle.exchanges.length > 0 && (
+                <div>
+                  {cycle.exchanges.map((exchange, exchangeIdx) => {
+                    const key = `${cycleIndex}-${exchangeIdx}`;
+                    const isExpanded = expandedExchanges.has(key);
 
-            return (
-              <div
-                key={blockIdx}
-                className="mb-3 border rounded-lg p-3 bg-background"
-              >
-                <button
-                  onClick={() => toggleBlock(blockIdx)}
-                  className="w-full flex items-start justify-between text-left"
-                >
-                  <div className="flex items-start gap-2 flex-1">
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 mt-1 flex-shrink-0" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 mt-1 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <div className="text-sm font-medium">
-                        Execution {blockIdx + 1}
+                    return (
+                      <div
+                        key={exchangeIdx}
+                        className="mb-3 border rounded-lg p-3 bg-background"
+                      >
+                        <button
+                          onClick={() => toggleExchange(exchangeIdx)}
+                          className="w-full flex items-start justify-between text-left"
+                        >
+                          <div className="flex items-start gap-2 flex-1">
+                            <motion.div
+                              animate={{ rotate: isExpanded ? 90 : 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              className="mt-1 flex-shrink-0"
+                            >
+                              <ArrowLeftRight className="size-4" />
+                            </motion.div>
+                            <div className="flex-1 flex flex-row justify-between items-center">
+                              <div className="text-sm font-medium">
+                                LLM Exchange {exchangeIdx + 1}
+                              </div>
+                              {exchange.code ? (
+                                <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                                  <CheckCircle className="size-4 text-green-600" />
+                                </div>
+                              ) : (
+                                <div className="text-xs text-destructive flex items-center gap-1 mt-1">
+                                  <XCircle className="size-4 text-destructive" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-3 space-y-3">
+                                <div className="border rounded-lg bg-background">
+                                  <button
+                                    onClick={() => togglePrompt(exchangeIdx)}
+                                    className="w-full flex items-center justify-between p-3 text-left hover:bg-accent transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <motion.div
+                                        animate={{
+                                          rotate: expandedPrompts.has(
+                                            `${cycleIndex}-${exchangeIdx}-prompt`,
+                                          )
+                                            ? 90
+                                            : 0,
+                                        }}
+                                        transition={{
+                                          duration: 0.2,
+                                          ease: "easeInOut",
+                                        }}
+                                        className="flex-shrink-0"
+                                      >
+                                        <ChevronDown className="h-4 w-4" />
+                                      </motion.div>
+                                      <div className="text-xs font-semibold text-muted-foreground tracking-wide">
+                                        Prompt
+                                      </div>
+                                    </div>
+                                  </button>
+                                  <AnimatePresence>
+                                    {expandedPrompts.has(
+                                      `${cycleIndex}-${exchangeIdx}-prompt`,
+                                    ) && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{
+                                          duration: 0.2,
+                                          ease: "easeInOut",
+                                        }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="bg-muted/50 p-3 text-xs whitespace-pre-wrap leading-relaxed">
+                                          {exchange.prompt.text}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+
+                                {exchange.answers.map((answer, answerIdx) => {
+                                  const answerKey = `${cycleIndex}-${exchangeIdx}-answer-${answerIdx}`;
+                                  const isAnswerExpanded =
+                                    expandedAnswers.has(answerKey);
+                                  return (
+                                    <div
+                                      key={answerIdx}
+                                      className="border rounded-lg bg-background"
+                                    >
+                                      <button
+                                        onClick={() =>
+                                          toggleAnswer(exchangeIdx, answerIdx)
+                                        }
+                                        className="w-full flex items-center justify-between p-3 text-left hover:bg-accent transition-colors"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <motion.div
+                                            animate={{
+                                              rotate: isAnswerExpanded ? 90 : 0,
+                                            }}
+                                            transition={{
+                                              duration: 0.2,
+                                              ease: "easeInOut",
+                                            }}
+                                            className="flex-shrink-0"
+                                          >
+                                            <ChevronDown className="h-4 w-4" />
+                                          </motion.div>
+                                          <div className="text-xs font-semibold text-muted-foreground tracking-wide">
+                                            Answer {answerIdx + 1}
+                                          </div>
+                                        </div>
+                                      </button>
+                                      <AnimatePresence>
+                                        {isAnswerExpanded && (
+                                          <motion.div
+                                            initial={{
+                                              height: 0,
+                                              opacity: 0,
+                                            }}
+                                            animate={{
+                                              height: "auto",
+                                              opacity: 1,
+                                            }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{
+                                              duration: 0.2,
+                                              ease: "easeInOut",
+                                            }}
+                                            className="overflow-hidden"
+                                          >
+                                            <div className="bg-muted/50 p-3 text-xs whitespace-pre-wrap leading-relaxed">
+                                              {answer.text}
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  );
+                                })}
+
+                                {exchange.code && (
+                                  <div className="relative rounded-lg border bg-white overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+                                      <span className="text-xs text-gray-500 font-medium">
+                                        python
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            exchange.code!,
+                                            "Generated code",
+                                          )
+                                        }
+                                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                                      >
+                                        <Copy className="h-3.5 w-3.5" />
+                                        Copy code
+                                      </button>
+                                    </div>
+                                    <SyntaxHighlighter
+                                      language="python"
+                                      style={oneLight}
+                                      customStyle={{
+                                        margin: 0,
+                                        padding: "1rem",
+                                        fontSize: "0.75rem",
+                                        lineHeight: "1.5",
+                                        background: "transparent",
+                                      }}
+                                      wrapLines
+                                      wrapLongLines
+                                    >
+                                      {exchange.code}
+                                    </SyntaxHighlighter>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                      {block.error && (
-                        <div className="text-xs text-destructive flex items-center gap-1 mt-1">
-                          <XCircle className="h-3 w-3" />
-                          {block.error.message}
-                        </div>
-                      )}
-                      {!block.error && block.is_executed && (
-                        <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Executed successfully
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </button>
+                    );
+                  })}
+                </div>
+              )}
 
-                {isExpanded && (
-                  <div className="mt-3 space-y-3">
-                    <div>
-                      <div className="text-xs font-medium text-muted-foreground mb-1">
-                        Generated Code:
-                      </div>
-                      <pre className="text-xs bg-slate-900 text-slate-100 p-2 rounded overflow-x-auto">
-                        {block.generated_code}
-                      </pre>
-                    </div>
+              {cycle.blocks.length > 0 && (
+                <div>
+                  {cycle.blocks.map((block, blockIdx) => {
+                    const key = `${cycleIndex}-${blockIdx}`;
+                    const isExpanded = expandedBlocks.has(key);
 
-                    {block.processed_code !== block.generated_code && (
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-1">
-                          Processed Code:
-                        </div>
-                        <pre className="text-xs bg-slate-900 text-slate-100 p-2 rounded overflow-x-auto">
-                          {block.processed_code}
-                        </pre>
-                      </div>
-                    )}
+                    return (
+                      <div
+                        key={blockIdx}
+                        className="mb-3 border rounded-lg p-3 bg-background"
+                      >
+                        <button
+                          onClick={() => toggleBlock(blockIdx)}
+                          className="w-full flex flex-row items-start justify-between text-left"
+                        >
+                          <div className="flex items-start gap-2 flex-1">
+                            <motion.div
+                              animate={{ rotate: isExpanded ? 90 : 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              className="mt-1 flex-shrink-0"
+                            >
+                              <Play className="size-4" />
+                            </motion.div>
+                            <div className="flex-1 flex flex-row justify-between items-center">
+                              <div className="text-sm font-medium">
+                                Execution Block {blockIdx + 1}
+                              </div>
+                              {!block.is_executed && (
+                                <Ban className="size-4 text-muted-foreground" />
+                              )}
+                              {block.feedback && (
+                                <CircleDot className="size-4 text-yellow-600" />
+                              )}
+                              {block.response && (
+                                <CircleCheck className="size-4 text-green-600" />
+                              )}
+                              {block.error && (
+                                <XCircle className="size-4 text-destructive" />
+                              )}
+                            </div>
+                          </div>
+                        </button>
 
-                    {block.logs && block.logs.length > 0 && (
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-1">
-                          Logs:
-                        </div>
-                        <div className="text-xs bg-muted p-2 rounded space-y-1">
-                          {block.logs.map((log, logIdx) => (
-                            <div key={logIdx}>{log}</div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-3 space-y-4">
+                                <div className="relative rounded-lg border bg-white overflow-hidden">
+                                  <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+                                    <span className="text-xs text-gray-500 font-medium">
+                                      python
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        copyToClipboard(
+                                          block.generated_code,
+                                          "Generated code",
+                                        )
+                                      }
+                                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                      Copy code
+                                    </button>
+                                  </div>
+                                  <SyntaxHighlighter
+                                    language="python"
+                                    style={oneLight}
+                                    customStyle={{
+                                      margin: 0,
+                                      padding: "1rem",
+                                      fontSize: "0.75rem",
+                                      lineHeight: "1.5",
+                                      background: "transparent",
+                                    }}
+                                    wrapLines
+                                    wrapLongLines
+                                  >
+                                    {block.generated_code}
+                                  </SyntaxHighlighter>
+                                </div>
 
-                    {block.feedback && (
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-1">
-                          Feedback:
-                        </div>
-                        <div className="text-xs bg-muted p-2 rounded">
-                          {block.feedback.text}
-                        </div>
-                      </div>
-                    )}
+                                {block.processed_code !==
+                                  block.generated_code && (
+                                  <div className="relative rounded-lg border bg-white overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+                                      <span className="text-xs text-gray-500 font-medium">
+                                        python
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            block.processed_code,
+                                            "Processed code",
+                                          )
+                                        }
+                                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                                      >
+                                        <Copy className="h-3.5 w-3.5" />
+                                        Copy code
+                                      </button>
+                                    </div>
+                                    <SyntaxHighlighter
+                                      language="python"
+                                      style={oneLight}
+                                      customStyle={{
+                                        margin: 0,
+                                        padding: "1rem",
+                                        fontSize: "0.75rem",
+                                        lineHeight: "1.5",
+                                        background: "transparent",
+                                      }}
+                                      wrapLines
+                                      wrapLongLines
+                                    >
+                                      {block.processed_code}
+                                    </SyntaxHighlighter>
+                                  </div>
+                                )}
 
-                    {block.response && (
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-1">
-                          Response:
-                        </div>
-                        <div className="text-xs bg-muted p-2 rounded">
-                          {block.response.text}
-                        </div>
+                                {block.logs && block.logs.length > 0 && (
+                                  <div className="bg-muted/50 p-3 rounded-lg border text-xs font-mono space-y-1 max-h-48 overflow-y-auto text-foreground">
+                                    {block.logs.map((log, logIdx) => (
+                                      <div key={logIdx}>{log}</div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {block.feedback && (
+                                  <div className="relative rounded-lg border bg-white overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+                                      <span className="text-xs text-gray-500 font-medium">
+                                        json
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            JSON.stringify(
+                                              block.feedback,
+                                              null,
+                                              2,
+                                            ),
+                                            "Feedback JSON",
+                                          )
+                                        }
+                                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                                      >
+                                        <Copy className="h-3.5 w-3.5" />
+                                        Copy code
+                                      </button>
+                                    </div>
+                                    <SyntaxHighlighter
+                                      language="json"
+                                      style={oneLight}
+                                      customStyle={{
+                                        margin: 0,
+                                        padding: "1rem",
+                                        fontSize: "0.75rem",
+                                        lineHeight: "1.5",
+                                        background: "transparent",
+                                      }}
+                                      wrapLines
+                                      wrapLongLines
+                                    >
+                                      {JSON.stringify(block.feedback, null, 2)}
+                                    </SyntaxHighlighter>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { createImageFileFromFigObject } from "@/lib/fabric";
 import { uploadFileToApi } from "@/lib/storage/api-storage";

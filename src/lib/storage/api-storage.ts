@@ -31,4 +31,3 @@ export async function uploadFileToApi(
 
   return payload.data ?? payload;
 }
-

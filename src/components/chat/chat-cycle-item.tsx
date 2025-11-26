@@ -26,7 +26,7 @@ export const ChatCycleItem: FC<ChatCycleItemProps> = ({
   const cycles = data?.cycles || [];
 
   return (
-    <div className="flex flex-col justify-start items-center h-full w-full overflow-y-scroll pr-2 pl-6">
+    <div className="flex flex-col justify-start items-center h-full w-full pr-2 pl-6 gap-2">
       <div className="max-w-5xl w-full">
         <MessageItem message={requestMessage} />
       </div>

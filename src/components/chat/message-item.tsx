@@ -10,7 +10,7 @@ interface MessageItemProps {
 
 export const MessageItem: FC<MessageItemProps> = ({ message }) => {
   return (
-    <div className="rounded-lg border p-2 size-fit rounded-tl-none">
+    <div className="rounded-lg border p-2 size-fit">
       <MessageTextDisplay text={message.text} />
       {message.attachments.length > 0 && (
         <div className="mt-2">
