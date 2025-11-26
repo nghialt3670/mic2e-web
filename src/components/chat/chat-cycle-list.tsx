@@ -31,16 +31,15 @@ export const ChatCycleList = () => {
   const lastIndex = chatCycles.length - 1;
 
   return (
-    <div className="flex flex-col justify-start items-center h-full w-full overflow-y-scroll pr-2 pl-6">
+    <div className="flex flex-col w-full">
       {chatCycles.map((chatCycle, index) => (
-        <div className="max-w-5xl w-full" key={chatCycle.id}>
           <ChatCycleItem
+            key={chatCycle.id}
             chatCycle={chatCycle}
             showResponseSkeleton={
               isResponding && index === lastIndex && !chatCycle.responseMessage
             }
           />
-        </div>
       ))}
 
       {isResponding && chatCycles.length === 0 && (

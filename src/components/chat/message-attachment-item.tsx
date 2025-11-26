@@ -1,10 +1,10 @@
+'use client';
+
 import { createImageFileFromFigObject } from "@/lib/fabric";
-import { uploadFileToSupabase } from "@/lib/supabase/supabase-utils";
-import { clientEnv } from "@/utils/client/client-env";
+import { uploadFileToApi } from "@/lib/storage/api-storage";
 import { createImageThumbnail } from "@/utils/client/image";
 import Image from "next/image";
-import { useState } from "react";
-import { FC, useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 
 import type { AttachmentDetail } from "../../types";
 
@@ -39,19 +39,17 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
           height,
         } = await createImageThumbnail(imageFile);
 
-        const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
         const thumbnailPath = `thumbnails/${attachment.figUpload.filename}.jpeg`;
-        const thumbnailUrl = await uploadFileToSupabase(
+        const uploadResponse = await uploadFileToApi(
           thumbnailFile,
           thumbnailPath,
-          bucketName,
         );
 
         setThumbnail({
           id: attachment.thumbnailUploadId ?? attachment.figUploadId ?? "",
           filename: attachment.figUpload.filename,
           path: thumbnailPath,
-          url: thumbnailUrl,
+          url: uploadResponse.upload_url,
           width,
           height,
           createdAt: new Date(),

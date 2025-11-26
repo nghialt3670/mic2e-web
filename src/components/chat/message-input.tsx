@@ -5,9 +5,8 @@ import {
   createImageFileFromFigObject,
   getFigObjectDimensions,
 } from "@/lib/fabric";
-import { uploadFileToSupabase } from "@/lib/supabase/supabase-utils";
+import { uploadFileToApi } from "@/lib/storage/api-storage";
 import { withToastHandler } from "@/utils/client/client-action-handlers";
-import { clientEnv } from "@/utils/client/client-env";
 import { getImageDimensions } from "@/utils/client/file-readers";
 import { createImageThumbnail } from "@/utils/client/image";
 import { to } from "await-to-js";
@@ -134,7 +133,7 @@ export const MessageInput = () => {
   };
 
   return (
-    <form className="w-full p-4" onSubmit={handleSubmit}>
+    <form className="w-full" onSubmit={handleSubmit}>
       <div className="relative border rounded-2xl bg-white shadow-sm">
         {/* Attachments inside the input */}
         {attachments.length > 0 && (
@@ -182,7 +181,6 @@ export const MessageInput = () => {
 const uploadInputAttachments = async (
   attachments: InputAttachment[],
 ): Promise<CreateAttachmentData[]> => {
-  const bucketName = clientEnv.NEXT_PUBLIC_ATTACHMENT_BUCKET_NAME;
   return await Promise.all(
     attachments.map(async (attachment) => {
       const figFilename = `${v4()}_${attachment.imageFile.name}.fig.json`;
@@ -193,20 +191,15 @@ const uploadInputAttachments = async (
       const figUploadPath = `figs/${figFilename}`;
       const { width: figWidth, height: figHeight } =
         await getFigObjectDimensions(attachment.figObject);
-      const figUploadUrl = await uploadFileToSupabase(
-        figFile,
-        figUploadPath,
-        bucketName,
-      );
+      const figUpload = await uploadFileToApi(figFile, figUploadPath);
 
       const imageFilename = `${v4()}_${attachment.imageFile.name}`;
       const imageUploadPath = `images/${imageFilename}`;
       const { width: imageWidth, height: imageHeight } =
         await getImageDimensions(attachment.imageFile);
-      const imageUploadUrl = await uploadFileToSupabase(
+      const imageUpload = await uploadFileToApi(
         attachment.imageFile,
         imageUploadPath,
-        bucketName,
       );
 
       const thumbnailFilename = `${v4()}_${attachment.imageFile.name}.jpeg`;
@@ -219,10 +212,9 @@ const uploadInputAttachments = async (
         height: thumbnailHeight,
       } = await createImageThumbnail(imageFile);
       const thumbnailUploadPath = `thumbnails/${thumbnailFilename}`;
-      const thumbnailUploadUrl = await uploadFileToSupabase(
+      const thumbnailUpload = await uploadFileToApi(
         thumbnailFile,
         thumbnailUploadPath,
-        bucketName,
       );
 
       return {
@@ -230,21 +222,21 @@ const uploadInputAttachments = async (
         figUpload: {
           filename: figFilename,
           path: figUploadPath,
-          url: figUploadUrl,
+          url: figUpload.upload_url,
           width: figWidth,
           height: figHeight,
         },
         imageUpload: {
           filename: attachment.imageFile.name,
           path: imageUploadPath,
-          url: imageUploadUrl,
+          url: imageUpload.upload_url,
           width: imageWidth,
           height: imageHeight,
         },
         thumbnailUpload: {
           filename: attachment.imageFile.name,
           path: thumbnailUploadPath,
-          url: thumbnailUploadUrl,
+          url: thumbnailUpload.upload_url,
           width: thumbnailWidth,
           height: thumbnailHeight,
         },
