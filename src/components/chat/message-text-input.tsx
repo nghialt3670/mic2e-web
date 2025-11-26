@@ -124,8 +124,6 @@ export const MessageTextInput = ({
     previousReferencesRef.current = references;
   }, [references]);
 
-  console.log(value)
-
   // Sync external value changes
   useEffect(() => {
     if (value !== localValue) {

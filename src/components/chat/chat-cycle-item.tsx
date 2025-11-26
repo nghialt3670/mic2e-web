@@ -1,19 +1,24 @@
 import { ChatCycleDetail } from "@/types/chat-cycle-detail";
 import { FC } from "react";
 
+import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { MessageItem } from "./message-item";
 import { PromptCycle } from "./prompt-cycle-item";
 import { PromptCycleList } from "./prompt-cycle-list";
 
 interface ChatCycleItemProps {
   chatCycle: ChatCycleDetail;
+  showResponseSkeleton?: boolean;
 }
 
 interface ChatCycleDataJson {
   cycles?: PromptCycle[];
 }
 
-export const ChatCycleItem: FC<ChatCycleItemProps> = ({ chatCycle }) => {
+export const ChatCycleItem: FC<ChatCycleItemProps> = ({
+  chatCycle,
+  showResponseSkeleton = false,
+}) => {
   const { requestMessage, responseMessage, dataJson } = chatCycle;
 
   // Extract cycles from dataJson
@@ -32,11 +37,13 @@ export const ChatCycleItem: FC<ChatCycleItemProps> = ({ chatCycle }) => {
         </div>
       )}
 
-      {responseMessage && (
-        <div className="max-w-5xl w-full">
+      <div className="max-w-5xl w-full">
+        {responseMessage ? (
           <MessageItem message={responseMessage} />
-        </div>
-      )}
+        ) : (
+          showResponseSkeleton && <MessageSkeleton />
+        )}
+      </div>
     </div>
   );
 };

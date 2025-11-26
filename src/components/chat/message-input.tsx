@@ -4,6 +4,7 @@ import {
   createImageFileFromFigObject,
   getFigObjectDimensions,
 } from "@/lib/fabric";
+import type { ImageUpload } from "@/lib/drizzle/drizzle-schema";
 import { uploadFileToSupabase } from "@/lib/supabase/supabase-utils";
 import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { clientEnv } from "@/utils/client/client-env";
@@ -22,13 +23,17 @@ import {
   CreateMessageRequest,
   createMessage,
 } from "../../actions/message/create-message";
-import { CreateAttachmentData } from "../../actions/message/create-message";
+import {
+  CreateAttachmentData,
+  CreateImageUploadData,
+} from "../../actions/message/create-message";
 import { useChatStore } from "../../stores/chat-store";
 import {
   InputAttachment,
   useInputAttachmentStore,
 } from "../../stores/input-attachment-store";
 import { useMessageStore } from "../../stores/message-store";
+import { AttachmentDetail, MessageDetail } from "../../types";
 import { InputAttachmentList } from "./input-attachment-list";
 import { MessageAttachmentInput } from "./message-attachment-input";
 import { MessageTextInput } from "./message-text-input";
@@ -37,7 +42,7 @@ export const MessageInput = () => {
   const pathname = usePathname();
   const [text, setText] = useState("");
   const { chat, setChat, addChat, updateChatStatus } = useChatStore();
-  const { addMessage } = useMessageStore();
+  const { addMessage, updateMessage, removeMessage } = useMessageStore();
   const { clearInputAttachments, getInputAttachments } =
     useInputAttachmentStore();
   const attachments = getInputAttachments();
@@ -63,15 +68,31 @@ export const MessageInput = () => {
     updateChatStatus("requesting");
 
     const chatId = await getChatId();
-    if (!chatId) return;
+    if (!chatId) {
+      updateChatStatus("idle");
+      return;
+    }
 
     const [error, uploadedAttachments] = await to(
       uploadInputAttachments(attachments),
     );
     if (error) {
       toast.error("Failed to upload attachments");
+      updateChatStatus("idle");
       return;
     }
+
+    const optimisticMessageId = v4();
+    const optimisticMessage = buildOptimisticMessage({
+      id: optimisticMessageId,
+      text,
+      attachments: uploadedAttachments,
+    });
+
+    addMessage(optimisticMessage);
+    setText("");
+    clearInputAttachments();
+    updateChatStatus("responding");
 
     const createMessageRequest: CreateMessageRequest = {
       chatId,
@@ -85,12 +106,11 @@ export const MessageInput = () => {
       createMessageRequest,
     );
     if (createdMessage) {
-      setText("");
-      clearInputAttachments();
-      addMessage(createdMessage);
-      updateChatStatus("responding");
+      updateMessage(optimisticMessageId, createdMessage);
     } else {
+      removeMessage(optimisticMessageId);
       updateChatStatus("idle");
+      return;
     }
 
     const responseMessage = await withToastHandler(getResponse, {
@@ -231,4 +251,78 @@ const uploadInputAttachments = async (
       };
     }),
   );
+};
+
+const buildOptimisticMessage = ({
+  id,
+  text,
+  attachments,
+}: {
+  id: string;
+  text: string;
+  attachments: CreateAttachmentData[];
+}): MessageDetail => {
+  const timestamp = new Date();
+  return {
+    id,
+    text,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    attachments: attachments.map((attachment) =>
+      buildOptimisticAttachment(attachment, id, timestamp),
+    ),
+  } as MessageDetail;
+};
+
+const buildOptimisticAttachment = (
+  attachment: CreateAttachmentData,
+  messageId: string,
+  timestamp: Date,
+): AttachmentDetail => {
+  const attachmentId = v4();
+  const figUpload = buildOptimisticImageUpload(attachment.figUpload, timestamp);
+  const imageUpload = buildOptimisticImageUpload(
+    attachment.imageUpload,
+    timestamp,
+  );
+  const thumbnailUpload = buildOptimisticImageUpload(
+    attachment.thumbnailUpload,
+    timestamp,
+  );
+
+  return {
+    id: attachmentId,
+    messageId,
+    type: attachment.type,
+    figUploadId: figUpload?.id ?? null,
+    imageUploadId: imageUpload?.id ?? null,
+    thumbnailUploadId: thumbnailUpload?.id ?? null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    figUpload,
+    imageUpload,
+    thumbnailUpload,
+  } as AttachmentDetail;
+};
+
+const buildOptimisticImageUpload = (
+  upload?: CreateImageUploadData,
+  timestamp?: Date,
+): ImageUpload | null => {
+  if (!upload) {
+    return null;
+  }
+
+  const id = v4();
+  const createdAt = timestamp ?? new Date();
+  return {
+    id,
+    filename: upload.filename,
+    path: upload.path,
+    url: upload.url,
+    width: upload.width,
+    height: upload.height,
+    createdAt,
+    updatedAt: createdAt,
+  };
 };
