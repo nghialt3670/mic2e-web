@@ -292,4 +292,3 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
     </div>
   );
 };
-

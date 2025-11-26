@@ -84,4 +84,3 @@ export const PromptCycleList: FC<PromptCycleListProps> = ({ cycles }) => {
     </div>
   );
 };
-

@@ -84,13 +84,13 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
 export const removeFigFrame = (canvas: Canvas) => {
   const fig = canvas.getObjects()[0] as Group;
   const figObjects = fig.getObjects();
-  
+
   // Check if frame exists at index 1 (has same id as fig)
   if (figObjects.length > 1 && figObjects[1]?.get("id") === fig.get("id")) {
     fig.remove(figObjects[1]);
     canvas.requestRenderAll();
   }
-  
+
   return fig;
 };
 

@@ -6,7 +6,6 @@ import { Mention, MentionsInput, SuggestionDataItem } from "react-mentions";
 
 import { useInputAttachmentStore } from "../../stores/input-attachment-store";
 
-
 interface MessageTextInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -50,7 +49,7 @@ export const MessageTextInput = ({
       if (!currentMentionIds.includes(ref.value)) {
         // Remove from reference store
         removeReferenceById(ref.value);
-        
+
         // Remove from canvas - if it's the fig itself (label "image"), pass the figId
         // Otherwise pass the object's own id
         if (ref.label === "image") {
@@ -86,32 +85,44 @@ export const MessageTextInput = ({
   // Remove mention text when reference is removed (e.g., when frame is unselected)
   useEffect(() => {
     const previousRefs = previousReferencesRef.current;
-    
+
     // Find removed references
     const removedRefs = previousRefs.filter(
-      (prevRef) => !references.find((ref) => ref.value === prevRef.value)
+      (prevRef) => !references.find((ref) => ref.value === prevRef.value),
     );
 
     if (removedRefs.length > 0) {
       let updatedValue = localValue;
-      
+
       // Remove each mention text from the input
       removedRefs.forEach((removedRef) => {
         // Extract color code without # prefix
-        const colorCode = removedRef.color.startsWith("#") 
-          ? removedRef.color.slice(1) 
+        const colorCode = removedRef.color.startsWith("#")
+          ? removedRef.color.slice(1)
           : removedRef.color;
         // Escape special regex characters
-        const escapedLabel = removedRef.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const escapedValue = removedRef.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const escapedColorCode = colorCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const escapedFigId = removedRef.figId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedLabel = removedRef.label.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        const escapedValue = removedRef.value.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        const escapedColorCode = colorCode.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
+        const escapedFigId = removedRef.figId.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&",
+        );
         // Format: #colorCode[label](value@figId)
         const mentionPattern = `#${escapedColorCode}\\[${escapedLabel}\\]\\(${escapedValue}@${escapedFigId}\\)`;
-        const regex = new RegExp(mentionPattern, 'g');
-        updatedValue = updatedValue.replace(regex, '').trim();
+        const regex = new RegExp(mentionPattern, "g");
+        updatedValue = updatedValue.replace(regex, "").trim();
         // Clean up extra spaces
-        updatedValue = updatedValue.replace(/\s+/g, ' ');
+        updatedValue = updatedValue.replace(/\s+/g, " ");
       });
 
       if (updatedValue !== localValue) {
@@ -174,7 +185,7 @@ export const MessageTextInput = ({
             // Extract color code without # prefix for the format
             const colorCode = color.startsWith("#") ? color.slice(1) : color;
             // Format: #colorCode[label](value@figId) to match backend pattern
-            
+
             return (
               <Mention
                 key={ref.value}

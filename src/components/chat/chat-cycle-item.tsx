@@ -1,7 +1,7 @@
+import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { ChatCycleDetail } from "@/types/chat-cycle-detail";
 import { FC } from "react";
 
-import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { MessageItem } from "./message-item";
 import { PromptCycle } from "./prompt-cycle-item";
 import { PromptCycleList } from "./prompt-cycle-list";

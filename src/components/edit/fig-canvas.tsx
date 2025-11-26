@@ -117,7 +117,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
           const figFrame = createFigFrame(canvas, color);
           onFigSelected?.(figFrame);
         }
-        
+
         handleFigChange();
         return;
       }

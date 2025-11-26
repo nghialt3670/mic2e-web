@@ -131,10 +131,12 @@ export const createMessage = withErrorHandler(
         await drizzleClient.insert(attachments).values(attachmentRecords);
       }
 
-      await drizzleClient.insert(chatCycles).values([{
-        chatId,
-        requestMessageId: requestMessage.id,
-      }]);
+      await drizzleClient.insert(chatCycles).values([
+        {
+          chatId,
+          requestMessageId: requestMessage.id,
+        },
+      ]);
 
       const messageDetail = await drizzleClient.query.messages.findFirst({
         where: eq(messages.id, requestMessage.id),

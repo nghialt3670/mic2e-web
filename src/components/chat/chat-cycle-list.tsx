@@ -1,11 +1,11 @@
 "use client";
 
+import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { useEffect } from "react";
 
 import { getChatCyclePage } from "../../actions/chat-cycle";
 import { useChatCycleStore } from "../../stores/chat-cycle-store";
 import { useChatStore } from "../../stores/chat-store";
-import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { ChatCycleItem } from "./chat-cycle-item";
 
 export const ChatCycleList = () => {
@@ -37,9 +37,7 @@ export const ChatCycleList = () => {
           <ChatCycleItem
             chatCycle={chatCycle}
             showResponseSkeleton={
-              isResponding &&
-              index === lastIndex &&
-              !chatCycle.responseMessage
+              isResponding && index === lastIndex && !chatCycle.responseMessage
             }
           />
         </div>

@@ -1,11 +1,11 @@
-import { useState } from "react";
-import Image from "next/image";
-import { FC, useEffect } from "react";
-
 import { createImageFileFromFigObject } from "@/lib/fabric";
 import { uploadFileToSupabase } from "@/lib/supabase/supabase-utils";
 import { clientEnv } from "@/utils/client/client-env";
 import { createImageThumbnail } from "@/utils/client/image";
+import Image from "next/image";
+import { useState } from "react";
+import { FC, useEffect } from "react";
+
 import type { AttachmentDetail } from "../../types";
 
 interface MessageAttachmentItemProps {
