@@ -100,11 +100,10 @@ export const FigCanvas: FC<FigCanvasProps> = ({
     };
     
     const handleSingleClick = (point: Point) => {
-      // Single click: create point and arm for box drawing
+      // Single click: create point (arming already happened immediately on click)
       const createdPoint = createPoint(point, canvas, color);
       onPointAdded?.(createdPoint);
       handleFigChange();
-      state.isArmedDraw = true;
     };
 
     canvas.on("mouse:down", (e: any) => {
@@ -221,11 +220,11 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       if (state.dragStarted) {
         // CASE 1 & 4: Drag completed (regular draw or armed draw)
         if (state.isArmedDraw) {
-          // Armed draw: create box
+          // Armed draw: create box and disarm
           const box = createBox(state.mouseDownPoint, e.pointer, canvas, color);
           onBoxAdded?.(box);
           handleFigChange();
-          state.isArmedDraw = false;
+          state.isArmedDraw = false; // Disarm after creating box
         } else {
           // Regular draw: create scribble
           const scribble = createScribble(state.pathPoints, canvas, color);
@@ -244,12 +243,16 @@ export const FigCanvas: FC<FigCanvasProps> = ({
         
         // Check if this is a double click
         if (timeSinceLastClick < DOUBLE_CLICK_THRESHOLD) {
-          // Double click detected
+          // Double click detected - disarm and toggle frame
+          state.isArmedDraw = false;
           handleDoubleClick();
           state.lastClickTime = 0; // Reset to prevent triple-click issues
         } else {
-          // Potential single click - wait to confirm it's not a double click
+          // Potential single click - arm immediately but delay point creation
+          state.isArmedDraw = true;
+          
           state.clickTimer = setTimeout(() => {
+            // Only create the point if not cancelled by double-click
             handleSingleClick(clickPoint);
             state.clickTimer = null;
           }, DOUBLE_CLICK_THRESHOLD);
