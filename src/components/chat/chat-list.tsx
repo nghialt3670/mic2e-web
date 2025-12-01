@@ -25,7 +25,7 @@ export const ChatList = () => {
 
   return (
     <div className="flex flex-col gap-1 h-full max-h-[calc(100vh-10rem)] overflow-y-scroll">
-      {chats.reverse().map((chat) => (
+      {chats.map((chat) => (
         <ChatItem key={chat.id} chat={chat} />
       ))}
     </div>

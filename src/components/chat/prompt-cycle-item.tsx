@@ -170,7 +170,7 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
             Prompt Cycle {cycleIndex + 1}
           </span>
         </div>
-        {hasErrors && <AlertCircle className="h-4 w-4 text-destructive" />}
+        {hasErrors && <XCircle className="h-4 w-4 text-destructive" />}
         {hasFeedback && <CircleDot className="h-4 w-4 text-yellow-600" />}
         {hasResponse && <CircleCheck className="h-4 w-4 text-green-600" />}
       </button>
@@ -421,11 +421,11 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                               {!block.is_executed && (
                                 <Ban className="size-4 text-muted-foreground" />
                               )}
+                              {block.is_executed && !block.feedback && !block.error && (
+                                <CircleCheck className="size-4 text-green-600" />
+                              )}
                               {block.feedback && (
                                 <CircleDot className="size-4 text-yellow-600" />
-                              )}
-                              {block.response && (
-                                <CircleCheck className="size-4 text-green-600" />
                               )}
                               {block.error && (
                                 <XCircle className="size-4 text-destructive" />

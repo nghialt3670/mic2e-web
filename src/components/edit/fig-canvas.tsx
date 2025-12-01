@@ -67,6 +67,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
     tempObject: null as FabricObject | null,
     clickTimer: null as NodeJS.Timeout | null,
     lastClickTime: 0,
+    pendingArmPoint: null as Point | null, // Track which point armed the draw
   });
 
   const handleFigChange = () => {
@@ -74,7 +75,8 @@ export const FigCanvas: FC<FigCanvasProps> = ({
     if (!canvas) return;
     const fig = canvas.getObjects()[0];
     if (!fig) return;
-    const figObject = fig.toObject(["id"]);
+    const figObject = fig.toObject(["id", "is_ephemeral"]);
+    console.log("figObject", figObject);
     onFigObjectChange?.(figObject);
   };
 
@@ -115,6 +117,17 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       state.isDragging = false;
       state.dragStarted = false;
       state.pathPoints = [e.pointer];
+
+      // Check if this mouse down is on the same point that armed the draw
+      const isContinuingFromArmedClick = state.pendingArmPoint && 
+        Math.abs(e.pointer.x - state.pendingArmPoint.x) < 5 &&
+        Math.abs(e.pointer.y - state.pendingArmPoint.y) < 5;
+
+      // If this is a new mouse down (not continuing from armed click), disarm
+      if (state.isArmedDraw && !isContinuingFromArmedClick) {
+        state.isArmedDraw = false;
+        state.pendingArmPoint = null;
+      }
 
       // Cancel any pending single click timer
       if (state.clickTimer) {
@@ -225,6 +238,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
           onBoxAdded?.(box);
           handleFigChange();
           state.isArmedDraw = false; // Disarm after creating box
+          state.pendingArmPoint = null;
         } else {
           // Regular draw: create scribble
           const scribble = createScribble(state.pathPoints, canvas, color);
@@ -245,11 +259,13 @@ export const FigCanvas: FC<FigCanvasProps> = ({
         if (timeSinceLastClick < DOUBLE_CLICK_THRESHOLD) {
           // Double click detected - disarm and toggle frame
           state.isArmedDraw = false;
+          state.pendingArmPoint = null;
           handleDoubleClick();
           state.lastClickTime = 0; // Reset to prevent triple-click issues
         } else {
           // Potential single click - arm immediately but delay point creation
           state.isArmedDraw = true;
+          state.pendingArmPoint = clickPoint; // Remember where the arm happened
           
           state.clickTimer = setTimeout(() => {
             // Only create the point if not cancelled by double-click

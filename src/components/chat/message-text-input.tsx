@@ -15,11 +15,16 @@ export const MessageTextInput = ({
   value,
   onChange,
 }: MessageTextInputProps) => {
-  const { removeObjectById } = useInputAttachmentStore();
-  const { references, getCurrentReference, removeReferenceById } =
-    useReferenceStore();
+  const { removeObjectById, clearInputAttachments } = useInputAttachmentStore();
+  const {
+    references,
+    getCurrentReference,
+    removeReferenceById,
+    clearReferences,
+  } = useReferenceStore();
   const [localValue, setLocalValue] = useState(value);
   const mentionsInputRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
   const previousReferencesRef = useRef(references);
 
   // Handle change from MentionsInput
@@ -135,12 +140,97 @@ export const MessageTextInput = ({
     previousReferencesRef.current = references;
   }, [references]);
 
-  // Sync external value changes
+  // Sync external value changes and clear references/attachments when value is cleared
   useEffect(() => {
     if (value !== localValue) {
       setLocalValue(value);
+      
+      // If value is cleared externally (empty string), clear all references and attachments
+      if (!value || value.trim() === "") {
+        clearReferences();
+        clearInputAttachments();
+      }
     }
-  }, [value]);
+  }, [value, localValue, clearReferences, clearInputAttachments]);
+
+  // Re-focus when value is cleared (e.g., after sending a message)
+  const previousValueRef = useRef(localValue);
+  useEffect(() => {
+    // Only refocus if value was cleared (went from non-empty to empty)
+    if (previousValueRef.current && !localValue) {
+      const container = mentionsInputRef.current;
+      if (!container) return;
+
+      const textarea = container.querySelector("textarea");
+      if (textarea) {
+        inputRef.current = textarea;
+        // Small delay to ensure the input is ready
+        setTimeout(() => {
+          textarea.focus();
+        }, 0);
+      }
+    }
+    previousValueRef.current = localValue;
+  }, [localValue]);
+
+  // Auto-focus on mount and keep focused
+  useEffect(() => {
+    const findAndFocusInput = () => {
+      const container = mentionsInputRef.current;
+      if (!container) return false;
+
+      // MentionsInput creates a textarea element
+      const textarea = container.querySelector("textarea");
+      if (textarea) {
+        inputRef.current = textarea;
+        textarea.focus();
+        return true;
+      }
+      return false;
+    };
+
+    // Try to focus immediately
+    if (!findAndFocusInput()) {
+      // If not found, try again after a short delay (for async rendering)
+      const timeoutId = setTimeout(() => {
+        findAndFocusInput();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    // Keep focused when it loses focus
+    const handleBlur = (e: Event) => {
+      const focusEvent = e as FocusEvent;
+      // Don't refocus if user is clicking on a button or interactive element
+      const target = focusEvent.relatedTarget as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "BUTTON" ||
+          target.tagName === "A" ||
+          target.closest("button") ||
+          target.closest("a"))
+      ) {
+        return;
+      }
+
+      // Use setTimeout to ensure the blur event has completed
+      setTimeout(() => {
+        const textarea = inputRef.current;
+        if (textarea && document.activeElement !== textarea) {
+          textarea.focus();
+        }
+      }, 0);
+    };
+
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.addEventListener("blur", handleBlur);
+      return () => {
+        textarea.removeEventListener("blur", handleBlur);
+      };
+    }
+  }, []);
 
   return (
     <div className="flex-1" ref={mentionsInputRef}>

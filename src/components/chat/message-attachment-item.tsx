@@ -7,6 +7,7 @@ import Image from "next/image";
 import { FC, useEffect, useState } from "react";
 
 import type { AttachmentDetail } from "../../types";
+import { clientEnv } from "@/utils/client/client-env";
 
 interface MessageAttachmentItemProps {
   attachment: AttachmentDetail;
@@ -17,10 +18,21 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
 }) => {
   const [thumbnail, setThumbnail] = useState(attachment.thumbnailUpload);
 
+  const updateUrl = (url: string) => {
+    const host = clientEnv.NEXT_PUBLIC_CHAT2EDIT_API_URL
+    const pathname = new URL(url).pathname.replace("api/v1", "");
+    const newUrl = `${host}${pathname}`;
+    console.log(newUrl)
+    return newUrl;
+  }
+
   useEffect(() => {
     const ensureThumbnail = async () => {
       if (attachment.thumbnailUpload?.url) {
-        setThumbnail(attachment.thumbnailUpload);
+        setThumbnail({
+          ...attachment.thumbnailUpload,
+          url: updateUrl(attachment.thumbnailUpload.url),
+        });
         return;
       }
 
@@ -49,7 +61,7 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
           id: attachment.thumbnailUploadId ?? attachment.figUploadId ?? "",
           filename: attachment.figUpload.filename,
           path: thumbnailPath,
-          url: uploadResponse.upload_url,
+          url: updateUrl(uploadResponse.upload_url),
           width,
           height,
           createdAt: new Date(),
@@ -71,7 +83,7 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
 
   return (
     <Image
-      src={url}
+      src={updateUrl(url)}
       alt={filename}
       width={width}
       height={height}

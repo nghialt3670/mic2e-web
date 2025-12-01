@@ -138,6 +138,12 @@ export const createMessage = withErrorHandler(
         },
       ]);
 
+      // Update chat title to the latest message text
+      await drizzleClient
+        .update(chats)
+        .set({ title: requestMessage.text })
+        .where(eq(chats.id, chatId));
+
       const messageDetail = await drizzleClient.query.messages.findFirst({
         where: eq(messages.id, requestMessage.id),
         with: {
