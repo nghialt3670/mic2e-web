@@ -22,7 +22,6 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
     const host = clientEnv.NEXT_PUBLIC_CHAT2EDIT_API_URL
     const pathname = new URL(url).pathname.replace("api/v1", "");
     const newUrl = `${host}${pathname}`;
-    console.log(newUrl)
     return newUrl;
   }
 

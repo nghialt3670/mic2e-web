@@ -76,7 +76,6 @@ export const FigCanvas: FC<FigCanvasProps> = ({
     const fig = canvas.getObjects()[0];
     if (!fig) return;
     const figObject = fig.toObject(["id", "is_ephemeral"]);
-    console.log("figObject", figObject);
     onFigObjectChange?.(figObject);
   };
 
