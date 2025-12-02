@@ -222,21 +222,21 @@ const uploadInputAttachments = async (
         figUpload: {
           filename: figFilename,
           path: figUploadPath,
-          url: figUpload.upload_url,
+          url: figUpload.upload_url, // Store relative path (e.g., /storage/attachments/figs/...)
           width: figWidth,
           height: figHeight,
         },
         imageUpload: {
           filename: attachment.imageFile.name,
           path: imageUploadPath,
-          url: imageUpload.upload_url,
+          url: imageUpload.upload_url, // Store relative path (e.g., /storage/attachments/images/...)
           width: imageWidth,
           height: imageHeight,
         },
         thumbnailUpload: {
           filename: attachment.imageFile.name,
           path: thumbnailUploadPath,
-          url: thumbnailUpload.upload_url,
+          url: thumbnailUpload.upload_url, // Store relative path (e.g., /storage/attachments/thumbnails/...)
           width: thumbnailWidth,
           height: thumbnailHeight,
         },

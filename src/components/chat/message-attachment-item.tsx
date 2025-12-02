@@ -3,11 +3,11 @@
 import { createImageFileFromFigObject } from "@/lib/fabric";
 import { uploadFileToApi } from "@/lib/storage/api-storage";
 import { createImageThumbnail } from "@/utils/client/image";
+import { clientEnv } from "@/utils/client/client-env";
 import Image from "next/image";
 import { FC, useEffect, useState } from "react";
 
 import type { AttachmentDetail } from "../../types";
-import { clientEnv } from "@/utils/client/client-env";
 
 interface MessageAttachmentItemProps {
   attachment: AttachmentDetail;
@@ -18,20 +18,19 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
 }) => {
   const [thumbnail, setThumbnail] = useState(attachment.thumbnailUpload);
 
-  const updateUrl = (url: string) => {
-    const host = clientEnv.NEXT_PUBLIC_CHAT2EDIT_API_URL
-    const pathname = new URL(url).pathname.replace("api/v1", "");
-    const newUrl = `${host}${pathname}`;
-    return newUrl;
-  }
+  // Build full URL from relative path for display
+  const getFullUrl = (relativePath: string): string => {
+    const apiUrl = clientEnv.NEXT_PUBLIC_CHAT2EDIT_API_URL;
+    const baseUrl = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
+    const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
+    return `${baseUrl}${path}`;
+  };
 
   useEffect(() => {
     const ensureThumbnail = async () => {
       if (attachment.thumbnailUpload?.url) {
-        setThumbnail({
-          ...attachment.thumbnailUpload,
-          url: updateUrl(attachment.thumbnailUpload.url),
-        });
+        // url is already a relative path, no need to update
+        setThumbnail(attachment.thumbnailUpload);
         return;
       }
 
@@ -40,7 +39,9 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
       }
 
       try {
-        const response = await fetch(attachment.figUpload.url);
+        // Build full URL from relative path for fetching
+        const figUrl = getFullUrl(attachment.figUpload.url);
+        const response = await fetch(figUrl);
         if (!response.ok) return;
         const figJson = await response.json();
         const imageFile = await createImageFileFromFigObject(figJson);
@@ -60,7 +61,8 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
           id: attachment.thumbnailUploadId ?? attachment.figUploadId ?? "",
           filename: attachment.figUpload.filename,
           path: thumbnailPath,
-          url: updateUrl(uploadResponse.upload_url),
+          // Store relative path (e.g., /storage/attachments/thumbnails/...)
+          url: uploadResponse.upload_url,
           width,
           height,
           createdAt: new Date(),
@@ -82,7 +84,8 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
 
   return (
     <Image
-      src={updateUrl(url)}
+      // Build full URL from relative path when displaying
+      src={getFullUrl(url)}
       alt={filename}
       width={width}
       height={height}

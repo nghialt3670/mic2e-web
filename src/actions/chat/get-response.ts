@@ -123,7 +123,7 @@ export const getResponse = withErrorHandler(
                 .values({
                   filename: attachment.filename,
                   path: attachment.upload_path,
-                  url: attachment.upload_url,
+                  url: attachment.upload_url, // Store relative path (e.g., /storage/attachments/figs/...)
                   width: 0,
                   height: 0,
                 })
@@ -150,6 +150,12 @@ export const getResponse = withErrorHandler(
           ...(responseMessageId ? { responseMessageId } : {}),
         })
         .where(eq(chatCycles.id, lastChatCycle.id));
+
+      // Also persist latest context URL at chat level so future requests send correct context
+      await drizzleClient
+        .update(chats)
+        .set({ contextUrl: chatResponse.context_url })
+        .where(eq(chats.id, chatId));
 
       let messageDetail: MessageDetail | undefined;
       if (responseMessageId) {
