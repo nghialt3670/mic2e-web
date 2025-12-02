@@ -6,7 +6,6 @@ import {
   ArrowLeftRight,
   Ban,
   CheckCircle,
-  ChevronDown,
   ChevronRight,
   CircleCheck,
   CircleDot,
@@ -81,12 +80,6 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
     new Set(),
   );
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
-  const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(
-    new Set(),
-  );
-  const [expandedAnswers, setExpandedAnswers] = useState<Set<string>>(
-    new Set(),
-  );
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -109,32 +102,6 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
   const toggleBlock = (blockIdx: number) => {
     const key = `${cycleIndex}-${blockIdx}`;
     setExpandedBlocks((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(key)) {
-        newSet.delete(key);
-      } else {
-        newSet.add(key);
-      }
-      return newSet;
-    });
-  };
-
-  const togglePrompt = (exchangeIdx: number) => {
-    const key = `${cycleIndex}-${exchangeIdx}-prompt`;
-    setExpandedPrompts((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(key)) {
-        newSet.delete(key);
-      } else {
-        newSet.add(key);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleAnswer = (exchangeIdx: number, answerIdx: number) => {
-    const key = `${cycleIndex}-${exchangeIdx}-answer-${answerIdx}`;
-    setExpandedAnswers((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(key)) {
         newSet.delete(key);
@@ -235,121 +202,57 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                               className="overflow-hidden"
                             >
                               <div className="mt-3 space-y-3">
-                                <div className="border rounded-lg bg-background">
-                                  <button
-                                    onClick={() => togglePrompt(exchangeIdx)}
-                                    className="w-full flex items-center justify-between p-3 text-left hover:bg-accent transition-colors"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <motion.div
-                                        animate={{
-                                          rotate: expandedPrompts.has(
-                                            `${cycleIndex}-${exchangeIdx}-prompt`,
-                                          )
-                                            ? 90
-                                            : 0,
-                                        }}
-                                        transition={{
-                                          duration: 0.2,
-                                          ease: "easeInOut",
-                                        }}
-                                        className="flex-shrink-0"
-                                      >
-                                        <ChevronDown className="h-4 w-4" />
-                                      </motion.div>
-                                      <div className="text-xs font-semibold text-muted-foreground tracking-wide">
-                                        Prompt
-                                      </div>
-                                    </div>
-                                  </button>
-                                  <AnimatePresence>
-                                    {expandedPrompts.has(
-                                      `${cycleIndex}-${exchangeIdx}-prompt`,
-                                    ) && (
-                                      <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{
-                                          duration: 0.2,
-                                          ease: "easeInOut",
-                                        }}
-                                        className="overflow-hidden"
-                                      >
-                                        <div className="bg-muted/50 p-3 text-xs whitespace-pre-wrap leading-relaxed">
-                                          {exchange.prompt.text}
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
+                                <div className="relative rounded-lg border bg-white overflow-hidden">
+                                  <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+                                    <span className="text-xs text-gray-500 font-medium">
+                                      Prompt
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        copyToClipboard(
+                                          exchange.prompt.text,
+                                          "Prompt",
+                                        )
+                                      }
+                                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                  <div className="p-3 text-xs whitespace-pre-wrap leading-relaxed">
+                                    {exchange.prompt.text}
+                                  </div>
                                 </div>
 
-                                {exchange.answers.map((answer, answerIdx) => {
-                                  const answerKey = `${cycleIndex}-${exchangeIdx}-answer-${answerIdx}`;
-                                  const isAnswerExpanded =
-                                    expandedAnswers.has(answerKey);
-                                  return (
-                                    <div
-                                      key={answerIdx}
-                                      className="border rounded-lg bg-background"
-                                    >
+                                {exchange.answers.length > 0 && (
+                                  <div className="relative rounded-lg border bg-white overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+                                      <span className="text-xs text-gray-500 font-medium">
+                                        Answer
+                                      </span>
                                       <button
                                         onClick={() =>
-                                          toggleAnswer(exchangeIdx, answerIdx)
+                                          copyToClipboard(
+                                            exchange.answers[0].text,
+                                            "Answer",
+                                          )
                                         }
-                                        className="w-full flex items-center justify-between p-3 text-left hover:bg-accent transition-colors"
+                                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                                       >
-                                        <div className="flex items-center gap-2">
-                                          <motion.div
-                                            animate={{
-                                              rotate: isAnswerExpanded ? 90 : 0,
-                                            }}
-                                            transition={{
-                                              duration: 0.2,
-                                              ease: "easeInOut",
-                                            }}
-                                            className="flex-shrink-0"
-                                          >
-                                            <ChevronDown className="h-4 w-4" />
-                                          </motion.div>
-                                          <div className="text-xs font-semibold text-muted-foreground tracking-wide">
-                                            Answer {answerIdx + 1}
-                                          </div>
-                                        </div>
+                                        <Copy className="h-3.5 w-3.5" />
                                       </button>
-                                      <AnimatePresence>
-                                        {isAnswerExpanded && (
-                                          <motion.div
-                                            initial={{
-                                              height: 0,
-                                              opacity: 0,
-                                            }}
-                                            animate={{
-                                              height: "auto",
-                                              opacity: 1,
-                                            }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{
-                                              duration: 0.2,
-                                              ease: "easeInOut",
-                                            }}
-                                            className="overflow-hidden"
-                                          >
-                                            <div className="bg-muted/50 p-3 text-xs whitespace-pre-wrap leading-relaxed">
-                                              {answer.text}
-                                            </div>
-                                          </motion.div>
-                                        )}
-                                      </AnimatePresence>
                                     </div>
-                                  );
-                                })}
+                                    <div className="p-3 text-xs whitespace-pre-wrap leading-relaxed">
+                                      {exchange.answers[0].text}
+                                    </div>
+                                  </div>
+                                )}
 
                                 {exchange.code && (
                                   <div className="relative rounded-lg border bg-white overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
                                       <span className="text-xs text-gray-500 font-medium">
-                                        python
+                                        code
                                       </span>
                                       <button
                                         onClick={() =>
@@ -361,7 +264,6 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                         className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                                       >
                                         <Copy className="h-3.5 w-3.5" />
-                                        Copy code
                                       </button>
                                     </div>
                                     <SyntaxHighlighter
@@ -447,7 +349,7 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                 <div className="relative rounded-lg border bg-white overflow-hidden">
                                   <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
                                     <span className="text-xs text-gray-500 font-medium">
-                                      python
+                                      generated_code
                                     </span>
                                     <button
                                       onClick={() =>
@@ -459,7 +361,6 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                       className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                                     >
                                       <Copy className="h-3.5 w-3.5" />
-                                      Copy code
                                     </button>
                                   </div>
                                   <SyntaxHighlighter
@@ -484,7 +385,7 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                   <div className="relative rounded-lg border bg-white overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
                                       <span className="text-xs text-gray-500 font-medium">
-                                        python
+                                        processed_code
                                       </span>
                                       <button
                                         onClick={() =>
@@ -496,7 +397,6 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                         className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                                       >
                                         <Copy className="h-3.5 w-3.5" />
-                                        Copy code
                                       </button>
                                     </div>
                                     <SyntaxHighlighter
@@ -529,7 +429,7 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                   <div className="relative rounded-lg border bg-white overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
                                       <span className="text-xs text-gray-500 font-medium">
-                                        json
+                                        feedback
                                       </span>
                                       <button
                                         onClick={() =>
@@ -545,7 +445,6 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                         className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                                       >
                                         <Copy className="h-3.5 w-3.5" />
-                                        Copy code
                                       </button>
                                     </div>
                                     <SyntaxHighlighter
