@@ -171,14 +171,6 @@ export const getResponse = withErrorHandler(
             },
           },
         });
-
-        // Update chat title to the latest message text (response message)
-        if (messageDetail?.text) {
-          await drizzleClient
-            .update(chats)
-            .set({ title: messageDetail.text })
-            .where(eq(chats.id, chatId));
-        }
       }
 
       return {

@@ -16,7 +16,7 @@ export const Sidebar = () => {
         <SidebarGroup>
           <NewChat />
         </SidebarGroup>
-        <SidebarGroup className="p-0">
+        <SidebarGroup className="p-0 flex-1 min-h-0">
           <ChatList />
         </SidebarGroup>
       </SidebarContent>

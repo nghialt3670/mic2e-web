@@ -189,14 +189,18 @@ const uploadInputAttachments = async (
         figFilename,
       );
       const figUploadPath = `figs/${figFilename}`;
-      const { width: figWidth, height: figHeight } =
+      const { width: figWidthRaw, height: figHeightRaw } =
         await getFigObjectDimensions(attachment.figObject);
+      const figWidth = Math.round(figWidthRaw);
+      const figHeight = Math.round(figHeightRaw);
       const figUpload = await uploadFileToApi(figFile, figUploadPath);
 
       const imageFilename = `${v4()}_${attachment.imageFile.name}`;
       const imageUploadPath = `images/${imageFilename}`;
-      const { width: imageWidth, height: imageHeight } =
+      const { width: imageWidthRaw, height: imageHeightRaw } =
         await getImageDimensions(attachment.imageFile);
+      const imageWidth = Math.round(imageWidthRaw);
+      const imageHeight = Math.round(imageHeightRaw);
       const imageUpload = await uploadFileToApi(
         attachment.imageFile,
         imageUploadPath,
@@ -208,9 +212,11 @@ const uploadInputAttachments = async (
       );
       const {
         file: thumbnailFile,
-        width: thumbnailWidth,
-        height: thumbnailHeight,
+        width: thumbnailWidthRaw,
+        height: thumbnailHeightRaw,
       } = await createImageThumbnail(imageFile);
+      const thumbnailWidth = Math.round(thumbnailWidthRaw);
+      const thumbnailHeight = Math.round(thumbnailHeightRaw);
       const thumbnailUploadPath = `thumbnails/${thumbnailFilename}`;
       const thumbnailUpload = await uploadFileToApi(
         thumbnailFile,

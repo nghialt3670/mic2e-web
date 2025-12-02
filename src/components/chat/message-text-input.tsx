@@ -223,11 +223,29 @@ export const MessageTextInput = ({
       }, 0);
     };
 
+    // Submit on Enter (without modifiers) instead of inserting newline
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "Enter" &&
+        !e.shiftKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.metaKey
+      ) {
+        e.preventDefault();
+        const target = e.target as HTMLTextAreaElement | null;
+        const form = target?.closest("form");
+        form?.requestSubmit();
+      }
+    };
+
     const textarea = inputRef.current;
     if (textarea) {
       textarea.addEventListener("blur", handleBlur);
+      textarea.addEventListener("keydown", handleKeyDown);
       return () => {
         textarea.removeEventListener("blur", handleBlur);
+        textarea.removeEventListener("keydown", handleKeyDown);
       };
     }
   }, []);

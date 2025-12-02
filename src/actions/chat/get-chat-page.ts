@@ -6,7 +6,7 @@ import { chats } from "@/lib/drizzle/drizzle-schema";
 import { Page } from "@/types/api-types";
 import { withErrorHandler } from "@/utils/server/server-action-handlers";
 import { getSessionUserId } from "@/utils/server/session";
-import { asc, count, eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 
 interface GetChatPageRequest {
   page?: number;
@@ -33,7 +33,7 @@ export const getChatPage = withErrorHandler<GetChatPageRequest, Page<Chat>>(
       .select()
       .from(chats)
       .where(eq(chats.userId, userId))
-      .orderBy(asc(chats.updatedAt))
+      .orderBy(desc(chats.updatedAt))
       .limit(pageSize)
       .offset((currentPage - 1) * pageSize);
 

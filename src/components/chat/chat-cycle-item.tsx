@@ -24,7 +24,6 @@ export const ChatCycleItem: FC<ChatCycleItemProps> = ({
   // Extract cycles from dataJson
   const data = dataJson as ChatCycleDataJson | null;
   const cycles = data?.cycles || [];
-  console.log(cycles);
 
   return (
     <div className="flex flex-col justify-start items-center h-full w-full pr-2 pl-6 gap-2">
