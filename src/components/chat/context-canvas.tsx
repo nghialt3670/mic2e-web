@@ -1,6 +1,7 @@
 "use client";
 
 import { FC, useEffect, useRef } from "react";
+import { Canvas, Circle, FabricImage, Group, Path, Rect, Text as FabricText } from "fabric";
 
 interface ContextCanvasEntry {
   key: string;
@@ -15,22 +16,15 @@ interface ContextCanvasProps {
 const isPrimitive = (value: any): boolean =>
   value === null || ["string", "number", "boolean"].includes(typeof value);
 
-const getImageSrc = (value: any): string | null => {
+const getFabricType = (value: any): string | null => {
   if (!value || typeof value !== "object") return null;
-  const v: any = value;
+  const t = (value as any).type;
+  return typeof t === "string" ? t.toLowerCase() : null;
+};
 
-  if (typeof v.type === "string" && v.type.toLowerCase() === "image" && v.src) {
-    return String(v.src);
-  }
-
-  if (typeof v.type === "string" && v.type.toLowerCase() === "group" && Array.isArray(v.objects)) {
-    const img = v.objects.find(
-      (o: any) => typeof o?.type === "string" && o.type.toLowerCase() === "image" && o.src,
-    );
-    return img ? String(img.src) : null;
-  }
-
-  return null;
+const isFabricLike = (value: any): boolean => {
+  const t = getFabricType(value);
+  return !!t && ["image", "group", "rect", "circle", "ellipse", "path"].includes(t);
 };
 
 export const ContextCanvas: FC<ContextCanvasProps> = ({
@@ -38,71 +32,121 @@ export const ContextCanvas: FC<ContextCanvasProps> = ({
   height = 360,
 }) => {
   const canvasElementRef = useRef<HTMLCanvasElement | null>(null);
+  const fabricCanvasRef = useRef<Canvas | null>(null);
 
   useEffect(() => {
     const element = canvasElementRef.current;
     if (!element) return;
 
-    const ctx = element.getContext("2d");
-    if (!ctx) return;
+    if (!fabricCanvasRef.current) {
+      fabricCanvasRef.current = new Canvas(element, {
+        selection: false,
+      });
+    }
+    const canvas = fabricCanvasRef.current;
 
     const container = element.parentElement;
     const width = container?.clientWidth ?? 800;
-    element.width = width;
-    element.height = height;
+    canvas.setDimensions({ width, height });
+    canvas.clear();
 
-    ctx.clearRect(0, 0, width, height);
+    const toFabricObject = async (value: any): Promise<any | null> => {
+      const t = getFabricType(value);
+      if (!t) return null;
+
+      if (t === "group") {
+        return await Group.fromObject(value as any);
+      }
+
+      if (t === "image") {
+        return await FabricImage.fromObject(value as any);
+      }
+
+      if (t === "rect") {
+        return await Rect.fromObject(value as any);
+      }
+
+      if (t === "circle") {
+        return await Circle.fromObject(value as any);
+      }
+
+      if (t === "path") {
+        return await Path.fromObject(value as any);
+      }
+
+      // Fallback: wrap any single object into a group so we can position it
+      const wrapper = {
+        type: "group",
+        version: (value as any).version,
+        left: 0,
+        top: 0,
+        objects: [value],
+      };
+      return await Group.fromObject(wrapper as any);
+    };
 
     const render = async () => {
       let x = 20;
       let y = 20;
       const marginX = 40;
       const marginY = 40;
-      const slotWidth = width / 3 - marginX;
-      const slotHeight = 100;
-
-      ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas";
-      ctx.textBaseline = "top";
-      ctx.fillStyle = "#020617";
-      ctx.fillRect(0, 0, width, height);
+      let rowMaxHeight = 0;
 
       for (const { key, value } of entries) {
-        const label = String(key);
-        ctx.fillStyle = "#e5e7eb";
-        ctx.fillText(label, x, y);
+        if (isFabricLike(value)) {
+          const obj = await toFabricObject(value as any);
+          if (!obj) continue;
 
-        const src = getImageSrc(value);
-        if (src) {
-          await new Promise<void>((resolve) => {
-            const img = new window.Image();
-            img.onload = () => {
-              const scale = Math.min(
-                slotWidth / img.width,
-                (slotHeight / img.height) || 1,
-              );
-              const drawWidth = img.width * scale;
-              const drawHeight = img.height * scale;
-              ctx.drawImage(img, x, y + 16, drawWidth, drawHeight);
-              resolve();
-            };
-            img.onerror = () => resolve();
-            img.src = src;
+          const bounds = obj.getBoundingRect(true);
+          const slotWidth = (canvas.getWidth() ?? 800) / 3 - marginX;
+          const maxWidth = Math.max(1, slotWidth);
+          const scale = Math.min(1, maxWidth / Math.max(1, bounds.width));
+
+          obj.scale(scale);
+          obj.set({
+            left: x,
+            top: y + 18,
           });
+
+          const label = new FabricText(String(key), {
+            left: x,
+            top: y,
+            fontSize: 12,
+            fill: "#020617",
+            fontFamily: "monospace",
+          });
+
+          canvas.add(label);
+          canvas.add(obj);
+
+          rowMaxHeight = Math.max(
+            rowMaxHeight,
+            (bounds.height || 0) * scale + 24,
+          );
         } else if (isPrimitive(value)) {
-          ctx.fillStyle = "#9ca3af";
-          const text = String(value);
-          ctx.fillText(text.slice(0, 40), x, y + 16);
-        } else {
-          ctx.fillStyle = "#4b5563";
-          ctx.fillText("[object]", x, y + 16);
+          const label = new FabricText(
+            `${String(key)}: ${String(value)}`.slice(0, 60),
+            {
+              left: x,
+              top: y,
+              fontSize: 12,
+              fill: "#020617",
+              fontFamily: "monospace",
+            },
+          );
+          canvas.add(label);
+          rowMaxHeight = Math.max(rowMaxHeight, 20);
         }
 
-        y += slotHeight + marginY;
-        if (y + slotHeight > height) {
-          y = 20;
-          x += slotWidth + marginX;
+        x += (canvas.getWidth() ?? width) / 3 + marginX;
+        if (x + (canvas.getWidth() ?? width) / 3 > (canvas.getWidth() ?? width)) {
+          x = 20;
+          y += rowMaxHeight + marginY;
+          rowMaxHeight = 0;
         }
       }
+
+      canvas.renderAll();
     };
 
     void render();
@@ -118,4 +162,3 @@ export const ContextCanvas: FC<ContextCanvasProps> = ({
     </div>
   );
 };
-
