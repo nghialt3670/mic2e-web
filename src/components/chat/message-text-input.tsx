@@ -224,7 +224,7 @@ export const MessageTextInput = ({
     };
 
     // Submit on Enter (without modifiers) instead of inserting newline
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: any) => {
       if (
         e.key === "Enter" &&
         !e.shiftKey &&
