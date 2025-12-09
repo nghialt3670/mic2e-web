@@ -6,15 +6,15 @@ import { toast } from "sonner";
 export async function withToastHandler<T>(
   action: (args: any) => Promise<ApiResponse<T>>,
   args: any,
-): Promise<T | undefined> {
+): Promise<T> {
   const response = await action(args);
 
-  if (response.code !== 200) {
+  if (response.code !== 200 || !response.data) {
     console.error(response);
     toast.error(response.message, {
       description: `Code: ${response.code}`,
     });
-    return undefined;
+    throw new Error(response.message ?? "Unknown error");
   }
 
   return response.data;

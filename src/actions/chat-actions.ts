@@ -1,60 +1,62 @@
 "use server";
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
-import { Chat, ChatStatus, chats } from "@/lib/drizzle/drizzle-schema";
+import { Chat, chats } from "@/lib/drizzle/drizzle-schema";
 import {
   withAuthHandler,
   withErrorHandler,
 } from "@/utils/server/handler-utils";
 import { and, eq } from "drizzle-orm";
 
-interface ChatCreateDto {
-  title?: string;
+interface ChatCreateRequest {
+  chat: Omit<Chat, "id" | "createdAt" | "updatedAt">;
 }
 
-interface ChatUpdateDto {
-  chatId: string;
-  title?: string;
-}
-
-interface ChatDeleteRequest {
-  chatId: string;
-}
 
 export const createChat = withErrorHandler(
-  withAuthHandler<ChatCreateDto, Chat>(async ({ userId, ...dto }) => {
-    const [chat] = await drizzleClient
+  withAuthHandler<ChatCreateRequest, Chat>(async ({ userId, chat }) => {
+    const [createdChat] = await drizzleClient
       .insert(chats)
-      .values({ userId, ...dto })
+      .values({ ...chat, userId })
       .returning();
 
     return {
       message: "Chat created successfully.",
       code: 200,
-      data: chat,
+      data: createdChat,
     };
   }),
 );
 
+interface ChatUpdateRequest {
+  chatId: string;
+  chat: Omit<Chat, "id" | "createdAt" | "updatedAt">;
+}
+
 export const updateChat = withErrorHandler(
-  withAuthHandler<ChatUpdateDto, Chat>(async ({ userId, chatId, ...dto }) => {
-    const [chat] = await drizzleClient
+  withAuthHandler<ChatUpdateRequest, Chat>(async ({ userId, chatId, chat }) => {
+    const [updatedChat] = await drizzleClient
       .update(chats)
-      .set({ ...dto })
+      .set({ ...chat })
       .where(and(eq(chats.id, chatId), eq(chats.userId, userId)))
       .returning();
 
     return {
       message: "Chat updated successfully.",
       code: 200,
-      data: chat,
+      data: updatedChat,
     };
   }),
 );
 
+
+interface ChatDeleteRequest {
+  chatId: string;
+}
+
 export const deleteChat = withErrorHandler(
-  withAuthHandler<ChatDeleteRequest, void>(async ({ userId, chatId }) => {
-    const [chat] = await drizzleClient
+  withAuthHandler<ChatDeleteRequest, Chat>(async ({ userId, chatId }) => {
+    const [deletedChat] = await drizzleClient
       .delete(chats)
       .where(and(eq(chats.id, chatId), eq(chats.userId, userId)))
       .returning();
@@ -62,7 +64,7 @@ export const deleteChat = withErrorHandler(
     return {
       message: "Chat deleted successfully.",
       code: 200,
-      data: undefined,
+      data: deletedChat,
     };
   }),
 );

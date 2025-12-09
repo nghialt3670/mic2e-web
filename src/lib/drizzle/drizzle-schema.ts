@@ -1,16 +1,20 @@
 import { relations } from "drizzle-orm";
 import {
   PgColumn,
+  boolean,
   integer,
   jsonb,
-  pgEnum,
   pgTable,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 import { v4 as uuidv4 } from "uuid";
 
-const uuidPrimaryKey = (name: string) =>
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+
+const primaryKey = (name: string) =>
   text(name)
     .primaryKey()
     .$defaultFn(() => uuidv4());
@@ -19,14 +23,18 @@ const foreignKey = (name: string, references: PgColumn<any>) =>
   text(name).references(() => references);
 
 const createdAt = (name: string) => timestamp(name).defaultNow().notNull();
+
 const updatedAt = (name: string) =>
   timestamp(name)
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull();
 
+// ─────────────────────────────────────────────
+// Users
+// ─────────────────────────────────────────────
 export const users = pgTable("users", {
-  id: uuidPrimaryKey("id"),
+  id: primaryKey("id"),
   name: text("name"),
   email: text("email").unique(),
   imageUrl: text("imageUrl"),
@@ -34,64 +42,79 @@ export const users = pgTable("users", {
   updatedAt: updatedAt("updatedAt"),
 });
 
-export const chatStatus = pgEnum("chat_status", [
-  "idle",
-  "requesting",
-  "responding",
-  "failed",
-]);
-
+// ─────────────────────────────────────────────
+// Chats
+// ─────────────────────────────────────────────
 export const chats = pgTable("chats", {
-  id: uuidPrimaryKey("id"),
+  id: primaryKey("id"),
   userId: foreignKey("user_id", users.id).notNull(),
   title: text("title"),
-  status: chatStatus("status").notNull().default("idle"),
-  contextUrl: text("context_url"),
+  failed: boolean("failed").default(false),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),
 });
 
+// ─────────────────────────────────────────────
+// Contexts
+// ─────────────────────────────────────────────
+export const contexts = pgTable("contexts", {
+  id: primaryKey("id"),
+  fileId: text("file_id").notNull(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
+// ─────────────────────────────────────────────
+// Messages
+// ─────────────────────────────────────────────
 export const messages = pgTable("messages", {
-  id: uuidPrimaryKey("id"),
+  id: primaryKey("id"),
   text: text("text").notNull(),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),
 });
 
-export const chatCycles = pgTable("chat_cycles", {
-  id: uuidPrimaryKey("id"),
+// ─────────────────────────────────────────────
+// Cycles
+// ─────────────────────────────────────────────
+export const cycles = pgTable("cycles", {
+  id: primaryKey("id"),
   chatId: foreignKey("chat_id", chats.id).notNull(),
-  requestMessageId: foreignKey("request_message_id", messages.id).notNull(),
-  responseMessageId: foreignKey("response_message_id", messages.id),
-  contextUrl: text("context_url"),
-  dataJson: jsonb("data_json"),
+  requestId: foreignKey("request_id", messages.id).notNull(),
+  responseId: foreignKey("response_id", messages.id),
+  contextId: foreignKey("context_id", contexts.id),
+  jsonData: jsonb("json_data"),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),
 });
 
-export const imageUploads = pgTable("image_uploads", {
-  id: uuidPrimaryKey("id"),
-  filename: text("filename").notNull(),
-  path: text("path").notNull(),
-  url: text("url").notNull(),
+// ─────────────────────────────────────────────
+// Thumbnails
+// ─────────────────────────────────────────────
+export const thumbnails = pgTable("thumbnails", {
+  id: primaryKey("id"),
+  fileId: text("file_id").notNull(),
   width: integer("width").notNull(),
   height: integer("height").notNull(),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),
 });
 
-export const attachmentType = pgEnum("attachment_type", ["fig"]);
-
+// ─────────────────────────────────────────────
+// Attachments
+// ─────────────────────────────────────────────
 export const attachments = pgTable("attachments", {
-  id: uuidPrimaryKey("id"),
+  id: primaryKey("id"),
+  fileId: text("file_id").notNull(),
   messageId: foreignKey("message_id", messages.id).notNull(),
-  type: attachmentType("type").notNull(),
-  figUploadId: foreignKey("fig_id", imageUploads.id),
-  imageUploadId: foreignKey("image_id", imageUploads.id),
-  thumbnailUploadId: foreignKey("thumbnail_id", imageUploads.id),
+  thumbnailId: foreignKey("thumbnail_id", thumbnails.id),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),
 });
+
+// ─────────────────────────────────────────────
+// Relations
+// ─────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
   chats: many(chats),
@@ -102,52 +125,42 @@ export const chatsRelations = relations(chats, ({ one, many }) => ({
     fields: [chats.userId],
     references: [users.id],
   }),
-  messages: many(messages),
-  chatCycles: many(chatCycles),
+  cycles: many(cycles),
 }));
 
-export const chatCyclesRelations = relations(chatCycles, ({ one }) => ({
+export const contextsRelations = relations(contexts, ({ many }) => ({
+  cycles: many(cycles),
+}));
+
+export const cyclesRelations = relations(cycles, ({ one }) => ({
   chat: one(chats, {
-    fields: [chatCycles.chatId],
+    fields: [cycles.chatId],
     references: [chats.id],
   }),
-  requestMessage: one(messages, {
-    fields: [chatCycles.requestMessageId],
+  request: one(messages, {
+    fields: [cycles.requestId],
     references: [messages.id],
-    relationName: "requestMessage",
+    relationName: "request",
   }),
-  responseMessage: one(messages, {
-    fields: [chatCycles.responseMessageId],
+  response: one(messages, {
+    fields: [cycles.responseId],
     references: [messages.id],
-    relationName: "responseMessage",
+    relationName: "response",
+  }),
+  context: one(contexts, {
+    fields: [cycles.contextId],
+    references: [contexts.id],
+    relationName: "context",
   }),
 }));
 
 export const messagesRelations = relations(messages, ({ many }) => ({
   attachments: many(attachments),
-  asRequestMessageInCycle: many(chatCycles, {
-    relationName: "requestMessage",
+  asRequestMessageInCycle: many(cycles, {
+    relationName: "request",
   }),
-  asResponseMessageInCycle: many(chatCycles, {
-    relationName: "responseMessage",
-  }),
-}));
-
-export const imageUploadsRelations = relations(imageUploads, ({ one }) => ({
-  asFigUploadInAttachment: one(attachments, {
-    fields: [imageUploads.id],
-    references: [attachments.figUploadId],
-    relationName: "figUpload",
-  }),
-  asImageUploadInAttachment: one(attachments, {
-    fields: [imageUploads.id],
-    references: [attachments.imageUploadId],
-    relationName: "imageUpload",
-  }),
-  asThumbnailUploadInAttachment: one(attachments, {
-    fields: [imageUploads.id],
-    references: [attachments.thumbnailUploadId],
-    relationName: "thumbnailUpload",
+  asResponseMessageInCycle: many(cycles, {
+    relationName: "response",
   }),
 }));
 
@@ -156,28 +169,20 @@ export const attachmentsRelations = relations(attachments, ({ one }) => ({
     fields: [attachments.messageId],
     references: [messages.id],
   }),
-  figUpload: one(imageUploads, {
-    fields: [attachments.figUploadId],
-    references: [imageUploads.id],
-    relationName: "figUpload",
-  }),
-  imageUpload: one(imageUploads, {
-    fields: [attachments.imageUploadId],
-    references: [imageUploads.id],
-    relationName: "imageUpload",
-  }),
-  thumbnailUpload: one(imageUploads, {
-    fields: [attachments.thumbnailUploadId],
-    references: [imageUploads.id],
-    relationName: "thumbnailUpload",
+  thumbnail: one(thumbnails, {
+    fields: [attachments.thumbnailId],
+    references: [thumbnails.id],
   }),
 }));
 
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
+
 export type User = typeof users.$inferSelect;
 export type Chat = typeof chats.$inferSelect;
-export type ChatCycle = typeof chatCycles.$inferSelect;
-export type ChatStatus = (typeof chatStatus.enumValues)[number];
+export type Context = typeof contexts.$inferSelect;
+export type Cycle = typeof cycles.$inferSelect;
 export type Message = typeof messages.$inferSelect;
-export type ImageUpload = typeof imageUploads.$inferSelect;
-export type AttachmentType = (typeof attachmentType.enumValues)[number];
+export type Thumbnail = typeof thumbnails.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;

@@ -1,0 +1,122 @@
+import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  AttachmentInput,
+  useMessageInputStore,
+} from "@/stores/message-input-store";
+import { useReferenceStore } from "@/stores/reference-store";
+import { Canvas, Circle, FabricObject, Group, Path, Rect } from "fabric";
+import { Box, X } from "lucide-react";
+import { FC } from "react";
+import stringToColor from "string-to-color";
+import { v4 } from "uuid";
+
+import { useInteractionStore } from "../../stores/interaction-store";
+import { FigCanvas } from "../edit/fig-canvas";
+
+interface InputAttachmentItemProps {
+  attachment: AttachmentInput;
+}
+
+export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({
+  attachment,
+}) => {
+  const { setAttachment, removeAttachment, addReference, removeReference } =
+    useMessageInputStore();
+  const { color, setColor } = useInteractionStore();
+  const isMobile = useIsMobile();
+
+  const handleRemove = () => {
+    removeAttachment(attachment);
+  };
+
+  const handleFigFileChange = (figFile: File) => {
+    setAttachment({ ...attachment, file: figFile });
+  };
+
+  const handlePointAdded = (point: Circle) => {
+    const reference = {
+      value: v4(),
+      label: "point",
+      color: stringToColor(v4()),
+    };
+    addReference(reference);
+    point.set("reference", reference);
+    attachment.canvasRef?.current?.renderAll();
+    setColor(stringToColor(v4()));
+  };
+
+  const handleBoxAdded = (box: Rect) => {
+    const reference = {
+      value: v4(),
+      label: "box",
+      color: stringToColor(v4()),
+    };
+    addReference(reference);
+    box.set("reference", reference);
+    attachment.canvasRef?.current?.renderAll();
+    setColor(stringToColor(v4()));
+  };
+
+  const handleFigSelected = (fig: Group) => {
+    const reference = {
+      value: v4(),
+      label: "image",
+      color: stringToColor(v4()),
+    };
+    addReference(reference);
+    fig.set("reference", reference);
+    attachment.canvasRef?.current?.renderAll();
+    setColor(stringToColor(v4()));
+  };
+
+  const handleFigUnselected = (fig: Group) => {
+    removeReference(fig.get("reference"));
+    attachment.canvasRef?.current?.renderAll();
+  };
+
+  const handleScribbleAdded = (scribble: Path) => {
+    const reference = {
+      value: v4(),
+      label: "scribble",
+      color: stringToColor(v4()),
+    };
+    addReference(reference);
+    scribble.set("reference", reference);
+    attachment.canvasRef?.current?.renderAll();
+    setColor(stringToColor(v4()));
+  };
+
+  const handleObjectRemoved = (object: Circle | Rect | Path) => {
+    removeReference(object.get("reference"));
+    attachment.canvasRef?.current?.renderAll();
+  };
+
+  return (
+    <div className="relative group border rounded-lg overflow-hidden transition-all">
+      <FigCanvas
+        ref={attachment.canvasRef}
+        figFile={attachment.file}
+        maxHeight={isMobile ? 180 : 360}
+        maxWidth={isMobile ? 240 : 480}
+        onFigFileChange={handleFigFileChange}
+        onPointAdded={handlePointAdded}
+        onBoxAdded={handleBoxAdded}
+        onFigSelected={handleFigSelected}
+        onFigUnselected={handleFigUnselected}
+        onScribbleAdded={handleScribbleAdded}
+        onObjectRemoved={handleObjectRemoved}
+        color={color}
+      />
+
+      <Button
+        size="icon"
+        variant="outline"
+        className="absolute top-1 right-1 h-6 w-6"
+        onClick={handleRemove}
+      >
+        <X className="size-4" />
+      </Button>
+    </div>
+  );
+};

@@ -6,19 +6,19 @@ import {
   MAXIMUM_NUMBER_OF_FILES,
   SUPPORTED_FILE_TYPES,
 } from "@/constants/upload-constants";
-import { createFigObjectFromImageFile } from "@/lib/fabric/fabric-utils";
 import {
-  InputAttachment,
-  useInputAttachmentStore,
-} from "@/stores/input-attachment-store";
+  createFigFileFromFigObject,
+  createFigFileFromImageFile,
+  createFigObjectFromImageFile,
+} from "@/lib/fabric/fabric-utils";
+import { useMessageInputStore } from "@/stores/message-input-store";
 import { UploadIcon } from "lucide-react";
 import { useRef } from "react";
 import { toast } from "sonner";
 
 export const MessageAttachmentInput = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { clearInputAttachments, setInputAttachments } =
-    useInputAttachmentStore();
+  const { setAttachments, clearAttachments } = useMessageInputStore();
 
   const validateFiles = (files: File[]) => {
     if (files.length > MAXIMUM_NUMBER_OF_FILES) {
@@ -39,22 +39,15 @@ export const MessageAttachmentInput = () => {
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    clearInputAttachments();
-
     const files = Array.from(event.target.files || []);
     if (!validateFiles(files)) {
       return;
     }
 
-    const keys = files.map((file) => file.name);
-    const attachments: InputAttachment[] = await Promise.all(
-      files.map(async (file) => ({
-        type: "fig",
-        figObject: await createFigObjectFromImageFile(file),
-        imageFile: file,
-      })),
-    );
-    setInputAttachments(keys, attachments);
+    clearAttachments();
+    const figFiles = await Promise.all(files.map(createFigFileFromImageFile));
+    const attachments = figFiles.map((file) => ({ file }));
+    setAttachments(attachments);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";

@@ -1,7 +1,7 @@
 import { FC } from "react";
 
 import { MessageDetail } from "../../types";
-import { MessageAttachmentList } from "./message-attachment-list";
+import { MessageAttachmentList } from "./attachment-list";
 import { MessageTextDisplay } from "./message-text-display";
 
 interface MessageItemProps {

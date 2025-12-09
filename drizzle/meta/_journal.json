@@ -134,6 +134,48 @@
       "when": 1765248568114,
       "tag": "0018_pretty_speed_demon",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1765264518471,
+      "tag": "0019_slimy_namor",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1765264583143,
+      "tag": "0020_far_nuke",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1765264688863,
+      "tag": "0021_fine_deadpool",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1765264827964,
+      "tag": "0022_clumsy_lenny_balinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1765265833101,
+      "tag": "0023_spicy_lord_hawal",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1765299981464,
+      "tag": "0024_fine_the_hand",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { Canvas, Circle, FabricImage, Group, Path, Point, Rect } from "fabric";
 import { v4 } from "uuid";
 
-export const createFigFromObject = async (
+export const createFigFromFigObject = async (
   obj: Record<string, any>,
 ): Promise<Group> => {
   const fig = await Group.fromObject(obj);

@@ -1,5 +1,5 @@
-import { readFileAsDataURL } from "@/utils/client/file-readers";
-import { createImageFileFromDataURL } from "@/utils/client/image";
+import { readFileAsDataURL } from "@/utils/client/file-utils";
+import { createImageFileFromDataURL } from "@/utils/client/image-utils";
 import { Canvas, FabricImage, Group, StaticCanvas } from "fabric";
 import { v4 } from "uuid";
 
@@ -22,13 +22,29 @@ export const createFigObjectFromImageFile = async (
   return group.toObject(["id", "selectable", "evented", "hoverCursor"] as any);
 };
 
-export const createFigFileFromObject = async (
-  obj: Record<string, any>,
-  filename: string,
+export const createFigFileFromFigObject = async (
+  figObject: Record<string, any>,
+  filename: string = `${v4()}.fig.json`,
 ): Promise<File> => {
-  return new File([JSON.stringify(obj)], `${v4()}_${filename}.fig.json`, {
+  return new File([JSON.stringify(figObject)], filename, {
     type: "application/json",
   });
+};
+
+export const createFigFileFromImageFile = async (
+  imageFile: File,
+): Promise<File> => {
+  const figObject = await createFigObjectFromImageFile(imageFile);
+  return await createFigFileFromFigObject(
+    figObject,
+    `${imageFile.name}.fig.json`,
+  );
+};
+
+export const createFigObjectFromFigFile = async (
+  file: File,
+): Promise<Record<string, any>> => {
+  return await JSON.parse(await file.text());
 };
 
 export const createImageFileFromFigObject = async (
