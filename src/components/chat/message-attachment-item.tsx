@@ -2,8 +2,8 @@
 
 import { createImageFileFromFigObject } from "@/lib/fabric";
 import { uploadFileToApi } from "@/lib/storage/api-storage";
-import { createImageThumbnail } from "@/utils/client/image";
 import { clientEnv } from "@/utils/client/client-env";
+import { createImageThumbnail } from "@/utils/client/image";
 import Image from "next/image";
 import { FC, useEffect, useState } from "react";
 
@@ -22,7 +22,9 @@ export const MessageAttachmentItem: FC<MessageAttachmentItemProps> = ({
   const getFullUrl = (relativePath: string): string => {
     const apiUrl = clientEnv.NEXT_PUBLIC_CHAT2EDIT_API_URL;
     const baseUrl = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
-    const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
+    const path = relativePath.startsWith("/")
+      ? relativePath
+      : `/${relativePath}`;
     return `${baseUrl}${path}`;
   };
 

@@ -144,7 +144,7 @@ export const MessageTextInput = ({
   useEffect(() => {
     if (value !== localValue) {
       setLocalValue(value);
-      
+
       // If value is cleared externally (empty string), clear all references and attachments
       if (!value || value.trim() === "") {
         clearReferences();

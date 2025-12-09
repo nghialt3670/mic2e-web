@@ -1,16 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { resizeAndZoomCanvas } from "@/lib/fabric/fabric-utils";
 import { to } from "await-to-js";
-import {
-  Canvas,
-  Circle,
-  FabricImage,
-  FabricObject,
-  Group,
-  Path,
-  Point,
-  Rect,
-} from "fabric";
+import { Canvas, Circle, FabricObject, Group, Path, Point, Rect } from "fabric";
 import { AlertCircle } from "lucide-react";
 import { FC, useEffect, useRef, useState } from "react";
 
@@ -86,7 +77,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
 
     const DOUBLE_CLICK_THRESHOLD = 300; // ms
     const DRAG_THRESHOLD = 5; // pixels
-    
+
     const handleDoubleClick = () => {
       // Double click: toggle frame
       if (hasFigFrame(canvas)) {
@@ -99,7 +90,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       handleFigChange();
       state.isArmedDraw = false;
     };
-    
+
     const handleSingleClick = (point: Point) => {
       // Single click: create point (arming already happened immediately on click)
       const createdPoint = createPoint(point, canvas, color);
@@ -118,7 +109,8 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       state.pathPoints = [e.pointer];
 
       // Check if this mouse down is on the same point that armed the draw
-      const isContinuingFromArmedClick = state.pendingArmPoint && 
+      const isContinuingFromArmedClick =
+        state.pendingArmPoint &&
         Math.abs(e.pointer.x - state.pendingArmPoint.x) < 5 &&
         Math.abs(e.pointer.y - state.pendingArmPoint.y) < 5;
 
@@ -244,7 +236,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
           onScribbleAdded?.(scribble);
           handleFigChange();
         }
-        
+
         // Reset drag state
         state.dragStarted = false;
         state.isDragging = false;
@@ -253,7 +245,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
       } else {
         // CASE 2 & 3: Click without drag (single or double click)
         const clickPoint = state.mouseDownPoint;
-        
+
         // Check if this is a double click
         if (timeSinceLastClick < DOUBLE_CLICK_THRESHOLD) {
           // Double click detected - disarm and toggle frame
@@ -265,16 +257,16 @@ export const FigCanvas: FC<FigCanvasProps> = ({
           // Potential single click - arm immediately but delay point creation
           state.isArmedDraw = true;
           state.pendingArmPoint = clickPoint; // Remember where the arm happened
-          
+
           state.clickTimer = setTimeout(() => {
             // Only create the point if not cancelled by double-click
             handleSingleClick(clickPoint);
             state.clickTimer = null;
           }, DOUBLE_CLICK_THRESHOLD);
-          
+
           state.lastClickTime = now;
         }
-        
+
         // Reset state
         state.mouseDownPoint = null;
         state.pathPoints = [];
@@ -285,7 +277,7 @@ export const FigCanvas: FC<FigCanvasProps> = ({
   useEffect(() => {
     const disposeCanvas = () => {
       const state = stateRef.current;
-      
+
       if (state.clickTimer) {
         clearTimeout(state.clickTimer);
         state.clickTimer = null;

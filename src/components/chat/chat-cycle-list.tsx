@@ -1,52 +1,44 @@
-"use client";
+import { drizzleClient } from "@/lib/drizzle/drizzle-client";
+import { chatCycles as chatCyclesTable } from "@/lib/drizzle/drizzle-schema";
+import { desc, eq } from "drizzle-orm";
 
-import { MessageSkeleton } from "@/components/chat/message-skeleton";
-import { useEffect } from "react";
-
-import { getChatCyclePage } from "../../actions/chat-cycle";
-import { useChatCycleStore } from "../../stores/chat-cycle-store";
-import { useChatStore } from "../../stores/chat-store";
 import { ChatCycleItem } from "./chat-cycle-item";
 
-export const ChatCycleList = () => {
-  const { chat } = useChatStore();
-  const { page, size, chatCycles, setChatCycles } = useChatCycleStore();
-
-  useEffect(() => {
-    const fetchChatCycles = async () => {
-      const chatId = chat?.id;
-      if (!chatId) return;
-      const { data: chatCyclePage } = await getChatCyclePage({
-        chatId,
-        page,
-        size,
-      });
-      if (!chatCyclePage?.items) return;
-      setChatCycles(chatCyclePage.items);
-    };
-    fetchChatCycles();
-  }, [chat, page, size, setChatCycles]);
-
-  const isResponding = chat?.status === "responding";
-  const lastIndex = chatCycles.length - 1;
+export const ChatCycleList = async ({ chatId }: { chatId: string }) => {
+  const chatCycles = await drizzleClient.query.chatCycles.findMany({
+    where: eq(chatCyclesTable.chatId, chatId),
+    orderBy: desc(chatCyclesTable.createdAt),
+    with: {
+      requestMessage: {
+        with: {
+          attachments: {
+            with: {
+              figUpload: true,
+              imageUpload: true,
+              thumbnailUpload: true,
+            },
+          },
+        },
+      },
+      responseMessage: {
+        with: {
+          attachments: {
+            with: {
+              figUpload: true,
+              imageUpload: true,
+              thumbnailUpload: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
   return (
     <div className="flex flex-col w-full gap-10">
       {chatCycles.map((chatCycle, index) => (
-        <ChatCycleItem
-          key={chatCycle.id}
-          chatCycle={chatCycle}
-          showResponseSkeleton={
-            isResponding && index === lastIndex && !chatCycle.responseMessage
-          }
-        />
+        <ChatCycleItem key={chatCycle.id} chatCycle={chatCycle} />
       ))}
-
-      {isResponding && chatCycles.length === 0 && (
-        <div className="max-w-5xl w-full">
-          <MessageSkeleton />
-        </div>
-      )}
     </div>
   );
 };

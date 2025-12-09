@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import type { ImageUpload } from "@/lib/drizzle/drizzle-schema";
 import {

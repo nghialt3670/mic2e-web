@@ -18,13 +18,20 @@ const uuidPrimaryKey = (name: string) =>
 const foreignKey = (name: string, references: PgColumn<any>) =>
   text(name).references(() => references);
 
+const createdAt = (name: string) => timestamp(name).defaultNow().notNull();
+const updatedAt = (name: string) =>
+  timestamp(name)
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull();
+
 export const users = pgTable("users", {
   id: uuidPrimaryKey("id"),
   name: text("name"),
   email: text("email").unique(),
   imageUrl: text("imageUrl"),
-  createdAt: timestamp("createdAt").defaultNow(),
-  updatedAt: timestamp("updatedAt").defaultNow(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
 });
 
 export const chatStatus = pgEnum("chat_status", [
@@ -40,15 +47,15 @@ export const chats = pgTable("chats", {
   title: text("title"),
   status: chatStatus("status").notNull().default("idle"),
   contextUrl: text("context_url"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
 });
 
 export const messages = pgTable("messages", {
   id: uuidPrimaryKey("id"),
   text: text("text").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
 });
 
 export const chatCycles = pgTable("chat_cycles", {
@@ -58,8 +65,8 @@ export const chatCycles = pgTable("chat_cycles", {
   responseMessageId: foreignKey("response_message_id", messages.id),
   contextUrl: text("context_url"),
   dataJson: jsonb("data_json"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
 });
 
 export const imageUploads = pgTable("image_uploads", {
@@ -69,8 +76,8 @@ export const imageUploads = pgTable("image_uploads", {
   url: text("url").notNull(),
   width: integer("width").notNull(),
   height: integer("height").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
 });
 
 export const attachmentType = pgEnum("attachment_type", ["fig"]);
@@ -82,8 +89,8 @@ export const attachments = pgTable("attachments", {
   figUploadId: foreignKey("fig_id", imageUploads.id),
   imageUploadId: foreignKey("image_id", imageUploads.id),
   thumbnailUploadId: foreignKey("thumbnail_id", imageUploads.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

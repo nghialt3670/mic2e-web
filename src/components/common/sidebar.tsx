@@ -1,5 +1,7 @@
+"use server";
+
 import { ChatList } from "@/components/chat/chat-list";
-import { NewChat } from "@/components/chat/new-chat";
+import { ChatNew } from "@/components/chat/chat-new";
 import {
   SidebarContent,
   SidebarFooter,
@@ -8,19 +10,27 @@ import {
   Sidebar as SidebarUI,
 } from "@/components/ui/sidebar";
 
-export const Sidebar = () => {
+import { Separator } from "../ui/separator";
+import { UserOrLogin } from "../user/user-or-login";
+import { SidebarToggle } from "./sidebar-toggle";
+
+export const Sidebar = async () => {
   return (
     <SidebarUI>
-      <SidebarHeader />
+      <SidebarHeader className="flex flex-row items-center justify-between p-1">
+        <ChatNew />
+        <SidebarToggle />
+      </SidebarHeader>
+      <Separator />
       <SidebarContent>
         <SidebarGroup>
-          <NewChat />
-        </SidebarGroup>
-        <SidebarGroup className="p-0 flex-1 min-h-0">
           <ChatList />
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter />
+      <Separator />
+      <SidebarFooter className="flex flex-row items-center justify-between p-3">
+        <UserOrLogin />
+      </SidebarFooter>
     </SidebarUI>
   );
 };

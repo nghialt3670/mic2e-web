@@ -1,3 +1,5 @@
+"use client";
+
 import { MessageSkeleton } from "@/components/chat/message-skeleton";
 import { ChatCycleDetail } from "@/types/chat-cycle-detail";
 import { FC } from "react";

@@ -2,8 +2,8 @@
 
 import { ContextCanvas } from "@/components/chat/context-canvas";
 import { FigCanvas } from "@/components/edit/fig-canvas";
-import { clientEnv } from "@/utils/client/client-env";
-import { useChatStore } from "@/stores/chat-store";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +11,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useChatStore } from "@/stores/chat-store";
+import { clientEnv } from "@/utils/client/client-env";
 import { FileJson, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -169,5 +169,3 @@ export const ContextDialog = () => {
     </Dialog>
   );
 };
-
-

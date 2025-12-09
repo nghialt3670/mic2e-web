@@ -1,9 +1,12 @@
+"use server";
+
 import { Footer } from "@/components/common/footer";
 import { Header } from "@/components/common/header";
 import { Sidebar } from "@/components/common/sidebar";
+import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-export default function MainLayout({
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -13,6 +16,7 @@ export default function MainLayout({
       <Sidebar />
       <SidebarInset className="flex flex-col h-screen">
         <Header />
+        <Separator />
         <main className="flex-1 overflow-auto">{children}</main>
         <Footer />
       </SidebarInset>

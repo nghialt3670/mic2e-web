@@ -127,6 +127,13 @@
       "when": 1762507318668,
       "tag": "0017_curvy_sister_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1765248568114,
+      "tag": "0018_pretty_speed_demon",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,15 @@
 "use client";
 
+import {
+  Canvas,
+  Circle,
+  FabricImage,
+  Text as FabricText,
+  Group,
+  Path,
+  Rect,
+} from "fabric";
 import { FC, useEffect, useRef } from "react";
-import { Canvas, Circle, FabricImage, Group, Path, Rect, Text as FabricText } from "fabric";
 
 interface ContextCanvasEntry {
   key: string;
@@ -24,7 +32,9 @@ const getFabricType = (value: any): string | null => {
 
 const isFabricLike = (value: any): boolean => {
   const t = getFabricType(value);
-  return !!t && ["image", "group", "rect", "circle", "ellipse", "path"].includes(t);
+  return (
+    !!t && ["image", "group", "rect", "circle", "ellipse", "path"].includes(t)
+  );
 };
 
 export const ContextCanvas: FC<ContextCanvasProps> = ({
@@ -139,7 +149,10 @@ export const ContextCanvas: FC<ContextCanvasProps> = ({
         }
 
         x += (canvas.getWidth() ?? width) / 3 + marginX;
-        if (x + (canvas.getWidth() ?? width) / 3 > (canvas.getWidth() ?? width)) {
+        if (
+          x + (canvas.getWidth() ?? width) / 3 >
+          (canvas.getWidth() ?? width)
+        ) {
           x = 20;
           y += rowMaxHeight + marginY;
           rowMaxHeight = 0;

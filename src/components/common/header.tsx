@@ -1,29 +1,25 @@
 "use client";
 
 import { SidebarToggle } from "@/components/common/sidebar-toggle";
-import { Login } from "@/components/user/login";
-import { User } from "@/components/user/user";
-import { useSession } from "next-auth/react";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+import { useSidebar } from "../ui/sidebar";
 
 export const Header = () => {
-  const { data: session } = useSession();
-
-  const renderUserOrLogin = () => {
-    if (session) {
-      return <User />;
-    }
-    return <Login />;
-  };
+  const isMobile = useIsMobile();
+  const { open } = useSidebar();
+  const showSidebarToggle = isMobile ? true : !open;
 
   return (
-    <div className="flex justify-between items-center px-4 py-2 border-b">
+    <div
+      className={`flex justify-between items-center ${showSidebarToggle ? "p-1 pl-2" : "p-2"}`}
+    >
       <div className="flex items-center gap-2">
-        <SidebarToggle />
-        <h1 className="text-xl font-medium">
+        {showSidebarToggle && <SidebarToggle />}
+        <h1 className={`text-xl font-medium ${!showSidebarToggle && "ml-2"}`}>
           Multimodal Interactive Chat2Edit
         </h1>
       </div>
-      {renderUserOrLogin()}
     </div>
   );
 };

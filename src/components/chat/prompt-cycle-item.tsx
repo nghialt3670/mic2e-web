@@ -323,9 +323,11 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                               {!block.is_executed && (
                                 <Ban className="size-4 text-muted-foreground" />
                               )}
-                              {block.is_executed && !block.feedback && !block.error && (
-                                <CircleCheck className="size-4 text-green-600" />
-                              )}
+                              {block.is_executed &&
+                                !block.feedback &&
+                                !block.error && (
+                                  <CircleCheck className="size-4 text-green-600" />
+                                )}
                               {block.feedback && (
                                 <CircleDot className="size-4 text-yellow-600" />
                               )}
