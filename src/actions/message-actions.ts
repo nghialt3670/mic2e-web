@@ -6,10 +6,7 @@ import {
   cycles as cyclesTable,
   messages as messagesTable,
 } from "@/lib/drizzle/drizzle-schema";
-import {
-  withAuthHandler,
-  withErrorHandler,
-} from "@/utils/server/action-utils";
+import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 
 interface MessageCreateRequest {
   chatId: string;

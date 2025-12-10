@@ -63,15 +63,20 @@ export const createImageFileFromFigObject = async (
   return await createImageFileFromDataURL(dataUrl);
 };
 
-export const getFigObjectDimensions = async (
+export const createFigFromFigObject = async (
   obj: Record<string, any>,
-): Promise<{ width: number; height: number }> => {
-  const group = await Group.fromObject(obj);
-  const image = group.getObjects()[0] as FabricImage;
-  return {
-    width: image.getScaledWidth(),
-    height: image.getScaledHeight(),
-  };
+): Promise<Group> => {
+  const fig = await Group.fromObject(obj);
+
+  fig.set({
+    id: obj.id,
+    subTargetCheck: true,
+    selectable: false,
+    evented: false,
+    interactive: true,
+  });
+
+  return fig;
 };
 
 export const calculateZoomToFit = (

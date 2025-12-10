@@ -16,9 +16,7 @@ interface ChatCycleDataJson {
   cycles?: PromptCycle[];
 }
 
-export const CycleItem: FC<CycleItemProps> = ({
-  cycle,
-}) => {
+export const CycleItem: FC<CycleItemProps> = ({ cycle }) => {
   const { request, response, jsonData } = cycle;
 
   const cycles = jsonData?.cycles || [];
@@ -36,9 +34,7 @@ export const CycleItem: FC<CycleItemProps> = ({
       )}
 
       <div className="max-w-5xl w-full">
-        {response ? (
-          <MessageItem message={response} />
-        ) : null}
+        {response ? <MessageItem message={response} /> : null}
       </div>
     </div>
   );

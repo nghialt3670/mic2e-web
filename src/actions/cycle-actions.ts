@@ -2,18 +2,15 @@
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
+  Cycle,
   attachments,
   chats,
   contexts,
-  Cycle,
   cycles,
   cycles as cyclesTable,
   messages,
 } from "@/lib/drizzle/drizzle-schema";
-import {
-  withAuthHandler,
-  withErrorHandler,
-} from "@/utils/server/action-utils";
+import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 import { serverEnv } from "@/utils/server/env-utils";
 import { asc, desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -151,7 +148,7 @@ export const completeCycle = withErrorHandler(
       .values({
         fileId: context_file_id,
       })
-      .returning()
+      .returning();
 
     const [completedCycle] = await drizzleClient
       .update(cycles)
@@ -164,6 +161,10 @@ export const completeCycle = withErrorHandler(
       .returning();
 
     revalidatePath(`/chats/${chatId}`);
-    return { message: "Cycle completed successfully", code: 200, data: completedCycle };
+    return {
+      message: "Cycle completed successfully",
+      code: 200,
+      data: completedCycle,
+    };
   }),
 );

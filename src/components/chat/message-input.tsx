@@ -4,6 +4,8 @@ import {
   AttachmentCreateRequest,
   createAttachments,
 } from "@/actions/attachment-actions";
+import { createChat } from "@/actions/chat-actions";
+import { completeCycle } from "@/actions/cycle-actions";
 import { createMessage } from "@/actions/message-actions";
 import { Button } from "@/components/ui/button";
 import { ChatContext } from "@/contexts/chat-context";
@@ -19,11 +21,9 @@ import { Loader2, Send, WandSparkles } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useContext } from "react";
 
-import { completeCycle } from "@/actions/cycle-actions";
 import { AttachmentInput } from "./attachment-input";
 import { AttachmentInputList } from "./attachment-input-list";
 import { MessageTextInput } from "./message-text-input";
-import { createChat } from "@/actions/chat-actions";
 
 export const MessageInput = () => {
   const { chat } = useContext(ChatContext);
@@ -112,9 +112,7 @@ const uploadAttachmentsAndThumbnails = async (
   );
   const fileIds = await Promise.all(files.map(uploadFile));
 
-  const imageFiles = await Promise.all(
-    files.map(createImageFileFromFigObject),
-  );
+  const imageFiles = await Promise.all(files.map(createImageFileFromFigObject));
   const thumbnailResults = await Promise.all(
     imageFiles.map(createImageThumbnail),
   );

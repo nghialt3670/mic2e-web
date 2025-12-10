@@ -2,16 +2,12 @@
 
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import { Chat, chats } from "@/lib/drizzle/drizzle-schema";
-import {
-  withAuthHandler,
-  withErrorHandler,
-} from "@/utils/server/action-utils";
+import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 import { and, eq } from "drizzle-orm";
 
 interface ChatCreateRequest {
   chat: Omit<Chat, "id" | "createdAt" | "updatedAt">;
 }
-
 
 export const createChat = withErrorHandler(
   withAuthHandler<ChatCreateRequest, Chat>(async ({ userId, chat }) => {
@@ -48,7 +44,6 @@ export const updateChat = withErrorHandler(
     };
   }),
 );
-
 
 interface ChatDeleteRequest {
   chatId: string;

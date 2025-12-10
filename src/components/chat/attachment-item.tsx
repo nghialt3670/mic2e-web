@@ -1,26 +1,23 @@
 "use client";
 
+import { updateAttachmentThumbnail } from "@/actions/attachment-actions";
+import { createThumbnail } from "@/actions/thumbnail-actions";
 import { createImageFileFromFigObject } from "@/lib/fabric";
+import { uploadFile } from "@/lib/storage";
+import { withToastHandler } from "@/utils/client/action-utils";
+import { clientEnv } from "@/utils/client/env-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
 import Image from "next/image";
 import { FC, useEffect, useState } from "react";
 
 import type { AttachmentDetail } from "../../types";
-import { clientEnv } from "@/utils/client/env-utils";
-import { uploadFile } from "@/lib/storage";
-import { updateAttachmentThumbnail } from "@/actions/attachment-actions";
-import { createThumbnail } from "@/actions/thumbnail-actions";
-import { withToastHandler } from "@/utils/client/action-utils";
 
 interface AttachmentItemProps {
   attachment: AttachmentDetail;
 }
 
-export const AttachmentItem: FC<AttachmentItemProps> = ({
-  attachment,
-}) => {
+export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
   const [thumbnail, setThumbnail] = useState(attachment.thumbnail);
-
 
   useEffect(() => {
     const ensureThumbnail = async () => {
@@ -36,7 +33,11 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({
         if (!response.ok) return;
         const figObject = await response.json();
         const imageFile = await createImageFileFromFigObject(figObject);
-        const { file: thumbnailFile, width, height } = await createImageThumbnail(imageFile);
+        const {
+          file: thumbnailFile,
+          width,
+          height,
+        } = await createImageThumbnail(imageFile);
         const thumbnailFileId = await uploadFile(thumbnailFile);
         const createdThumbnail = await withToastHandler(createThumbnail, {
           fileId: thumbnailFileId,

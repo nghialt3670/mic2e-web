@@ -8,7 +8,7 @@ import {
 import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 
 export interface ThumbnailCreateRequest {
-    thumbnail: Omit<Thumbnail, "id" | "createdAt" | "updatedAt">;
+  thumbnail: Omit<Thumbnail, "id" | "createdAt" | "updatedAt">;
 }
 
 export const createThumbnail = withErrorHandler(

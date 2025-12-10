@@ -1,6 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   createFigFileFromFigObject,
+  createFigFromFigObject,
   createFigObjectFromFigFile,
   resizeAndZoomCanvas,
 } from "@/lib/fabric/fabric-utils";
@@ -19,7 +20,6 @@ import {
   canvasToFigCoords,
   createBox,
   createFigFrame,
-  createFigFromFigObject,
   createPoint,
   createScribble,
   hasFigFrame,
@@ -86,7 +86,10 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       const fig = canvas.getObjects()[0];
       if (!fig) return;
       const figObject = fig.toObject(["id", "ephemeral", "reference"]);
-      const newfigFile = await createFigFileFromFigObject(figObject, figFile.name);
+      const newfigFile = await createFigFileFromFigObject(
+        figObject,
+        figFile.name,
+      );
       lastEmittedSignatureRef.current = figSignature(newfigFile);
       onFigFileChange?.(newfigFile);
     };
@@ -303,9 +306,9 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
     useEffect(() => {
       const loadCanvas = async () => {
         if (!canvasElementRef.current) return;
-        
+
         const incomingSignature = figSignature(figFile);
-        
+
         // Skip if this is our own change
         if (
           incomingSignature &&
@@ -314,7 +317,7 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
           lastLoadedSignatureRef.current = incomingSignature;
           return;
         }
-        
+
         setIsLoading(true);
 
         const [figObjectError, figObject] = await to(
@@ -367,7 +370,7 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       // Cleanup function only for unmounting
       return () => {
         const state = stateRef.current;
-        
+
         if (state.clickTimer) {
           clearTimeout(state.clickTimer);
           state.clickTimer = null;

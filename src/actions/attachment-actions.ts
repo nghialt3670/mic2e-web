@@ -3,14 +3,11 @@
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
   Attachment,
-  attachments as attachmentsTable,
   Thumbnail,
+  attachments as attachmentsTable,
   thumbnails as thumbnailsTable,
 } from "@/lib/drizzle/drizzle-schema";
-import {
-  withAuthHandler,
-  withErrorHandler,
-} from "@/utils/server/action-utils";
+import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 import { eq } from "drizzle-orm";
 
 export interface ThumbnailCreateRequest {
@@ -60,22 +57,24 @@ export const createAttachments = withErrorHandler(
 );
 
 export interface UpdateAttachmentThumbnailRequest {
-    attachmentId: string;
-    thumbnailId: string;
+  attachmentId: string;
+  thumbnailId: string;
 }
 
 export const updateAttachmentThumbnail = withErrorHandler(
-  withAuthHandler<UpdateAttachmentThumbnailRequest, Attachment>(async ({ attachmentId, thumbnailId }) => {
-    const [updatedAttachment] = await drizzleClient
+  withAuthHandler<UpdateAttachmentThumbnailRequest, Attachment>(
+    async ({ attachmentId, thumbnailId }) => {
+      const [updatedAttachment] = await drizzleClient
         .update(attachmentsTable)
         .set({ thumbnailId })
         .where(eq(attachmentsTable.id, attachmentId))
         .returning();
 
-    return {
-      message: "Attachment thumbnail updated successfully.",
-      code: 200,
-      data: updatedAttachment,
-    };
-  }),
+      return {
+        message: "Attachment thumbnail updated successfully.",
+        code: 200,
+        data: updatedAttachment,
+      };
+    },
+  ),
 );
