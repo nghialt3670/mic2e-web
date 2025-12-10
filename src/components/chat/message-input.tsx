@@ -5,11 +5,15 @@ import {
   createAttachments,
 } from "@/actions/attachment-actions";
 import { createChat } from "@/actions/chat-actions";
-import { completeCycle, createCycle } from "@/actions/cycle-actions";
+import { createCycle, generateCycle } from "@/actions/cycle-actions";
 import { createMessage } from "@/actions/message-actions";
 import { Button } from "@/components/ui/button";
 import { ChatContext } from "@/contexts/chat-context";
-import { createFigFileFromFigObject, createFigObjectFromFigFile, createImageFileFromFigObject } from "@/lib/fabric";
+import {
+  createFigFileFromFigObject,
+  createFigObjectFromFigFile,
+  createImageFileFromFigObject,
+} from "@/lib/fabric";
 import { uploadFile } from "@/lib/storage";
 import {
   AttachmentInput as AttachmentInputType,
@@ -28,8 +32,20 @@ import { MessageTextInput } from "./message-text-input";
 export const MessageInput = () => {
   const router = useRouter();
   const { chat } = useContext(ChatContext);
-  const { text, setText, clearText, getAttachments, clearAttachments } = useMessageInputStore();
+  const { text, setText, clearText, getAttachments, clearAttachments } =
+    useMessageInputStore();
   const attachments = getAttachments();
+  // Helper to force router refresh with proper timing
+  const forceRefresh = async () => {
+    return new Promise<void>((resolve) => {
+      // Call router.refresh()
+      router.refresh();
+
+      // Wait for Next.js to process the refresh
+      // Use a longer timeout to ensure server components re-fetch
+      setTimeout(resolve, 150);
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,23 +77,23 @@ export const MessageInput = () => {
       clearText();
       clearAttachments();
 
+      // Create cycle and force UI update
       const createdCycle = await withToastHandler(createCycle, {
         chatId,
         requestId: createdMessage.id,
       });
-      router.refresh();
+      await forceRefresh(); // Force refresh to show the created cycle
 
-      await withToastHandler(completeCycle, {
-        chatId,
+      // Generate cycle and force UI update
+      await withToastHandler(generateCycle, {
         cycleId: createdCycle.id,
       });
-
-      router.refresh();
+      await forceRefresh(); // Force refresh to show the generated cycle
     } catch (error) {
       console.error("Error submitting message:", error);
       // Error is already shown via withToastHandler
       // Just refresh to show the current state
-      router.refresh();
+      await forceRefresh();
     }
   };
 
@@ -131,7 +147,9 @@ const uploadAttachmentsAndThumbnails = async (
   const fileIds = await Promise.all(files.map(uploadFile));
 
   const figObjects = await Promise.all(files.map(createFigObjectFromFigFile));
-  const imageFiles = await Promise.all(figObjects.map(createImageFileFromFigObject));
+  const imageFiles = await Promise.all(
+    figObjects.map(createImageFileFromFigObject),
+  );
   const thumbnailResults = await Promise.all(
     imageFiles.map(createImageThumbnail),
   );

@@ -3,9 +3,9 @@
 import { ChatCycleDetail } from "@/types/chat-cycle-detail";
 import { FC } from "react";
 
+import { CycleDetail } from "./cycle-detail";
+import { CycleRegenerate } from "./cycle-regenerate";
 import { MessageItem } from "./message-item";
-import { PromptCycle } from "./prompt-cycle-item";
-import { PromptCycleList } from "./prompt-cycle-list";
 
 interface CycleItemProps {
   cycle: ChatCycleDetail;
@@ -14,22 +14,19 @@ interface CycleItemProps {
 export const CycleItem: FC<CycleItemProps> = ({ cycle }) => {
   const { request, response, jsonData } = cycle;
 
-  const cycles = jsonData?.cycles || ([] as PromptCycle[]);
-
   return (
-    <div className="flex flex-col justify-start items-center h-full w-full pr-2 pl-6 gap-2">
-      <div className="max-w-5xl w-full">
-        <MessageItem message={request} />
+    <div className="flex flex-col h-full w-full pr-2 pl-6 gap-6">
+      <div className="w-full flex justify-end">
+        <MessageItem message={request} type="request" />
       </div>
-
-      {cycles.length > 0 && (
-        <div className="w-full flex justify-center">
-          <PromptCycleList cycles={cycles} />
+      <div className="flex flex-col gap-1">
+        <div className="w-full flex justify-start">
+          {response && <MessageItem message={response} type="response" />}
         </div>
-      )}
-
-      <div className="max-w-5xl w-full">
-        {response ? <MessageItem message={response} /> : null}
+        <div className="flex items-start gap-1">
+          <CycleRegenerate cycleId={cycle.id} />
+          {jsonData && <CycleDetail jsonData={jsonData} />}
+        </div>
       </div>
     </div>
   );

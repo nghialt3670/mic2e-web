@@ -27,7 +27,7 @@ export const createPoint = (point: Point, canvas: Canvas, color: string) => {
     originX: "center",
     originY: "center",
     pointerEvents: "none",
-    is_ephemeral: true,
+    ephemeral: true,
   });
   fig.add(circle);
   canvas.requestRenderAll();
@@ -52,7 +52,7 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
     stroke: color,
     strokeWidth: 5 / zoom,
     color: color,
-    is_ephemeral: true,
+    ephemeral: true,
   });
 
   // Insert the frame at index 1 (right after the base image at index 0)
@@ -121,7 +121,7 @@ export const createScribble = (
     strokeLineCap: "round",
     strokeLineJoin: "round",
     color: color,
-    is_ephemeral: true,
+    ephemeral: true,
   });
   fig.add(path);
   canvas.requestRenderAll();
@@ -153,7 +153,7 @@ export const createBox = (
     stroke: color,
     strokeWidth: 5 / zoom,
     color: color,
-    is_ephemeral: true,
+    ephemeral: true,
   });
   fig.add(rect);
   canvas.requestRenderAll();

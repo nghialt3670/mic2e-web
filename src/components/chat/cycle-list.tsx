@@ -4,6 +4,10 @@ import { asc, eq } from "drizzle-orm";
 
 import { CycleItem } from "./cycle-item";
 
+// Force dynamic rendering to prevent caching
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export const CycleList = async ({ chatId }: { chatId: string }) => {
   const cycles = await drizzleClient.query.cycles.findMany({
     where: eq(cyclesTable.chatId, chatId),
@@ -33,7 +37,7 @@ export const CycleList = async ({ chatId }: { chatId: string }) => {
   console.log(cycles);
 
   return (
-    <div className="flex flex-col w-full gap-10">
+    <div className="flex flex-col w-full gap-6">
       {cycles.map((cycle, index) => (
         <CycleItem key={cycle.id} cycle={cycle} />
       ))}

@@ -7,8 +7,8 @@ interface CreateThumbnailResult {
 export async function createImageThumbnail(
   file: File,
 ): Promise<CreateThumbnailResult> {
-  const maxWidth = 800;
-  const maxHeight = 800;
+  const maxWidth = 400;
+  const maxHeight = 300;
   const quality = 0.85;
 
   return new Promise((resolve, reject) => {

@@ -2,7 +2,10 @@
 
 import { updateAttachmentThumbnail } from "@/actions/attachment-actions";
 import { createThumbnail } from "@/actions/thumbnail-actions";
-import { createFigObjectFromFigFile, createImageFileFromFigObject } from "@/lib/fabric";
+import {
+  createFigObjectFromFigFile,
+  createImageFileFromFigObject,
+} from "@/lib/fabric";
 import { uploadFile } from "@/lib/storage";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { clientEnv } from "@/utils/client/env-utils";
@@ -32,7 +35,9 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
         const response = await fetch(attachmentFileUrl);
         if (!response.ok) return;
         const figBlob = await response.blob();
-        const figFile = new File([figBlob], attachment.filename, { type: "application/json" });
+        const figFile = new File([figBlob], attachment.filename, {
+          type: "application/json",
+        });
         const figObject = await createFigObjectFromFigFile(figFile);
         const imageFile = await createImageFileFromFigObject(figObject);
         const {
