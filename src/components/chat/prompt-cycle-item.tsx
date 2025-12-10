@@ -31,7 +31,7 @@ interface LlmMessage {
 
 interface PromptExchange {
   prompt: LlmMessage;
-  answers: LlmMessage[];
+  answer: LlmMessage;
   error?: PromptError;
   code?: string;
 }
@@ -41,22 +41,22 @@ interface ExecutionError {
   type?: string;
 }
 
-interface ContextualizedFeedback {
+interface Feedback {
   text: string;
-  paths?: string[];
+  attachments?: string[];
 }
 
-interface ContextualizedMessage {
+interface Message {
   text: string;
-  paths?: string[];
+  attachments?: string[];
 }
 
 interface ExecutionBlock {
   generated_code: string;
   processed_code: string;
-  is_executed: boolean;
-  feedback?: ContextualizedFeedback;
-  response?: ContextualizedMessage;
+  executed: boolean;
+  feedback?: Feedback;
+  response?: Message;
   error?: ExecutionError;
   logs?: string[];
 }
@@ -224,7 +224,7 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                   </div>
                                 </div>
 
-                                {exchange.answers.length > 0 && (
+                                {exchange.answer && (
                                   <div className="relative rounded-lg border bg-white overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
                                       <span className="text-xs text-gray-500 font-medium">
@@ -233,7 +233,7 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                       <button
                                         onClick={() =>
                                           copyToClipboard(
-                                            exchange.answers[0].text,
+                                            exchange.answer.text,
                                             "Answer",
                                           )
                                         }
@@ -243,7 +243,7 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                       </button>
                                     </div>
                                     <div className="p-3 text-xs whitespace-pre-wrap leading-relaxed">
-                                      {exchange.answers[0].text}
+                                      {exchange.answer.text}
                                     </div>
                                   </div>
                                 )}
@@ -320,10 +320,10 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                               <div className="text-sm font-medium">
                                 Execution Block {blockIdx + 1}
                               </div>
-                              {!block.is_executed && (
+                              {!block.executed && (
                                 <Ban className="size-4 text-muted-foreground" />
                               )}
-                              {block.is_executed &&
+                              {block.executed &&
                                 !block.feedback &&
                                 !block.error && (
                                   <CircleCheck className="size-4 text-green-600" />

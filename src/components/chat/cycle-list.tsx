@@ -1,13 +1,13 @@
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import { cycles as cyclesTable } from "@/lib/drizzle/drizzle-schema";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 
 import { CycleItem } from "./cycle-item";
 
 export const CycleList = async ({ chatId }: { chatId: string }) => {
   const cycles = await drizzleClient.query.cycles.findMany({
     where: eq(cyclesTable.chatId, chatId),
-    orderBy: desc(cyclesTable.createdAt),
+    orderBy: asc(cyclesTable.createdAt),
     with: {
       request: {
         with: {

@@ -5,7 +5,7 @@ import {
   createAttachments,
 } from "@/actions/attachment-actions";
 import { createChat } from "@/actions/chat-actions";
-import { completeCycle } from "@/actions/cycle-actions";
+import { completeCycle, createCycle } from "@/actions/cycle-actions";
 import { createMessage } from "@/actions/message-actions";
 import { Button } from "@/components/ui/button";
 import { ChatContext } from "@/contexts/chat-context";
@@ -49,15 +49,24 @@ export const MessageInput = () => {
       message: { text },
     });
 
-    const attachmentCreateRequests =
-      await uploadAttachmentsAndThumbnails(attachments);
-    await withToastHandler(createAttachments, {
-      messageId: createdMessage.id,
-      attachments: attachmentCreateRequests,
+    if (attachments.length > 0) {
+      const attachmentCreateRequests =
+        await uploadAttachmentsAndThumbnails(attachments);
+      const createdAttachments = await withToastHandler(createAttachments, {
+        messageId: createdMessage.id,
+        attachments: attachmentCreateRequests,
+      });
+      console.log("createdAttachments", createdAttachments);
+    }
+
+    const createdCycle = await withToastHandler(createCycle, {
+      chatId,
+      requestId: createdMessage.id,
     });
 
-    const completedCycle = await withToastHandler(completeCycle, {
+    await withToastHandler(completeCycle, {
       chatId,
+      cycleId: createdCycle.id,
     });
 
     router.push(`/chats/${chatId}`);
