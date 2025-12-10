@@ -4,14 +4,11 @@ import {
   AttachmentInput,
   useMessageInputStore,
 } from "@/stores/message-input-store";
-import { useReferenceStore } from "@/stores/reference-store";
-import { Canvas, Circle, FabricObject, Group, Path, Rect } from "fabric";
-import { Box, X } from "lucide-react";
+import { Circle, Group, Path, Rect } from "fabric";
+import { X } from "lucide-react";
 import { FC } from "react";
-import stringToColor from "string-to-color";
 import { v4 } from "uuid";
 
-import { useInteractionStore } from "../../stores/interaction-store";
 import { FigCanvas } from "../edit/fig-canvas";
 
 interface AttachmentInputItemProps {
@@ -23,7 +20,6 @@ export const AttachmentInputItem: FC<AttachmentInputItemProps> = ({
 }) => {
   const { setAttachment, removeAttachment, addReference, removeReference } =
     useMessageInputStore();
-  const { color, setColor } = useInteractionStore();
   const isMobile = useIsMobile();
 
   const handleRemove = () => {
@@ -38,58 +34,54 @@ export const AttachmentInputItem: FC<AttachmentInputItemProps> = ({
     const reference = {
       value: v4(),
       label: "point",
-      color: stringToColor(v4()),
+      color: point.get("color"),
     };
     addReference(reference);
     point.set("reference", reference);
-    attachment.canvasRef?.current?.renderAll();
-    setColor(stringToColor(v4()));
+    attachment.canvasRef?.current?.canvas?.renderAll();
   };
 
   const handleBoxAdded = (box: Rect) => {
     const reference = {
       value: v4(),
       label: "box",
-      color: stringToColor(v4()),
+      color: box.get("color"),
     };
     addReference(reference);
     box.set("reference", reference);
-    attachment.canvasRef?.current?.renderAll();
-    setColor(stringToColor(v4()));
+    attachment.canvasRef?.current?.canvas?.renderAll();
   };
 
   const handleFigSelected = (fig: Group) => {
     const reference = {
       value: v4(),
       label: "image",
-      color: stringToColor(v4()),
+      color: fig.get("color"),
     };
     addReference(reference);
     fig.set("reference", reference);
-    attachment.canvasRef?.current?.renderAll();
-    setColor(stringToColor(v4()));
+    attachment.canvasRef?.current?.canvas?.renderAll();
   };
 
   const handleFigUnselected = (fig: Group) => {
     removeReference(fig.get("reference"));
-    attachment.canvasRef?.current?.renderAll();
+    attachment.canvasRef?.current?.canvas?.renderAll();
   };
 
   const handleScribbleAdded = (scribble: Path) => {
     const reference = {
       value: v4(),
       label: "scribble",
-      color: stringToColor(v4()),
+      color: scribble.get("color"),
     };
     addReference(reference);
     scribble.set("reference", reference);
-    attachment.canvasRef?.current?.renderAll();
-    setColor(stringToColor(v4()));
+    attachment.canvasRef?.current?.canvas?.renderAll();
   };
 
   const handleObjectRemoved = (object: Circle | Rect | Path) => {
     removeReference(object.get("reference"));
-    attachment.canvasRef?.current?.renderAll();
+    attachment.canvasRef?.current?.canvas?.renderAll();
   };
 
   return (
@@ -106,7 +98,6 @@ export const AttachmentInputItem: FC<AttachmentInputItemProps> = ({
         onFigUnselected={handleFigUnselected}
         onScribbleAdded={handleScribbleAdded}
         onObjectRemoved={handleObjectRemoved}
-        color={color}
       />
 
       <Button

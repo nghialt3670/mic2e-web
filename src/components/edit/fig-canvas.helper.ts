@@ -1,22 +1,6 @@
 import { Canvas, Circle, FabricImage, Group, Path, Point, Rect } from "fabric";
 import { v4 } from "uuid";
 
-export const createFigFromFigObject = async (
-  obj: Record<string, any>,
-): Promise<Group> => {
-  const fig = await Group.fromObject(obj);
-
-  fig.set({
-    id: obj.id,
-    subTargetCheck: true,
-    selectable: false,
-    evented: false,
-    interactive: true,
-  });
-
-  return fig;
-};
-
 export const canvasToFigCoords = (point: Point, canvas: Canvas) => {
   const zoom = canvas.getZoom();
   const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
@@ -39,6 +23,7 @@ export const createPoint = (point: Point, canvas: Canvas, color: string) => {
     top: figCoords.y,
     radius: 5 / zoom,
     fill: color,
+    color: color,
     originX: "center",
     originY: "center",
     pointerEvents: "none",
@@ -66,6 +51,7 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
     fill: "transparent",
     stroke: color,
     strokeWidth: 5 / zoom,
+    color: color,
     is_ephemeral: true,
   });
 
@@ -134,6 +120,7 @@ export const createScribble = (
     fill: "",
     strokeLineCap: "round",
     strokeLineJoin: "round",
+    color: color,
     is_ephemeral: true,
   });
   fig.add(path);
@@ -165,6 +152,7 @@ export const createBox = (
     fill: "transparent",
     stroke: color,
     strokeWidth: 5 / zoom,
+    color: color,
     is_ephemeral: true,
   });
   fig.add(rect);

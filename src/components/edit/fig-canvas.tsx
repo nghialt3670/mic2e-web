@@ -5,6 +5,7 @@ import {
   createFigObjectFromFigFile,
   resizeAndZoomCanvas,
 } from "@/lib/fabric/fabric-utils";
+import { getNextColor } from "@/utils/client/color-utils";
 import { to } from "await-to-js";
 import { Canvas, Circle, FabricObject, Group, Path, Point, Rect } from "fabric";
 import { AlertCircle } from "lucide-react";
@@ -12,6 +13,7 @@ import {
   type ForwardedRef,
   forwardRef,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
 } from "react";
@@ -27,7 +29,6 @@ import {
 } from "./fig-canvas.helper";
 
 interface FigCanvasProps {
-  color: string;
   figFile: File;
   onPointAdded?: (point: Circle) => void;
   onBoxAdded?: (box: Rect) => void;
@@ -40,10 +41,14 @@ interface FigCanvasProps {
   maxHeight?: number;
 }
 
-export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
+export interface FigCanvasRef {
+  canvas: Canvas | null;
+  updateFigFile: () => Promise<void>;
+}
+
+export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
   (
     {
-      color,
       figFile,
       onFigFileChange,
       onPointAdded,
@@ -54,7 +59,7 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       maxWidth = 800,
       maxHeight = 600,
     },
-    ref: ForwardedRef<Canvas>,
+    ref: ForwardedRef<FigCanvasRef>,
   ) => {
     const canvasElementRef = useRef<HTMLCanvasElement>(null);
     const fabricCanvasRef = useRef<Canvas | null>(null);
@@ -62,6 +67,8 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
     const [isError, setIsError] = useState(false);
     const lastEmittedSignatureRef = useRef<string | null>(null);
     const lastLoadedSignatureRef = useRef<string | null>(null);
+    const currentColorRef = useRef<string>("#000000");
+    const figDataUrlRef = useRef<string>("");
 
     const figSignature = (file?: File | null) =>
       file ? `${file.name}-${file.size}-${file.lastModified}` : null;
@@ -80,12 +87,19 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       pendingArmPoint: null as Point | null, // Track which point armed the draw
     });
 
+    const updateNextColor = async () => {
+      if (figDataUrlRef.current) {
+        const nextColor = await getNextColor(figDataUrlRef.current);
+        currentColorRef.current = nextColor;
+      }
+    };
+
     const handleFigChange = async () => {
       const canvas = fabricCanvasRef.current;
       if (!canvas) return;
       const fig = canvas.getObjects()[0];
       if (!fig) return;
-      const figObject = fig.toObject(["id", "ephemeral", "reference"]);
+      const figObject = fig.toObject(["id", "ephemeral", "reference", "color"]);
       const newfigFile = await createFigFileFromFigObject(
         figObject,
         figFile.name,
@@ -93,6 +107,12 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       lastEmittedSignatureRef.current = figSignature(newfigFile);
       onFigFileChange?.(newfigFile);
     };
+
+    // Expose canvas and updateFigFile method via ref
+    useImperativeHandle(ref, () => ({
+      canvas: fabricCanvasRef.current,
+      updateFigFile: handleFigChange,
+    }), [isLoading, figFile]); // Update when loading state changes (canvas ready)
 
     const setupInteractions = (canvas: Canvas) => {
       const state = stateRef.current;
@@ -102,23 +122,25 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       const DOUBLE_CLICK_THRESHOLD = 300; // ms
       const DRAG_THRESHOLD = 5; // pixels
 
-      const handleDoubleClick = () => {
+      const handleDoubleClick = async () => {
         // Double click: toggle frame
         if (hasFigFrame(canvas)) {
           const fig = removeFigFrame(canvas);
           onFigUnselected?.(fig);
         } else {
-          const figFrame = createFigFrame(canvas, color);
+          const figFrame = createFigFrame(canvas, currentColorRef.current);
           onFigSelected?.(figFrame);
+          await updateNextColor();
         }
         handleFigChange();
         state.isArmedDraw = false;
       };
 
-      const handleSingleClick = (point: Point) => {
+      const handleSingleClick = async (point: Point) => {
         // Single click: create point (arming already happened immediately on click)
-        const createdPoint = createPoint(point, canvas, color);
+        const createdPoint = createPoint(point, canvas, currentColorRef.current);
         onPointAdded?.(createdPoint);
+        await updateNextColor();
         handleFigChange();
       };
 
@@ -190,7 +212,7 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
               width,
               height,
               fill: "transparent",
-              stroke: color,
+              stroke: currentColorRef.current,
               strokeWidth: 5 / zoom,
               strokeDashArray: [5, 5],
               selectable: false,
@@ -217,7 +239,7 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
 
             const zoom = canvas.getZoom();
             state.tempObject = new Path(pathString, {
-              stroke: color,
+              stroke: currentColorRef.current,
               strokeWidth: 10 / zoom,
               fill: "",
               strokeLineCap: "round",
@@ -253,16 +275,18 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
               state.mouseDownPoint,
               e.pointer,
               canvas,
-              color,
+              currentColorRef.current,
             );
             onBoxAdded?.(box);
+            updateNextColor();
             handleFigChange();
             state.isArmedDraw = false; // Disarm after creating box
             state.pendingArmPoint = null;
           } else {
             // Regular draw: create scribble
-            const scribble = createScribble(state.pathPoints, canvas, color);
+            const scribble = createScribble(state.pathPoints, canvas, currentColorRef.current);
             onScribbleAdded?.(scribble);
+            updateNextColor();
             handleFigChange();
           }
 
@@ -349,18 +373,18 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
         fabricCanvasRef.current = fabricCanvas;
         fabricCanvas.add(fig);
         resizeAndZoomCanvas(fabricCanvas, maxWidth, maxHeight);
-        setupInteractions(fabricCanvas);
         fabricCanvas.requestRenderAll();
+
+        // Get data URL from rendered canvas for color generation
+        figDataUrlRef.current = fabricCanvas.toDataURL();
+
+        // Initialize first color from canvas
+        const initialColor = await getNextColor(figDataUrlRef.current);
+        currentColorRef.current = initialColor;
+
+        setupInteractions(fabricCanvas);
         setIsLoading(false);
         lastLoadedSignatureRef.current = incomingSignature;
-
-        if (ref) {
-          if (typeof ref === "function") {
-            ref(fabricCanvas);
-          } else {
-            ref.current = fabricCanvas;
-          }
-        }
       };
 
       if (canvasElementRef.current) {

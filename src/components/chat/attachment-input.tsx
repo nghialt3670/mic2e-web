@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { FigCanvasRef } from "@/components/edit/fig-canvas";
 import {
   MAXIMUM_FILE_SIZE,
   MAXIMUM_NUMBER_OF_FILES,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/fabric/fabric-utils";
 import { useMessageInputStore } from "@/stores/message-input-store";
 import { UploadIcon } from "lucide-react";
-import { useRef } from "react";
+import { createRef, useRef } from "react";
 import { toast } from "sonner";
 
 export const AttachmentInput = () => {
@@ -46,7 +47,10 @@ export const AttachmentInput = () => {
 
     clearAttachments();
     const figFiles = await Promise.all(files.map(createFigFileFromImageFile));
-    const attachments = figFiles.map((file) => ({ file }));
+    const attachments = figFiles.map((file) => ({ 
+      file,
+      canvasRef: createRef<FigCanvasRef>()
+    }));
     setAttachments(attachments);
 
     if (fileInputRef.current) {

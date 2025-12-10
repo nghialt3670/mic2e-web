@@ -1,6 +1,6 @@
-import { Canvas } from "fabric";
 import { RefObject } from "react";
 import { create } from "zustand";
+import { FigCanvasRef } from "@/components/edit/fig-canvas";
 
 export interface Reference {
   value: string;
@@ -10,7 +10,7 @@ export interface Reference {
 
 export interface AttachmentInput {
   file: File;
-  canvasRef?: RefObject<Canvas | null>;
+  canvasRef?: RefObject<FigCanvasRef | null>;
 }
 
 export interface MessageInputStore {

@@ -1,6 +1,6 @@
 import { readFileAsDataURL } from "@/utils/client/file-utils";
 import { createImageFileFromDataURL } from "@/utils/client/image-utils";
-import { Canvas, FabricImage, Group, StaticCanvas } from "fabric";
+import { Canvas, FabricImage, Group, Rect, StaticCanvas } from "fabric";
 import { v4 } from "uuid";
 
 export const createFigObjectFromImageFile = async (
@@ -111,4 +111,43 @@ export const resizeAndZoomCanvas = (
   });
   canvas.setZoom(zoom);
   canvas.renderAll();
+};
+
+export const removeObjectWithReference = (
+  canvases: Canvas[],
+  reference: Record<string, any>,
+  onUpdate?: (canvas: Canvas) => void,
+) => {
+  canvases.forEach((canvas) => {
+    const fig = canvas.getObjects()[0] as Group;
+    if (!fig) return;
+
+    let objectRemoved = false;
+
+    // Check if this is a fig frame reference
+    if (fig.get("reference")?.value === reference.value) {
+      const frame = fig.getObjects()[1] as Rect;
+      if (frame && frame.get("id") === fig.get("id")) {
+        fig.remove(frame);
+        canvas.renderAll();
+        objectRemoved = true;
+      }
+    }
+
+    // Check if this is a regular object reference
+    if (!objectRemoved) {
+      const figObjects = fig.getObjects();
+      const object = figObjects.find((obj) => obj.get("reference")?.value === reference.value);
+      if (object) {
+        fig.remove(object);
+        canvas.renderAll();
+        objectRemoved = true;
+      }
+    }
+
+    // Trigger update callback if something was removed
+    if (objectRemoved && onUpdate) {
+      onUpdate(canvas);
+    }
+  });
 };

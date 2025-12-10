@@ -1,6 +1,6 @@
 import { FC } from "react";
 
-interface MessageTextDisplayProps {
+interface MessageTextProps {
   text: string;
 }
 
@@ -11,7 +11,7 @@ interface ParsedMention {
   figId: string;
 }
 
-export const MessageTextDisplay: FC<MessageTextDisplayProps> = ({ text }) => {
+export const MessageText: FC<MessageTextProps> = ({ text }) => {
   // Parse text and extract mentions with their colors
   // Format: #colorCode[label](value@figId)
   const parseMentions = (text: string) => {
@@ -23,7 +23,7 @@ export const MessageTextDisplay: FC<MessageTextDisplayProps> = ({ text }) => {
 
     // Regex to match the mention pattern: #colorCode[label](value@figId)
     // Matches: #2f88a2[box](8fe4e0c7-ef83-4897-9007-89b26cf952f8@deeaaac2-a474-4e30-a42c-2838b2cc5713)
-    const mentionRegex = /#([a-zA-Z0-9_]+)\[([^\]]+)\]\(([^@]+)@([^)]+)\)/g;
+    const mentionRegex = /#([a-zA-Z0-9_]+)\[([^\]]+)\]\(([^@]+)\)/g;
 
     let lastIndex = 0;
     let match;

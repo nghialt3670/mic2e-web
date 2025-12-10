@@ -1,10 +1,11 @@
 "use client";
 
-import { useReferenceStore } from "@/stores/reference-store";
 import { useEffect, useRef, useState } from "react";
 import { Mention, MentionsInput, SuggestionDataItem } from "react-mentions";
+import { Canvas } from "fabric";
 
-import { useInputAttachmentStore } from "../../stores/input-attachment-store";
+import { useMessageInputStore } from "@/stores/message-input-store";
+import { removeObjectWithReference } from "@/lib/fabric/fabric-utils";
 
 interface MessageTextInputProps {
   value: string;
@@ -15,16 +16,11 @@ export const MessageTextInput = ({
   value,
   onChange,
 }: MessageTextInputProps) => {
-  const { removeObjectById, clearInputAttachments } = useInputAttachmentStore();
-  const {
-    references,
-    getCurrentReference,
-    removeReferenceById,
-    clearReferences,
-  } = useReferenceStore();
+  const { getReferences, removeReference, clearReferences, getAttachments, clearAttachments } = useMessageInputStore();
   const [localValue, setLocalValue] = useState(value);
   const mentionsInputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+  const references = getReferences();
   const previousReferencesRef = useRef(references);
 
   // Handle change from MentionsInput
@@ -49,34 +45,37 @@ export const MessageTextInput = ({
       })
       .filter(Boolean);
 
-    // Check which references were removed
+    // Get fresh attachments and canvas refs at the time of change
+    const currentAttachments = getAttachments();
+    const canvasRefs = currentAttachments
+      .map((attachment) => attachment.canvasRef?.current)
+      .filter(Boolean);
+
     references.forEach((ref) => {
       if (!currentMentionIds.includes(ref.value)) {
-        // Remove from reference store
-        removeReferenceById(ref.value);
-
-        // Remove from canvas - if it's the fig itself (label "image"), pass the figId
-        // Otherwise pass the object's own id
-        if (ref.label === "image") {
-          // For frame/image selection, use the figId to remove the frame at index 1
-          removeObjectById(ref.figId);
-        } else {
-          // For other objects (point, box, scribble), use the value (object's id)
-          removeObjectById(ref.value);
-        }
+        removeReference(ref);
+        const canvases = canvasRefs
+          .map((canvasRef) => canvasRef?.canvas)
+          .filter((canvas): canvas is Canvas => !!canvas);
+        
+        removeObjectWithReference(canvases, ref, (canvas) => {
+          // Find the canvas ref that matches this canvas and trigger update
+          const canvasRef = canvasRefs.find((ref) => ref?.canvas === canvas);
+          canvasRef?.updateFigFile();
+        });
       }
     });
   };
 
   // Auto-insert new reference when added to store
   useEffect(() => {
-    const currentRef = getCurrentReference();
+    const currentRef = references.at(-1);
     if (!currentRef) return;
-    const { color, label, value, figId } = currentRef;
+    const { color, label, value } = currentRef;
     // Extract color code without # prefix for the format
     const colorCode = color.startsWith("#") ? color.slice(1) : color;
     // Format: #colorCode[label](value@figId) - backend expects # prefix with alphanumeric
-    const mentionText = `#${colorCode}[${label}](${value}@${figId})`;
+    const mentionText = `#${colorCode}[${label}](${value})`;
 
     // Check if reference is already in the value
     if (!localValue.includes(mentionText)) {
@@ -85,7 +84,7 @@ export const MessageTextInput = ({
       setLocalValue(newValue);
       onChange(newValue);
     }
-  }, [references, getCurrentReference, localValue]);
+  }, [references, localValue]);
 
   // Remove mention text when reference is removed (e.g., when frame is unselected)
   useEffect(() => {
@@ -118,12 +117,8 @@ export const MessageTextInput = ({
           /[.*+?^${}()|[\]\\]/g,
           "\\$&",
         );
-        const escapedFigId = removedRef.figId.replace(
-          /[.*+?^${}()|[\]\\]/g,
-          "\\$&",
-        );
         // Format: #colorCode[label](value@figId)
-        const mentionPattern = `#${escapedColorCode}\\[${escapedLabel}\\]\\(${escapedValue}@${escapedFigId}\\)`;
+        const mentionPattern = `#${escapedColorCode}\\[${escapedLabel}\\]\\(${escapedValue}\\)`;
         const regex = new RegExp(mentionPattern, "g");
         updatedValue = updatedValue.replace(regex, "").trim();
         // Clean up extra spaces
@@ -148,10 +143,10 @@ export const MessageTextInput = ({
       // If value is cleared externally (empty string), clear all references and attachments
       if (!value || value.trim() === "") {
         clearReferences();
-        clearInputAttachments();
+        clearAttachments();
       }
     }
-  }, [value, localValue, clearReferences, clearInputAttachments]);
+  }, [value, localValue, clearReferences, clearAttachments]);
 
   // Re-focus when value is cleared (e.g., after sending a message)
   const previousValueRef = useRef(localValue);
@@ -288,7 +283,7 @@ export const MessageTextInput = ({
       >
         {references.length > 0 ? (
           references.map((ref) => {
-            const { color, label, value, figId } = ref;
+            const { color, label, value } = ref;
             const mentionData: SuggestionDataItem[] = [];
             // Extract color code without # prefix for the format
             const colorCode = color.startsWith("#") ? color.slice(1) : color;
