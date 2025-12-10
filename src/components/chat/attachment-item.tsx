@@ -1,8 +1,7 @@
 "use client";
 
 import { createImageFileFromFigObject } from "@/lib/fabric";
-import { uploadFileToApi } from "@/lib/storage/api-storage";
-import { createImageThumbnail } from "@/utils/client/image";
+import { createImageThumbnail } from "@/utils/client/image-utils";
 import Image from "next/image";
 import { FC, useEffect, useState } from "react";
 
@@ -10,8 +9,8 @@ import type { AttachmentDetail } from "../../types";
 import { clientEnv } from "@/utils/client/env-utils";
 import { uploadFile } from "@/lib/storage";
 import { updateAttachmentThumbnail } from "@/actions/attachment-actions";
-import { withToastHandler } from "@/utils/client/client-action-handlers";
 import { createThumbnail } from "@/actions/thumbnail-actions";
+import { withToastHandler } from "@/utils/client/action-utils";
 
 interface AttachmentItemProps {
   attachment: AttachmentDetail;
@@ -44,7 +43,7 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({
           width,
           height,
         });
-        const updatedAttachment = await withToastHandler(updateAttachmentThumbnail, {
+        await withToastHandler(updateAttachmentThumbnail, {
           attachmentId: attachment.id,
           thumbnailId: createdThumbnail.id,
         });

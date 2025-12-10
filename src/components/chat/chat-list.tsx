@@ -1,6 +1,6 @@
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import { chats as chatsTable } from "@/lib/drizzle/drizzle-schema";
-import { getSessionUserId } from "@/utils/server/session";
+import { getSessionUserId } from "@/utils/server/auth-utils";
 import { desc, eq } from "drizzle-orm";
 import { Fragment } from "react";
 

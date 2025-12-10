@@ -9,12 +9,16 @@ export async function withToastHandler<T>(
 ): Promise<T> {
   const response = await action(args);
 
-  if (response.code !== 200 || !response.data) {
+  if (response.code !== 200) {
     console.error(response);
     toast.error(response.message, {
       description: `Code: ${response.code}`,
     });
     throw new Error(response.message ?? "Unknown error");
+  }
+
+  if (!response.data) {
+    throw new Error("No data returned from action");
   }
 
   return response.data;

@@ -5,7 +5,7 @@ import { Chat, chats } from "@/lib/drizzle/drizzle-schema";
 import {
   withAuthHandler,
   withErrorHandler,
-} from "@/utils/server/handler-utils";
+} from "@/utils/server/action-utils";
 import { and, eq } from "drizzle-orm";
 
 interface ChatCreateRequest {

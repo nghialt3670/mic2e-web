@@ -1,5 +1,5 @@
 import { deleteChat } from "@/actions/chat-actions";
-import { withToastHandler } from "@/utils/client/client-action-handlers";
+import { withToastHandler } from "@/utils/client/action-utils";
 import { Trash2 } from "lucide-react";
 import { FC } from "react";
 

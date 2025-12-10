@@ -9,7 +9,7 @@ import {
 import {
   withAuthHandler,
   withErrorHandler,
-} from "@/utils/server/server-action-handlers";
+} from "@/utils/server/action-utils";
 
 interface MessageCreateRequest {
   chatId: string;

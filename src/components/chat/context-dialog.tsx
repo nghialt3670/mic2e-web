@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChatStore } from "@/stores/chat-store";
-import { clientEnv } from "@/utils/client/client-env";
+import { clientEnv } from "@/utils/client/env-utils";
 import { FileJson, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 

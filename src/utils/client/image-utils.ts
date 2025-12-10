@@ -1,9 +1,3 @@
-interface CreateThumbnailOptions {
-  maxWidth?: number;
-  maxHeight?: number;
-  quality?: number;
-}
-
 interface CreateThumbnailResult {
   file: File;
   width: number;
@@ -12,9 +6,11 @@ interface CreateThumbnailResult {
 
 export async function createImageThumbnail(
   file: File,
-  options?: CreateThumbnailOptions,
 ): Promise<CreateThumbnailResult> {
-  const { maxWidth = 800, maxHeight = 800, quality = 0.85 } = options || {};
+  const maxWidth = 800;
+  const maxHeight = 800;
+  const quality = 0.85;
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     const canvas = document.createElement("canvas");

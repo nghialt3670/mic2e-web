@@ -10,7 +10,7 @@ import {
 import {
   withAuthHandler,
   withErrorHandler,
-} from "@/utils/server/server-action-handlers";
+} from "@/utils/server/action-utils";
 import { eq } from "drizzle-orm";
 
 export interface ThumbnailCreateRequest {

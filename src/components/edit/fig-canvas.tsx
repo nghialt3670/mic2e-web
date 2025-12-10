@@ -86,7 +86,7 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       const fig = canvas.getObjects()[0];
       if (!fig) return;
       const figObject = fig.toObject(["id", "ephemeral", "reference"]);
-      const newfigFile = await createFigFileFromFigObject(figObject);
+      const newfigFile = await createFigFileFromFigObject(figObject, figFile.name);
       lastEmittedSignatureRef.current = figSignature(newfigFile);
       onFigFileChange?.(newfigFile);
     };
@@ -301,22 +301,20 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
     };
 
     useEffect(() => {
-      const disposeCanvas = () => {
-        const state = stateRef.current;
-
-        if (state.clickTimer) {
-          clearTimeout(state.clickTimer);
-          state.clickTimer = null;
-        }
-
-        if (fabricCanvasRef.current) {
-          fabricCanvasRef.current.dispose();
-          fabricCanvasRef.current = null;
-        }
-      };
-
       const loadCanvas = async () => {
         if (!canvasElementRef.current) return;
+        
+        const incomingSignature = figSignature(figFile);
+        
+        // Skip if this is our own change
+        if (
+          incomingSignature &&
+          incomingSignature === lastEmittedSignatureRef.current
+        ) {
+          lastLoadedSignatureRef.current = incomingSignature;
+          return;
+        }
+        
         setIsLoading(true);
 
         const [figObjectError, figObject] = await to(
@@ -337,7 +335,12 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
           return;
         }
 
-        disposeCanvas();
+        // Dispose old canvas before creating new one
+        if (fabricCanvasRef.current) {
+          fabricCanvasRef.current.dispose();
+          fabricCanvasRef.current = null;
+        }
+
         const fabricCanvas = new Canvas(canvasElementRef.current);
         fabricCanvas.selection = true;
         fabricCanvasRef.current = fabricCanvas;
@@ -346,6 +349,7 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
         setupInteractions(fabricCanvas);
         fabricCanvas.requestRenderAll();
         setIsLoading(false);
+        lastLoadedSignatureRef.current = incomingSignature;
 
         if (ref) {
           if (typeof ref === "function") {
@@ -357,22 +361,21 @@ export const FigCanvas = forwardRef<Canvas, FigCanvasProps>(
       };
 
       if (canvasElementRef.current) {
-        const incomingSignature = figSignature(figFile);
-        if (
-          incomingSignature &&
-          incomingSignature === lastEmittedSignatureRef.current
-        ) {
-          // Skip reloading when the change originated from this canvas.
-          lastLoadedSignatureRef.current = incomingSignature;
-          return disposeCanvas;
-        }
-
-        loadCanvas().then(() => {
-          lastLoadedSignatureRef.current = incomingSignature;
-        });
+        loadCanvas();
       }
 
-      return disposeCanvas;
+      // Cleanup function only for unmounting
+      return () => {
+        const state = stateRef.current;
+        
+        if (state.clickTimer) {
+          clearTimeout(state.clickTimer);
+          state.clickTimer = null;
+        }
+
+        // Only dispose on unmount, not on every render
+        // Disposal during updates is handled in loadCanvas
+      };
     }, [figFile, maxWidth, maxHeight]);
 
     return (

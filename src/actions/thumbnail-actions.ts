@@ -5,7 +5,7 @@ import {
   Thumbnail,
   thumbnails as thumbnailsTable,
 } from "@/lib/drizzle/drizzle-schema";
-import { withAuthHandler, withErrorHandler } from "@/utils/server/server-action-handlers";
+import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 
 export interface ThumbnailCreateRequest {
     thumbnail: Omit<Thumbnail, "id" | "createdAt" | "updatedAt">;
