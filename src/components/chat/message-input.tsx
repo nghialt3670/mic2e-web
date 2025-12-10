@@ -10,7 +10,7 @@ import { ChatContext } from "@/contexts/chat-context";
 import { createImageFileFromFigObject } from "@/lib/fabric";
 import { uploadFile } from "@/lib/storage";
 import {
-  AttachmentInput,
+  AttachmentInput as AttachmentInputType,
   useMessageInputStore,
 } from "@/stores/message-input-store";
 import { withToastHandler } from "@/utils/client/client-action-handlers";
@@ -20,8 +20,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useContext } from "react";
 
 import { completeCycle } from "@/actions/cycle-actions";
-import { MessageAttachmentInput } from "./attachment-input";
-import { InputAttachmentList } from "./attachment-input-list";
+import { AttachmentInput } from "./attachment-input";
+import { AttachmentInputList } from "./attachment-input-list";
 import { MessageTextInput } from "./message-text-input";
 import { createChat } from "@/actions/chat-actions";
 
@@ -69,7 +69,7 @@ export const MessageInput = () => {
         {/* Attachments inside the input */}
         {attachments.length > 0 && (
           <div className="px-3 pt-3">
-            <InputAttachmentList />
+            <AttachmentInputList />
           </div>
         )}
 
@@ -85,7 +85,7 @@ export const MessageInput = () => {
             >
               <WandSparkles className="h-5 w-5" />
             </Button>
-            <MessageAttachmentInput />
+            <AttachmentInput />
           </div>
 
           <MessageTextInput value={text} onChange={setText} />
@@ -105,15 +105,15 @@ export const MessageInput = () => {
 };
 
 const uploadAttachmentsAndThumbnails = async (
-  attachments: AttachmentInput[],
+  attachments: AttachmentInputType[],
 ): Promise<AttachmentCreateRequest[]> => {
-  const figFiles = await Promise.all(
+  const files = await Promise.all(
     attachments.map((attachment) => attachment.file),
   );
-  const figFileIds = await Promise.all(figFiles.map(uploadFile));
+  const fileIds = await Promise.all(files.map(uploadFile));
 
   const imageFiles = await Promise.all(
-    figFiles.map(createImageFileFromFigObject),
+    files.map(createImageFileFromFigObject),
   );
   const thumbnailResults = await Promise.all(
     imageFiles.map(createImageThumbnail),
@@ -121,8 +121,9 @@ const uploadAttachmentsAndThumbnails = async (
   const thumbnailFiles = thumbnailResults.map((result) => result.file);
   const thumbnailFileIds = await Promise.all(thumbnailFiles.map(uploadFile));
 
-  return figFileIds.map((fileId, index) => ({
-    fileId,
+  return attachments.map((attachment, index) => ({
+    fileId: fileIds[index],
+    filename: attachment.file.name,
     thumbnail: {
       fileId: thumbnailFileIds[index],
       width: thumbnailResults[index].width,

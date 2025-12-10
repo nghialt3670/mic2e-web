@@ -16,7 +16,7 @@ import { UploadIcon } from "lucide-react";
 import { useRef } from "react";
 import { toast } from "sonner";
 
-export const MessageAttachmentInput = () => {
+export const AttachmentInput = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { setAttachments, clearAttachments } = useMessageInputStore();
 

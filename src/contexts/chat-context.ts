@@ -1,3 +1,5 @@
+"use client";
+
 import { Chat } from "@/lib/drizzle/drizzle-schema";
 import { createContext } from "react";
 

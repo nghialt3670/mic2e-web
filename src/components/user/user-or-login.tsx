@@ -23,6 +23,10 @@ export const UserOrLogin = () => {
     signIn("google", { callbackUrl: "/" });
   };
 
+  const handleLogoutClick = () => {
+    signOut({ callbackUrl: "/" });
+  };
+
   if (!session) {
     return (
       <Button
@@ -56,7 +60,7 @@ export const UserOrLogin = () => {
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={() => signOut()}>
+        <DropdownMenuItem onClick={handleLogoutClick}>
           <LogOutIcon />
           Logout
         </DropdownMenuItem>

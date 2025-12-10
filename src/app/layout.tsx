@@ -22,16 +22,9 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  params,
-  searchParams,
 }: Readonly<{
   children: React.ReactNode;
-  params: Promise<{ chatId: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
-  const paramsObject = await params;
-  const searchParamsObject = await searchParams;
-  console.log(paramsObject, searchParamsObject);
   return (
     <html lang="en">
       <body

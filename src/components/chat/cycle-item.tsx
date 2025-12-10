@@ -8,29 +8,25 @@ import { MessageItem } from "./message-item";
 import { PromptCycle } from "./prompt-cycle-item";
 import { PromptCycleList } from "./prompt-cycle-list";
 
-interface ChatCycleItemProps {
-  chatCycle: ChatCycleDetail;
-  showResponseSkeleton?: boolean;
+interface CycleItemProps {
+  cycle: ChatCycleDetail;
 }
 
 interface ChatCycleDataJson {
   cycles?: PromptCycle[];
 }
 
-export const ChatCycleItem: FC<ChatCycleItemProps> = ({
-  chatCycle,
-  showResponseSkeleton = false,
+export const CycleItem: FC<CycleItemProps> = ({
+  cycle,
 }) => {
-  const { requestMessage, responseMessage, dataJson } = chatCycle;
+  const { request, response, jsonData } = cycle;
 
-  // Extract cycles from dataJson
-  const data = dataJson as ChatCycleDataJson | null;
-  const cycles = data?.cycles || [];
+  const cycles = jsonData?.cycles || [];
 
   return (
     <div className="flex flex-col justify-start items-center h-full w-full pr-2 pl-6 gap-2">
       <div className="max-w-5xl w-full">
-        <MessageItem message={requestMessage} />
+        <MessageItem message={request} />
       </div>
 
       {cycles.length > 0 && (
@@ -40,11 +36,9 @@ export const ChatCycleItem: FC<ChatCycleItemProps> = ({
       )}
 
       <div className="max-w-5xl w-full">
-        {responseMessage ? (
-          <MessageItem message={responseMessage} />
-        ) : (
-          showResponseSkeleton && <MessageSkeleton />
-        )}
+        {response ? (
+          <MessageItem message={response} />
+        ) : null}
       </div>
     </div>
   );

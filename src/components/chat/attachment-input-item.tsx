@@ -14,11 +14,11 @@ import { v4 } from "uuid";
 import { useInteractionStore } from "../../stores/interaction-store";
 import { FigCanvas } from "../edit/fig-canvas";
 
-interface InputAttachmentItemProps {
+interface AttachmentInputItemProps {
   attachment: AttachmentInput;
 }
 
-export const InputAttachmentItem: FC<InputAttachmentItemProps> = ({
+export const AttachmentInputItem: FC<AttachmentInputItemProps> = ({
   attachment,
 }) => {
   const { setAttachment, removeAttachment, addReference, removeReference } =

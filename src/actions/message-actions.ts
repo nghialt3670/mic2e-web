@@ -1,10 +1,9 @@
+"use server";
+
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
-  Chat,
   Message,
-  chats,
   cycles as cyclesTable,
-  messages,
   messages as messagesTable,
 } from "@/lib/drizzle/drizzle-schema";
 import {
@@ -42,20 +41,4 @@ export const createMessage = withErrorHandler(
       };
     },
   ),
-);
-
-interface GetResponseRequest {
-  chatId: string;
-}
-
-export const getResponse = withErrorHandler(
-  withAuthHandler<GetResponseRequest, Message>(async ({ chatId }) => {
-    const response = await fetch(`${serverEnv.CHAT2EDIT_API_URL}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ chatId }),
-    });
-  }),
 );

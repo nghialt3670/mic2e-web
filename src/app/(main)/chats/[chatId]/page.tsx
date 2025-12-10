@@ -12,18 +12,16 @@ export default async function ChatPage({
 }: {
   params: Promise<{ chatId: string }>;
 }) {
-  const { chatId } = await params;
-
   const userId = await getSessionUserId();
-
   if (!userId) {
     return redirect("/login");
   }
 
+  const { chatId } = await params;
+  
   const chat = await drizzleClient.query.chats.findFirst({
     where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
   });
-
   if (!chat) {
     return <ChatNotFound />;
   }

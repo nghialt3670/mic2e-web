@@ -5,9 +5,7 @@ const _messageDetail = drizzleClient.query.messages.findFirst({
   with: {
     attachments: {
       with: {
-        figUpload: true,
-        imageUpload: true,
-        thumbnailUpload: true,
+        thumbnail: true,
       },
     },
   },

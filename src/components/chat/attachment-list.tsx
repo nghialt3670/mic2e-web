@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FC } from "react";
 
 import { AttachmentDetail } from "../../types";
-import { MessageAttachmentItem } from "./message-attachment-item";
+import { AttachmentItem } from "./attachment-item";
 
 interface MessageAttachmentListProps {
   attachments: AttachmentDetail[];
@@ -26,7 +26,7 @@ export const MessageAttachmentList: FC<MessageAttachmentListProps> = ({
             transition={{ duration: 0.2 }}
             layout
           >
-            <MessageAttachmentItem attachment={attachment} />
+            <AttachmentItem attachment={attachment} />
           </motion.div>
         ))}
       </AnimatePresence>

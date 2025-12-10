@@ -1,3 +1,5 @@
+"use server";
+
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
   attachments,
@@ -25,6 +27,7 @@ interface Chat2EditGenerateRequest {
     text: string;
     attachments: {
       file_id: string;
+      filename: string;
     }[];
   };
   history: Record<string, any>[];
@@ -36,6 +39,7 @@ interface Chat2EditGenerateResponse {
     text: string;
     attachments: {
       file_id: string;
+      filename: string;
     }[];
   };
   cycle: Record<string, any>;
@@ -138,6 +142,7 @@ export const completeCycle = withErrorHandler(
       message.attachments.map((attachment) => ({
         messageId: responseMessage.id,
         fileId: attachment.file_id,
+        filename: attachment.filename,
       })),
     );
 

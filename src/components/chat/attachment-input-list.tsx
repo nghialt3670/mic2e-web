@@ -1,15 +1,15 @@
 import { useMessageInputStore } from "@/stores/message-input-store";
 
-import { InputAttachmentItem } from "./attachment-input-item";
+import { AttachmentInputItem } from "./attachment-input-item";
 
-export const InputAttachmentList = () => {
+export const AttachmentInputList = () => {
   const { getAttachments } = useMessageInputStore();
   const attachments = getAttachments();
 
   return (
     <div className="flex flex-wrap gap-2">
       {attachments.map((attachment) => (
-        <InputAttachmentItem
+        <AttachmentInputItem
           key={attachment.file.name}
           attachment={attachment}
         />
