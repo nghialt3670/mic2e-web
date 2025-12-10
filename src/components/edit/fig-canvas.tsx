@@ -369,7 +369,7 @@ export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
         }
 
         const fabricCanvas = new Canvas(canvasElementRef.current);
-        fabricCanvas.selection = true;
+        fabricCanvas.selection = false; // Disable selection box
         fabricCanvasRef.current = fabricCanvas;
         fabricCanvas.add(fig);
         resizeAndZoomCanvas(fabricCanvas, maxWidth, maxHeight);
