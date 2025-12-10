@@ -15,6 +15,7 @@ interface CycleItemProps {
 export const CycleItem: FC<CycleItemProps> = ({ cycle }) => {
   const { request, response } = cycle;
   const jsonData = cycle.jsonData as any;
+  console.log(jsonData);
 
   return (
     <div className="flex flex-col h-full w-full pr-2 pl-6 gap-6">

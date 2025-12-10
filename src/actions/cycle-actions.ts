@@ -184,29 +184,40 @@ export const generateCycle = withErrorHandler(
         .set({ contextId: context.id })
         .where(eq(cycles.id, cycle.id));
     }
+    
+    if (message) {
+      const responseMessage = await drizzleClient
+        .insert(messages)
+        .values({
+          text: message.text,
+        })
+        .returning()
+        .then((rows) => rows[0]);
+  
+      if (message.attachments.length > 0) {
+        await drizzleClient.insert(attachments).values(
+          message.attachments.map((attachment) => ({
+            messageId: responseMessage.id,
+            fileId: attachment.file_id,
+            filename: attachment.filename,
+          })),
+        );
+      }
 
-    const responseMessage = await drizzleClient
-      .insert(messages)
-      .values({
-        text: message.text,
-      })
-      .returning()
-      .then((rows) => rows[0]);
+      await drizzleClient
+        .update(cycles)
+        .set({ responseId: responseMessage.id })
+        .where(eq(cycles.id, cycle.id));
 
-    if (message.attachments.length > 0) {
-      await drizzleClient.insert(attachments).values(
-        message.attachments.map((attachment) => ({
-          messageId: responseMessage.id,
-          fileId: attachment.file_id,
-          filename: attachment.filename,
-        })),
-      );
+      await drizzleClient
+        .update(chats)
+        .set({ failed: false })
+        .where(eq(chats.id, cycle.chatId));
     }
 
     const [completedCycle] = await drizzleClient
       .update(cycles)
       .set({
-        responseId: responseMessage.id,
         jsonData: cycleJsonData,
       })
       .where(eq(cycles.id, cycle.id))

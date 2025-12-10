@@ -61,7 +61,6 @@ export const ChatActions: FC<ChatActionsProps> = ({
         chatId,
         chat: {
           title: newTitle.trim(),
-          userId: "", // Will be filled by auth handler
           failed: false,
         },
       });

@@ -418,6 +418,8 @@ const FigCanvasComponent = forwardRef<FigCanvasRef, FigCanvasProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [figFile, maxWidth, maxHeight]);
 
+    console.log(fabricCanvasRef.current?.toObject())
+
     return (
       <div className="w-full h-full bg-slate-100 relative flex items-center justify-center overflow-hidden">
         {isLoading && (

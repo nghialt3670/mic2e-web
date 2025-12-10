@@ -40,7 +40,7 @@ export const CycleDetail: FC<CycleDetailProps> = ({ jsonData }) => {
           <ListChevronsUpDown className="size-3" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="flex flex-col p-0 max-w-4xl max-h-[85vh]">
+      <DialogContent className="flex flex-col p-0 w-screen h-screen overflow-scroll">
         <DialogHeader className="px-6 pt-6 pb-3 border-b flex flex-row items-center justify-between gap-4">
           <div>
             <DialogTitle className="text-base">Prompt Cycles</DialogTitle>
@@ -54,7 +54,7 @@ export const CycleDetail: FC<CycleDetailProps> = ({ jsonData }) => {
           </Badge>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="flex-1 px-6 py-4 h-full max-h-full">
           {hasCycles ? (
             <PromptCycleList cycles={cycles} />
           ) : (

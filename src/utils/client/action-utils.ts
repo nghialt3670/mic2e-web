@@ -7,6 +7,7 @@ export async function withToastHandler<T>(
   action: (args: any) => Promise<ApiResponse<T>>,
   args: any,
 ): Promise<T> {
+  try {
   const response = await action(args);
 
   if (response.code !== 200) {
@@ -14,12 +15,20 @@ export async function withToastHandler<T>(
     toast.error(response.message, {
       description: `Code: ${response.code}`,
     });
-    throw new Error(response.message ?? "Unknown error");
+    return undefined as any;
   }
 
   if (!response.data) {
-    throw new Error("No data returned from action");
+    toast.error("No data returned from action");
+    return undefined as any;
   }
 
-  return response.data;
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    toast.error("An error occurred while executing the action", {
+      description: `Code: ${error instanceof Error ? error.message : "Unknown error"}`,
+    });
+    return undefined as any;
+  }
 }
