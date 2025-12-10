@@ -37,9 +37,12 @@ interface ChatUpdateRequest {
 
 export const updateChat = withErrorHandler(
   withAuthHandler<ChatUpdateRequest, Chat>(async ({ userId, chatId, chat }) => {
+    // Exclude userId from the update to prevent overwriting
+    const { userId: _userId, ...updateData } = chat;
+    
     const [updatedChat] = await drizzleClient
       .update(chats)
-      .set({ ...chat })
+      .set(updateData)
       .where(and(eq(chats.id, chatId), eq(chats.userId, userId)))
       .returning();
 

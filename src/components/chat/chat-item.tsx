@@ -5,17 +5,19 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { FC } from "react";
 
 import { Badge } from "../ui/badge";
-import { ChatDelete } from "./chat-delete";
+import { ChatActions } from "./chat-actions";
 
 interface ChatItemProps {
   chat: Chat;
-  isActive?: boolean;
 }
 
-export const ChatItem: FC<ChatItemProps> = ({ chat, isActive = false }) => {
+export const ChatItem: FC<ChatItemProps> = ({ chat }) => {
+  const pathname = usePathname();
+  const isActive = pathname === `/chats/${chat.id}`;
   return (
     <Link href={`/chats/${chat.id}`} className="block group">
       <div
@@ -32,17 +34,16 @@ export const ChatItem: FC<ChatItemProps> = ({ chat, isActive = false }) => {
             <h3
               className={cn(
                 "font-medium text-sm truncate",
-                chat.failed && "text-destructive"
               )}
             >
               {chat.title || "New Chat"}
             </h3>
           </div>
           <div
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            className="flex items-center"
             onClick={(e) => e.preventDefault()}
           >
-            <ChatDelete chatId={chat.id} />
+            <ChatActions chatId={chat.id} currentTitle={chat.title} />
           </div>
         </div>
 
@@ -56,7 +57,7 @@ export const ChatItem: FC<ChatItemProps> = ({ chat, isActive = false }) => {
           {chat.failed && (
             <>
               <span>•</span>
-              <Badge variant="destructive" className="h-5 text-xs">
+              <Badge variant="outline" className="h-5 text-xs">
                 <AlertCircle className="size-3 mr-1" />
                 Failed
               </Badge>

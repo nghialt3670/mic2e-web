@@ -29,11 +29,10 @@ export const ChatList = async () => {
 
   return (
     <ScrollArea className="h-full">
-      {chats.map((chat, i) => (
-        <Fragment key={chat.id}>
+      {chats.map((chat) => (
+        <div key={chat.id} className="my-1">
           <ChatItem chat={chat} />
-          {i < chats.length - 1 && <Separator />}
-        </Fragment>
+        </div>
       ))}
     </ScrollArea>
   );
