@@ -35,6 +35,7 @@ export const CycleDetail: FC<CycleDetailProps> = ({ jsonData }) => {
           variant="ghost"
           disabled={!hasCycles}
           className="p-1 size-fit"
+          title="View cycle details"
         >
           <ListChevronsUpDown className="size-3" />
         </Button>

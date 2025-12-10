@@ -10,10 +10,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ChatContext } from "@/contexts/chat-context";
+import { Context } from "@/lib/drizzle/drizzle-schema";
 import { clientEnv } from "@/utils/client/env-utils";
-import { FileJson, RefreshCw } from "lucide-react";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { Container, FileJson, RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 type ContextValue = unknown;
 
@@ -22,21 +22,17 @@ interface ParsedEntry {
   value: ContextValue;
 }
 
-const buildFullUrl = (relativePath: string): string => {
-  const apiUrl = clientEnv.NEXT_PUBLIC_STORAGE_API_HOST;
-  const baseUrl = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
-  const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
-  return `${baseUrl}${path}`;
-};
+interface ContextDialogProps {
+  context: Context
+}
 
-export const ContextDialog = () => {
-  const { chat } = useContext(ChatContext);
+export const ContextDialog = ({ context }: ContextDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<ParsedEntry[]>([]);
 
-  const contextUrl = `${clientEnv.NEXT_PUBLIC_STORAGE_API_HOST}/files/${chat?.cycles.at(-1)?.context?.fileId ?? ""}`;
+  const contextUrl = `${clientEnv.NEXT_PUBLIC_STORAGE_API_HOST}/files/${context?.fileId ?? ""}`;
 
   const handleFetch = async () => {
     if (!contextUrl) return;
@@ -44,7 +40,7 @@ export const ContextDialog = () => {
     setError(null);
 
     try {
-      const response = await fetch(buildFullUrl(contextUrl));
+      const response = await fetch(contextUrl);
       if (!response.ok) {
         throw new Error(`Failed to load context (${response.status})`);
       }
@@ -84,17 +80,13 @@ export const ContextDialog = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          size="sm"
-          variant="outline"
+          size="icon"
+          variant="ghost"
           disabled={!hasContext}
-          className="gap-2"
+          className="p-1 size-fit"
+          title="View execution context"
         >
-          <FileJson className="size-4" />
-          {hasContext ? (
-            <Badge variant="secondary" className="ml-1">
-              {entries.length}
-            </Badge>
-          ) : null}
+          <Container className="size-3" />
         </Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col p-0">

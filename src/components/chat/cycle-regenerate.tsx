@@ -26,6 +26,7 @@ export const CycleRegenerate = ({ cycleId }: CycleRegenerateProps) => {
       className="p-1 size-fit"
       onClick={handleRegenerateCycle}
       disabled={loading}
+      title="Regenerate cycle"
     >
       <RefreshCcw className={cn("size-3", loading && "animate-spin text-muted-foreground")} />
     </Button>

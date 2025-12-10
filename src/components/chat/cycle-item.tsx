@@ -6,6 +6,7 @@ import { FC } from "react";
 import { CycleDetail } from "./cycle-detail";
 import { CycleRegenerate } from "./cycle-regenerate";
 import { MessageItem } from "./message-item";
+import { ContextDialog } from "./context-dialog";
 
 interface CycleItemProps {
   cycle: ChatCycleDetail;
@@ -27,6 +28,7 @@ export const CycleItem: FC<CycleItemProps> = ({ cycle }) => {
         <div className="flex items-start gap-1">
           <CycleRegenerate cycleId={cycle.id} />
           {jsonData && <CycleDetail jsonData={jsonData} />}
+          {cycle.context && <ContextDialog context={cycle.context} />}
         </div>
       </div>
     </div>

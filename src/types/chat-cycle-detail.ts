@@ -21,6 +21,7 @@ const _chatCycleDetail = drizzleClient.query.cycles.findFirst({
         },
       },
     },
+    context: true,
   },
 });
 
