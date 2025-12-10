@@ -18,7 +18,7 @@ import {
 import { withToastHandler } from "@/utils/client/action-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
 import { Loader2, Send, WandSparkles } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useContext } from "react";
 
 import { AttachmentInput } from "./attachment-input";
@@ -26,11 +26,10 @@ import { AttachmentInputList } from "./attachment-input-list";
 import { MessageTextInput } from "./message-text-input";
 
 export const MessageInput = () => {
-  const { chat } = useContext(ChatContext);
   const router = useRouter();
-  const { text, setText, getAttachments } = useMessageInputStore();
+  const { chat } = useContext(ChatContext);
+  const { text, setText, clearText, getAttachments } = useMessageInputStore();
   const attachments = getAttachments();
-  const pathname = usePathname();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,7 +37,9 @@ export const MessageInput = () => {
     let chatId = chat?.id;
     if (!chatId) {
       const newChat = await withToastHandler(createChat, {
-        title: "New Chat",
+        chat: {
+          title: "New Chat",
+        },
       });
       chatId = newChat.id;
       router.push(`/chats/${chatId}`);
@@ -50,13 +51,10 @@ export const MessageInput = () => {
     });
 
     if (attachments.length > 0) {
-      const attachmentCreateRequests =
-        await uploadAttachmentsAndThumbnails(attachments);
-      const createdAttachments = await withToastHandler(createAttachments, {
+      await withToastHandler(createAttachments, {
         messageId: createdMessage.id,
-        attachments: attachmentCreateRequests,
+        attachments: await uploadAttachmentsAndThumbnails(attachments),
       });
-      console.log("createdAttachments", createdAttachments);
     }
 
     const createdCycle = await withToastHandler(createCycle, {
@@ -69,7 +67,7 @@ export const MessageInput = () => {
       cycleId: createdCycle.id,
     });
 
-    router.push(`/chats/${chatId}`);
+    clearText();
   };
 
   return (

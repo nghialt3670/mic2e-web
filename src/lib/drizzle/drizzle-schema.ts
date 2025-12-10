@@ -19,8 +19,11 @@ const primaryKey = (name: string) =>
     .primaryKey()
     .$defaultFn(() => uuidv4());
 
-const foreignKey = (name: string, references: PgColumn<any>) =>
-  text(name).references(() => references);
+const foreignKey = (
+  name: string,
+  references: PgColumn<any>,
+  options?: { onDelete?: "cascade" | "set null" | "restrict" | "no action" },
+) => text(name).references(() => references, options);
 
 const createdAt = (name: string) => timestamp(name).defaultNow().notNull();
 
@@ -79,7 +82,7 @@ export const messages = pgTable("messages", {
 // ─────────────────────────────────────────────
 export const cycles = pgTable("cycles", {
   id: primaryKey("id"),
-  chatId: foreignKey("chat_id", chats.id).notNull(),
+  chatId: foreignKey("chat_id", chats.id, { onDelete: "cascade" }).notNull(),
   requestId: foreignKey("request_id", messages.id).notNull(),
   responseId: foreignKey("response_id", messages.id),
   contextId: foreignKey("context_id", contexts.id),
@@ -107,7 +110,7 @@ export const attachments = pgTable("attachments", {
   id: primaryKey("id"),
   fileId: text("file_id").notNull(),
   filename: text("filename").notNull(),
-  messageId: foreignKey("message_id", messages.id).notNull(),
+  messageId: foreignKey("message_id", messages.id, { onDelete: "cascade" }).notNull(),
   thumbnailId: foreignKey("thumbnail_id", thumbnails.id),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),

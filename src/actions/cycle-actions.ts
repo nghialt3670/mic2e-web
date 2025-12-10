@@ -58,6 +58,7 @@ export const createCycle = withErrorHandler(
       })
       .returning();
 
+    revalidatePath(`/chats/${chatId}`);
     return {
       message: "Cycle created successfully",
       code: 200,

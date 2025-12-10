@@ -18,6 +18,7 @@ export interface MessageInputStore {
   referenceMap: Record<string, Reference>;
   attachmentMap: Record<string, AttachmentInput>;
   setText: (text: string) => void;
+  clearText: () => void;
   addReference: (reference: Reference) => void;
   removeReference: (reference: Reference) => void;
   getReferences: () => Reference[];
@@ -36,6 +37,7 @@ export const useMessageInputStore = create<MessageInputStore>((set, get) => ({
   referenceMap: {},
   attachmentMap: {},
   setText: (text: string) => set({ text }),
+  clearText: () => set({ text: "" }),
   addReference: (reference: Reference) =>
     set({
       referenceMap: { ...get().referenceMap, [reference.value]: reference },
