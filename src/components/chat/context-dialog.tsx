@@ -1,7 +1,6 @@
 "use client";
 
 import { ContextCanvas } from "@/components/chat/context-canvas";
-import { FigCanvas } from "@/components/edit/fig-canvas";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,11 +10,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useChatStore } from "@/stores/chat-store";
+import { ChatContext } from "@/contexts/chat-context";
 import { clientEnv } from "@/utils/client/env-utils";
 import { FileJson, RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 
 type ContextValue = unknown;
 
@@ -31,26 +29,14 @@ const buildFullUrl = (relativePath: string): string => {
   return `${baseUrl}${path}`;
 };
 
-const isLikelyFigObject = (value: any): boolean => {
-  return (
-    value &&
-    typeof value === "object" &&
-    value.type === "group" &&
-    Array.isArray(value.objects)
-  );
-};
-
-const isPrimitive = (value: any): boolean =>
-  value === null || ["string", "number", "boolean"].includes(typeof value);
-
 export const ContextDialog = () => {
-  const { chat } = useChatStore();
+  const { chat } = useContext(ChatContext);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<ParsedEntry[]>([]);
 
-  const contextUrl = chat?.contextUrl as string | undefined;
+  const contextUrl = `${clientEnv.NEXT_PUBLIC_STORAGE_API_HOST}/files/${chat?.cycles.at(-1)?.context?.fileId ?? ""}`;
 
   const handleFetch = async () => {
     if (!contextUrl) return;

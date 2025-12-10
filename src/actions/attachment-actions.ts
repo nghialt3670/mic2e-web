@@ -3,7 +3,6 @@
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import {
   Attachment,
-  Thumbnail,
   attachments as attachmentsTable,
   thumbnails as thumbnailsTable,
 } from "@/lib/drizzle/drizzle-schema";

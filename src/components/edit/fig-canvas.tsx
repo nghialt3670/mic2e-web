@@ -46,7 +46,7 @@ export interface FigCanvasRef {
   updateFigFile: () => Promise<void>;
 }
 
-export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
+const FigCanvasComponent = forwardRef<FigCanvasRef, FigCanvasProps>(
   (
     {
       figFile,
@@ -115,7 +115,7 @@ export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
         canvas: fabricCanvasRef.current,
         updateFigFile: handleFigChange,
       }),
-      [isLoading, figFile],
+      [isLoading, figFile, handleFigChange],
     ); // Update when loading state changes (canvas ready)
 
     const setupInteractions = (canvas: Canvas) => {
@@ -415,6 +415,7 @@ export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
         // Only dispose on unmount, not on every render
         // Disposal during updates is handled in loadCanvas
       };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [figFile, maxWidth, maxHeight]);
 
     return (
@@ -441,3 +442,7 @@ export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
     );
   },
 );
+
+FigCanvasComponent.displayName = "FigCanvas";
+
+export const FigCanvas = FigCanvasComponent;

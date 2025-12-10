@@ -10,7 +10,6 @@ import { createMessage } from "@/actions/message-actions";
 import { Button } from "@/components/ui/button";
 import { ChatContext } from "@/contexts/chat-context";
 import {
-  createFigFileFromFigObject,
   createFigObjectFromFigFile,
   createImageFileFromFigObject,
 } from "@/lib/fabric";
@@ -21,7 +20,7 @@ import {
 } from "@/stores/message-input-store";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
-import { Loader2, Send, WandSparkles } from "lucide-react";
+import { Send, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useContext } from "react";
 

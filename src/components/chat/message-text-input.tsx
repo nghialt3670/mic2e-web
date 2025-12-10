@@ -89,6 +89,7 @@ export const MessageTextInput = ({
       setLocalValue(newValue);
       onChange(newValue);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [references, localValue]);
 
   // Remove mention text when reference is removed (e.g., when frame is unselected)
@@ -138,6 +139,7 @@ export const MessageTextInput = ({
 
     // Update the ref for next comparison
     previousReferencesRef.current = references;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [references]);
 
   // Sync external value changes and clear references/attachments when value is cleared
@@ -288,7 +290,7 @@ export const MessageTextInput = ({
       >
         {references.length > 0 ? (
           references.map((ref) => {
-            const { color, label, value } = ref;
+            const { color } = ref;
             const mentionData: SuggestionDataItem[] = [];
             // Extract color code without # prefix for the format
             const colorCode = color.startsWith("#") ? color.slice(1) : color;

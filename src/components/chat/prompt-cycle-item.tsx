@@ -2,11 +2,9 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  AlertCircle,
   ArrowLeftRight,
   Ban,
   CheckCircle,
-  ChevronRight,
   CircleCheck,
   CircleDot,
   Copy,

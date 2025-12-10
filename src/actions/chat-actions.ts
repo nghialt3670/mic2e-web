@@ -32,17 +32,14 @@ export const createChat = withErrorHandler(
 
 interface ChatUpdateRequest {
   chatId: string;
-  chat: Omit<Chat, "id" | "createdAt" | "updatedAt">;
+  chat: Omit<Chat, "id" | "createdAt" | "updatedAt" | "userId">;
 }
 
 export const updateChat = withErrorHandler(
   withAuthHandler<ChatUpdateRequest, Chat>(async ({ userId, chatId, chat }) => {
-    // Exclude userId from the update to prevent overwriting
-    const { userId: _userId, ...updateData } = chat;
-    
     const [updatedChat] = await drizzleClient
       .update(chats)
-      .set(updateData)
+      .set(chat)
       .where(and(eq(chats.id, chatId), eq(chats.userId, userId)))
       .returning();
 

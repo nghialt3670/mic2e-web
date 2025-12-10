@@ -1,26 +1,22 @@
 import { drizzleClient } from "@/lib/drizzle";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _chatCycleDetail = drizzleClient.query.chatCycles.findFirst({
+const _chatCycleDetail = drizzleClient.query.cycles.findFirst({
   with: {
-    requestMessage: {
+    request: {
       with: {
         attachments: {
           with: {
-            figUpload: true,
-            imageUpload: true,
-            thumbnailUpload: true,
+            thumbnail: true,
           },
         },
       },
     },
-    responseMessage: {
+    response: {
       with: {
         attachments: {
           with: {
-            figUpload: true,
-            imageUpload: true,
-            thumbnailUpload: true,
+            thumbnail: true,
           },
         },
       },

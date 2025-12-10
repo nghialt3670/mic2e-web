@@ -7,11 +7,7 @@ import {
   MAXIMUM_NUMBER_OF_FILES,
   SUPPORTED_FILE_TYPES,
 } from "@/constants/upload-constants";
-import {
-  createFigFileFromFigObject,
-  createFigFileFromImageFile,
-  createFigObjectFromImageFile,
-} from "@/lib/fabric/fabric-utils";
+import { createFigFileFromImageFile } from "@/lib/fabric/fabric-utils";
 import { useMessageInputStore } from "@/stores/message-input-store";
 import { UploadIcon } from "lucide-react";
 import { createRef, useRef } from "react";

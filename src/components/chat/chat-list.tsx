@@ -2,10 +2,8 @@ import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import { chats as chatsTable } from "@/lib/drizzle/drizzle-schema";
 import { getSessionUserId } from "@/utils/server/auth-utils";
 import { desc, eq } from "drizzle-orm";
-import { Fragment } from "react";
 
 import { ScrollArea } from "../ui/scroll-area";
-import { Separator } from "../ui/separator";
 import { ChatItem } from "./chat-item";
 
 export const ChatList = async () => {

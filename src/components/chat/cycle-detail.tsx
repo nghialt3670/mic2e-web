@@ -17,7 +17,7 @@ import { PromptCycle } from "./prompt-cycle-item";
 import { PromptCycleList } from "./prompt-cycle-list";
 
 interface CycleDetailProps {
-  jsonData: { cycles: PromptCycle[] };
+  jsonData: any;
 }
 
 export const CycleDetail: FC<CycleDetailProps> = ({ jsonData }) => {

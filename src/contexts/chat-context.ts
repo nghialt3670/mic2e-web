@@ -1,10 +1,10 @@
 "use client";
 
-import { Chat } from "@/lib/drizzle/drizzle-schema";
+import { ChatDetails } from "@/types/chat-details";
 import { createContext } from "react";
 
 type ChatContextType = {
-  chat?: Chat;
+  chat?: ChatDetails;
 };
 
 export const ChatContext = createContext<ChatContextType>({

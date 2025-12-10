@@ -1,12 +1,12 @@
 "use client";
 
 import { ChatContext } from "@/contexts/chat-context";
-import { Chat } from "@/lib/drizzle/drizzle-schema";
+import { ChatDetails } from "@/types/chat-details";
 
 import { MessageInput } from "./message-input";
 
 interface ChatBoxClientProps {
-  chat?: Chat;
+  chat?: ChatDetails;
   children: React.ReactNode;
 }
 

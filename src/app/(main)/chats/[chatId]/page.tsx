@@ -21,7 +21,33 @@ export default async function ChatPage({
 
   const chat = await drizzleClient.query.chats.findFirst({
     where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
+    with: {
+      cycles: {
+        with: {
+          request: {
+            with: {
+              attachments: {
+                with: {
+                  thumbnail: true,
+                },
+              },
+            },
+          },
+          response: {
+            with: {
+              attachments: {
+                with: {
+                  thumbnail: true,
+                },
+              },
+            },
+          },
+          context: true
+        },
+      },
+    },
   });
+  
   if (!chat) {
     return <ChatNotFound />;
   }

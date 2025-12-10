@@ -3,42 +3,19 @@ import { cycles as cyclesTable } from "@/lib/drizzle/drizzle-schema";
 import { asc, eq } from "drizzle-orm";
 
 import { CycleItem } from "./cycle-item";
+import { ChatContext } from "@/contexts/chat-context";
+import { useContext } from "react";
 
 // Force dynamic rendering to prevent caching
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export const CycleList = async ({ chatId }: { chatId: string }) => {
-  const cycles = await drizzleClient.query.cycles.findMany({
-    where: eq(cyclesTable.chatId, chatId),
-    orderBy: asc(cyclesTable.createdAt),
-    with: {
-      request: {
-        with: {
-          attachments: {
-            with: {
-              thumbnail: true,
-            },
-          },
-        },
-      },
-      response: {
-        with: {
-          attachments: {
-            with: {
-              thumbnail: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  console.log(cycles);
+export const CycleList = () => {
+  const { chat } = useContext(ChatContext);
 
   return (
     <div className="flex flex-col w-full gap-6">
-      {cycles.map((cycle, index) => (
+      {chat?.cycles.map((cycle) => (
         <CycleItem key={cycle.id} cycle={cycle} />
       ))}
     </div>
