@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { FigCanvasRef } from "@/components/edit/fig-canvas";
+import { Button } from "@/components/ui/button";
 import {
   MAXIMUM_FILE_SIZE,
   MAXIMUM_NUMBER_OF_FILES,
@@ -47,9 +47,9 @@ export const AttachmentInput = () => {
 
     clearAttachments();
     const figFiles = await Promise.all(files.map(createFigFileFromImageFile));
-    const attachments = figFiles.map((file) => ({ 
+    const attachments = figFiles.map((file) => ({
       file,
-      canvasRef: createRef<FigCanvasRef>()
+      canvasRef: createRef<FigCanvasRef>(),
     }));
     setAttachments(attachments);
 

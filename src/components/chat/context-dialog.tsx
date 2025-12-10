@@ -25,7 +25,7 @@ interface ParsedEntry {
 }
 
 const buildFullUrl = (relativePath: string): string => {
-  const apiUrl = clientEnv.NEXT_PUBLIC_CHAT2EDIT_API_URL;
+  const apiUrl = clientEnv.NEXT_PUBLIC_STORAGE_API_HOST;
   const baseUrl = apiUrl.endsWith("/") ? apiUrl.slice(0, -1) : apiUrl;
   const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
   return `${baseUrl}${path}`;

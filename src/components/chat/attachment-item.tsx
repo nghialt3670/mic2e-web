@@ -2,7 +2,7 @@
 
 import { updateAttachmentThumbnail } from "@/actions/attachment-actions";
 import { createThumbnail } from "@/actions/thumbnail-actions";
-import { createImageFileFromFigObject } from "@/lib/fabric";
+import { createFigObjectFromFigFile, createImageFileFromFigObject } from "@/lib/fabric";
 import { uploadFile } from "@/lib/storage";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { clientEnv } from "@/utils/client/env-utils";
@@ -31,7 +31,9 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
         const attachmentFileUrl = `${clientEnv.NEXT_PUBLIC_STORAGE_API_HOST}/files/${attachment.fileId}`;
         const response = await fetch(attachmentFileUrl);
         if (!response.ok) return;
-        const figObject = await response.json();
+        const figBlob = await response.blob();
+        const figFile = new File([figBlob], attachment.filename, { type: "application/json" });
+        const figObject = await createFigObjectFromFigFile(figFile);
         const imageFile = await createImageFileFromFigObject(figObject);
         const {
           file: thumbnailFile,
@@ -40,9 +42,11 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
         } = await createImageThumbnail(imageFile);
         const thumbnailFileId = await uploadFile(thumbnailFile);
         const createdThumbnail = await withToastHandler(createThumbnail, {
-          fileId: thumbnailFileId,
-          width,
-          height,
+          thumbnail: {
+            fileId: thumbnailFileId,
+            width,
+            height,
+          },
         });
         await withToastHandler(updateAttachmentThumbnail, {
           attachmentId: attachment.id,

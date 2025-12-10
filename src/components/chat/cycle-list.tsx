@@ -1,6 +1,6 @@
 import { drizzleClient } from "@/lib/drizzle/drizzle-client";
 import { cycles as cyclesTable } from "@/lib/drizzle/drizzle-schema";
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { CycleItem } from "./cycle-item";
 
@@ -29,6 +29,8 @@ export const CycleList = async ({ chatId }: { chatId: string }) => {
       },
     },
   });
+
+  console.log(cycles);
 
   return (
     <div className="flex flex-col w-full gap-10">

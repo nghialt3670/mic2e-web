@@ -110,7 +110,9 @@ export const attachments = pgTable("attachments", {
   id: primaryKey("id"),
   fileId: text("file_id").notNull(),
   filename: text("filename").notNull(),
-  messageId: foreignKey("message_id", messages.id, { onDelete: "cascade" }).notNull(),
+  messageId: foreignKey("message_id", messages.id, {
+    onDelete: "cascade",
+  }).notNull(),
   thumbnailId: foreignKey("thumbnail_id", thumbnails.id),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),

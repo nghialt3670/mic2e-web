@@ -9,7 +9,7 @@ interface RGB {
 }
 
 function getLuminance(r: number, g: number, b: number): number {
-  const a = [r, g, b].map(v => {
+  const a = [r, g, b].map((v) => {
     const value = v / 255;
     return value <= 0.03928
       ? value / 12.92
@@ -40,7 +40,7 @@ export async function getNextColor(dataUrl: string): Promise<string> {
 // =========================
 
 function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "Anonymous";
     img.onload = () => resolve(img);
@@ -49,7 +49,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 function computeAverageColor(img: HTMLImageElement): Promise<RGB> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
@@ -97,7 +97,11 @@ function hslToHex(h: number, s: number, l: number): string {
   return (
     "#" +
     [f(0), f(8), f(4)]
-      .map(x => Math.round(x * 255).toString(16).padStart(2, "0"))
+      .map((x) =>
+        Math.round(x * 255)
+          .toString(16)
+          .padStart(2, "0"),
+      )
       .join("")
   );
 }

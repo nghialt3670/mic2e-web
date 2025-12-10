@@ -14,7 +14,7 @@ interface CycleItemProps {
 export const CycleItem: FC<CycleItemProps> = ({ cycle }) => {
   const { request, response, jsonData } = cycle;
 
-  const cycles = jsonData?.cycles || [] as PromptCycle[];
+  const cycles = jsonData?.cycles || ([] as PromptCycle[]);
 
   return (
     <div className="flex flex-col justify-start items-center h-full w-full pr-2 pl-6 gap-2">

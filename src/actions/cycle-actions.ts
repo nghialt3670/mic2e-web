@@ -11,7 +11,7 @@ import {
 } from "@/lib/drizzle/drizzle-schema";
 import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 import { serverEnv } from "@/utils/server/env-utils";
-import { and, asc, eq, lt } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, lt } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 interface CycleCompleteRequest {
@@ -73,7 +73,11 @@ export const completeCycle = withErrorHandler(
       where: eq(chats.id, chatId),
     });
     if (!chat) {
-      return { message: "Chat not found", code: 404 };
+      return { 
+        message: "Chat not found", 
+        code: 404,
+        data: undefined as any,
+      };
     }
 
     const cycle = await drizzleClient.query.cycles.findFirst({
@@ -81,7 +85,11 @@ export const completeCycle = withErrorHandler(
       with: { request: { with: { attachments: true } } },
     });
     if (!cycle) {
-      return { message: "Cycle not found", code: 404 };
+      return { 
+        message: "Cycle not found", 
+        code: 404,
+        data: undefined as any,
+      };
     }
 
     const prevCycles = await drizzleClient.query.cycles.findMany({
@@ -93,8 +101,31 @@ export const completeCycle = withErrorHandler(
       with: { context: true },
     });
 
+    // Delete cycles created after the current one (revert functionality)
+    // Use a safer approach: query for cycles to delete first, then delete by ID
+    const cyclesToDelete = await drizzleClient.query.cycles.findMany({
+      where: and(
+        eq(cycles.chatId, chatId),
+        gt(cycles.createdAt, cycle.createdAt),
+      ),
+      columns: { id: true },
+    });
+
+    // Only delete if there are cycles to delete, and explicitly exclude current cycle
+    if (cyclesToDelete.length > 0) {
+      const idsToDelete = cyclesToDelete
+        .map(c => c.id)
+        .filter(id => id !== cycleId); // Safety check: never delete the current cycle
+      
+      if (idsToDelete.length > 0) {
+        await drizzleClient
+          .delete(cycles)
+          .where(inArray(cycles.id, idsToDelete));
+      }
+    }
+
     const response = await fetch(
-      `${serverEnv.CHAT2EDIT_API_URL}/chat2edit/generate`,
+      `${serverEnv.AGENT_API_HOST}/chat2edit/generate`,
       {
         method: "POST",
         headers: {
@@ -119,7 +150,14 @@ export const completeCycle = withErrorHandler(
         .update(chats)
         .set({ failed: true })
         .where(eq(chats.id, chatId));
-      return { message: "Failed to complete cycle", code: response.status };
+      
+      revalidatePath(`/chats/${chatId}`);
+      
+      return { 
+        message: "Failed to complete cycle", 
+        code: response.status,
+        data: undefined as any, // Required by ApiResponse
+      };
     }
 
     const payload = await response.json();
@@ -161,24 +199,16 @@ export const completeCycle = withErrorHandler(
         message.attachments.map((attachment) => ({
           messageId: responseMessage.id,
           fileId: attachment.file_id,
-            filename: attachment.filename,
+          filename: attachment.filename,
         })),
       );
     }
-
-    const [context] = await drizzleClient
-      .insert(contexts)
-      .values({
-        fileId: context_file_id,
-      })
-      .returning();
 
     const [completedCycle] = await drizzleClient
       .update(cycles)
       .set({
         responseId: responseMessage.id,
         jsonData: cycleJsonData,
-        contextId: context.id,
       })
       .where(eq(cycles.id, cycle.id))
       .returning();

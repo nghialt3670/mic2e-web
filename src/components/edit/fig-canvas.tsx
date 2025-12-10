@@ -109,10 +109,14 @@ export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
     };
 
     // Expose canvas and updateFigFile method via ref
-    useImperativeHandle(ref, () => ({
-      canvas: fabricCanvasRef.current,
-      updateFigFile: handleFigChange,
-    }), [isLoading, figFile]); // Update when loading state changes (canvas ready)
+    useImperativeHandle(
+      ref,
+      () => ({
+        canvas: fabricCanvasRef.current,
+        updateFigFile: handleFigChange,
+      }),
+      [isLoading, figFile],
+    ); // Update when loading state changes (canvas ready)
 
     const setupInteractions = (canvas: Canvas) => {
       const state = stateRef.current;
@@ -138,7 +142,11 @@ export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
 
       const handleSingleClick = async (point: Point) => {
         // Single click: create point (arming already happened immediately on click)
-        const createdPoint = createPoint(point, canvas, currentColorRef.current);
+        const createdPoint = createPoint(
+          point,
+          canvas,
+          currentColorRef.current,
+        );
         onPointAdded?.(createdPoint);
         await updateNextColor();
         handleFigChange();
@@ -284,7 +292,11 @@ export const FigCanvas = forwardRef<FigCanvasRef, FigCanvasProps>(
             state.pendingArmPoint = null;
           } else {
             // Regular draw: create scribble
-            const scribble = createScribble(state.pathPoints, canvas, currentColorRef.current);
+            const scribble = createScribble(
+              state.pathPoints,
+              canvas,
+              currentColorRef.current,
+            );
             onScribbleAdded?.(scribble);
             updateNextColor();
             handleFigChange();

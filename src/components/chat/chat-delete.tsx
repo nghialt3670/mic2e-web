@@ -1,6 +1,8 @@
 "use client";
 
 import { deleteChat } from "@/actions/chat-actions";
+import { ChatContext } from "@/contexts/chat-context";
+import { withToastHandler } from "@/utils/client/action-utils";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FC, useContext } from "react";
@@ -14,8 +16,6 @@ import { AlertDialogFooter } from "../ui/alert-dialog";
 import { AlertDialogCancel } from "../ui/alert-dialog";
 import { AlertDialogAction } from "../ui/alert-dialog";
 import { Button } from "../ui/button";
-import { ChatContext } from "@/contexts/chat-context";
-import { withToastHandler } from "@/utils/client/action-utils";
 
 interface ChatDeleteProps {
   chatId: string;

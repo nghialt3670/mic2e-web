@@ -137,7 +137,9 @@ export const removeObjectWithReference = (
     // Check if this is a regular object reference
     if (!objectRemoved) {
       const figObjects = fig.getObjects();
-      const object = figObjects.find((obj) => obj.get("reference")?.value === reference.value);
+      const object = figObjects.find(
+        (obj) => obj.get("reference")?.value === reference.value,
+      );
       if (object) {
         fig.remove(object);
         canvas.renderAll();

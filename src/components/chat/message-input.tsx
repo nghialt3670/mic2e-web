@@ -9,7 +9,7 @@ import { completeCycle, createCycle } from "@/actions/cycle-actions";
 import { createMessage } from "@/actions/message-actions";
 import { Button } from "@/components/ui/button";
 import { ChatContext } from "@/contexts/chat-context";
-import { createImageFileFromFigObject } from "@/lib/fabric";
+import { createFigFileFromFigObject, createFigObjectFromFigFile, createImageFileFromFigObject } from "@/lib/fabric";
 import { uploadFile } from "@/lib/storage";
 import {
   AttachmentInput as AttachmentInputType,
@@ -28,46 +28,57 @@ import { MessageTextInput } from "./message-text-input";
 export const MessageInput = () => {
   const router = useRouter();
   const { chat } = useContext(ChatContext);
-  const { text, setText, clearText, getAttachments } = useMessageInputStore();
+  const { text, setText, clearText, getAttachments, clearAttachments } = useMessageInputStore();
   const attachments = getAttachments();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    let chatId = chat?.id;
-    if (!chatId) {
-      const newChat = await withToastHandler(createChat, {
-        chat: {
-          title: "New Chat",
-        },
+    try {
+      let chatId = chat?.id;
+      if (!chatId) {
+        const newChat = await withToastHandler(createChat, {
+          chat: {
+            title: "New Chat",
+          },
+        });
+        chatId = newChat.id;
+        router.push(`/chats/${chatId}`);
+      }
+
+      const createdMessage = await withToastHandler(createMessage, {
+        chatId,
+        message: { text },
       });
-      chatId = newChat.id;
-      router.push(`/chats/${chatId}`);
-    }
 
-    const createdMessage = await withToastHandler(createMessage, {
-      chatId,
-      message: { text },
-    });
+      if (attachments.length > 0) {
+        await withToastHandler(createAttachments, {
+          messageId: createdMessage.id,
+          attachments: await uploadAttachmentsAndThumbnails(attachments),
+        });
+      }
 
-    if (attachments.length > 0) {
-      await withToastHandler(createAttachments, {
-        messageId: createdMessage.id,
-        attachments: await uploadAttachmentsAndThumbnails(attachments),
+      clearText();
+      clearAttachments();
+
+      const createdCycle = await withToastHandler(createCycle, {
+        chatId,
+        requestId: createdMessage.id,
       });
+      router.refresh();
+
+      await withToastHandler(completeCycle, {
+        chatId,
+        cycleId: createdCycle.id,
+      });
+
+      router.refresh();
+    } catch (error) {
+      console.error("Error submitting message:", error);
+      // Error is already shown via withToastHandler
+      // Just refresh to show the current state
+      router.refresh();
     }
-
-    const createdCycle = await withToastHandler(createCycle, {
-      chatId,
-      requestId: createdMessage.id,
-    });
-
-    await withToastHandler(completeCycle, {
-      chatId,
-      cycleId: createdCycle.id,
-    });
-
-    clearText();
   };
 
   return (
@@ -119,7 +130,8 @@ const uploadAttachmentsAndThumbnails = async (
   );
   const fileIds = await Promise.all(files.map(uploadFile));
 
-  const imageFiles = await Promise.all(files.map(createImageFileFromFigObject));
+  const figObjects = await Promise.all(files.map(createFigObjectFromFigFile));
+  const imageFiles = await Promise.all(figObjects.map(createImageFileFromFigObject));
   const thumbnailResults = await Promise.all(
     imageFiles.map(createImageThumbnail),
   );

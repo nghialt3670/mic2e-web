@@ -1,11 +1,10 @@
 "use client";
 
+import { removeObjectWithReference } from "@/lib/fabric/fabric-utils";
+import { useMessageInputStore } from "@/stores/message-input-store";
+import { Canvas } from "fabric";
 import { useEffect, useRef, useState } from "react";
 import { Mention, MentionsInput, SuggestionDataItem } from "react-mentions";
-import { Canvas } from "fabric";
-
-import { useMessageInputStore } from "@/stores/message-input-store";
-import { removeObjectWithReference } from "@/lib/fabric/fabric-utils";
 
 interface MessageTextInputProps {
   value: string;
@@ -16,7 +15,13 @@ export const MessageTextInput = ({
   value,
   onChange,
 }: MessageTextInputProps) => {
-  const { getReferences, removeReference, clearReferences, getAttachments, clearAttachments } = useMessageInputStore();
+  const {
+    getReferences,
+    removeReference,
+    clearReferences,
+    getAttachments,
+    clearAttachments,
+  } = useMessageInputStore();
   const [localValue, setLocalValue] = useState(value);
   const mentionsInputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
@@ -57,7 +62,7 @@ export const MessageTextInput = ({
         const canvases = canvasRefs
           .map((canvasRef) => canvasRef?.canvas)
           .filter((canvas): canvas is Canvas => !!canvas);
-        
+
         removeObjectWithReference(canvases, ref, (canvas) => {
           // Find the canvas ref that matches this canvas and trigger update
           const canvasRef = canvasRefs.find((ref) => ref?.canvas === canvas);

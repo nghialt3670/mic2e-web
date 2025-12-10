@@ -12,7 +12,7 @@ export async function uploadFile(file: File): Promise<string> {
   const response = await fetch(FILES_ENDPOINT, options);
 
   const payload = await response.json();
-  return payload.data["file_id"];
+  return payload["file_id"];
 }
 
 export async function downloadFile(fileId: string): Promise<File> {
@@ -32,7 +32,7 @@ export async function replaceFile(fileId: string, file: File): Promise<string> {
   const response = await fetch(`${FILES_ENDPOINT}/${fileId}`, options);
 
   const payload = await response.json();
-  return payload.data["file_id"];
+  return payload["file_id"];
 }
 
 export async function deleteFile(fileId: string): Promise<string> {
@@ -40,5 +40,5 @@ export async function deleteFile(fileId: string): Promise<string> {
   const response = await fetch(`${FILES_ENDPOINT}/${fileId}`, options);
 
   const payload = await response.json();
-  return payload.data["file_id"];
+  return payload["file_id"];
 }

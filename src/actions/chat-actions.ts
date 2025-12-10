@@ -83,9 +83,7 @@ export const deleteChat = withErrorHandler(
 
     // Delete cycles first (to remove FK constraints to messages)
     if (chatCycles.length > 0) {
-      await drizzleClient
-        .delete(cycles)
-        .where(eq(cycles.chatId, chatId));
+      await drizzleClient.delete(cycles).where(eq(cycles.chatId, chatId));
     }
 
     // Delete messages (CASCADE will automatically delete attachments)

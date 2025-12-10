@@ -1,6 +1,6 @@
+import { FigCanvasRef } from "@/components/edit/fig-canvas";
 import { RefObject } from "react";
 import { create } from "zustand";
-import { FigCanvasRef } from "@/components/edit/fig-canvas";
 
 export interface Reference {
   value: string;
