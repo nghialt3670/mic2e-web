@@ -6,6 +6,7 @@ import { drizzleClient } from "./lib/drizzle/drizzle-client";
 import { users } from "./lib/drizzle/drizzle-schema";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   providers: [Google],
   callbacks: {
     async jwt({ token, user }) {
