@@ -30,7 +30,8 @@ const nextConfig: NextConfig = {
     remotePatterns,
   },
   output: "standalone",
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  // Only use assetPrefix for static assets (CSS, JS, images)
+  // Do NOT use basePath when nginx strips the path prefix
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
 };
 
