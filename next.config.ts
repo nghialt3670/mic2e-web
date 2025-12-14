@@ -9,22 +9,6 @@ const remotePatterns: RemotePatterns = [
   },
 ];
 
-const apiUrl = process.env.NEXT_PUBLIC_CHAT2EDIT_API_URL;
-if (apiUrl) {
-  try {
-    const parsed = new URL(apiUrl);
-    const basePath = parsed.pathname.replace(/\/$/, "");
-    remotePatterns.push({
-      protocol: parsed.protocol.replace(":", "") as "http" | "https",
-      hostname: parsed.hostname,
-      port: parsed.port || undefined,
-      pathname: `${basePath}/storage/**`,
-    });
-  } catch (error) {
-    console.warn("Invalid NEXT_PUBLIC_CHAT2EDIT_API_URL", error);
-  }
-}
-
 const nextConfig: NextConfig = {
   images: {
     remotePatterns,

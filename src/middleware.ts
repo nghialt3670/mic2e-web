@@ -3,19 +3,23 @@ import type { NextRequest } from "next/server";
 
 // Middleware runs in Edge Runtime - keep it simple
 export default auth((req: NextRequest) => {
-  const { pathname, search } = req.nextUrl;
-  const method = req.method;
-  
-  console.log(`[${new Date().toISOString()}] ${method} ${pathname}${search}`);
-  
-  // Log auth status
-  const session = (req as any).auth;
-  if (session?.user) {
-    console.log(`  ↳ User: ${session.user.email}`);
-  } else if (pathname.startsWith("/api/auth")) {
-    console.log(`  ↳ Auth request`);
-  } else {
-    console.log(`  ↳ Anonymous`);
+  try {
+    const { pathname, search } = req.nextUrl;
+    const method = req.method;
+    
+    console.log(`[${new Date().toISOString()}] ${method} ${pathname}${search}`);
+    
+    // Log auth status
+    const session = (req as any).auth;
+    if (session?.user) {
+      console.log(`  ↳ User: ${session.user.email}`);
+    } else if (pathname.startsWith("/api/auth")) {
+      console.log(`  ↳ Auth endpoint`);
+    } else {
+      console.log(`  ↳ Anonymous`);
+    }
+  } catch (error) {
+    console.error("[MIDDLEWARE ERROR]", error);
   }
   
   // Don't create NextResponse, just let auth handle it

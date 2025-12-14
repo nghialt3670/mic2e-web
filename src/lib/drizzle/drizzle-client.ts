@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as drizzleSchema from "./drizzle-schema";
+import { checkEnvironmentVariables } from "../check-env";
 
 // Type for the drizzle client with schema
 type DrizzleClient = ReturnType<typeof drizzle<typeof drizzleSchema>>;
@@ -15,6 +16,9 @@ function initializeDatabase(): DrizzleClient {
   if (client) {
     return client;
   }
+
+  // Check environment variables on first initialization
+  checkEnvironmentVariables();
 
   console.log("[DB] Initializing database connection...");
 

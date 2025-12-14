@@ -6,9 +6,32 @@ import { drizzleClient } from "./lib/drizzle/drizzle-client";
 import { users } from "./lib/drizzle/drizzle-schema";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  debug: process.env.AUTH_DEBUG === "true",
+  debug: true, // Always enable debug to see errors
   trustHost: true,
-  providers: [Google],
+  providers: [
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
+    })
+  ],
+  logger: {
+    error(code, ...message) {
+      console.error("[AUTH ERROR]", code, ...message);
+    },
+    warn(code, ...message) {
+      console.warn("[AUTH WARN]", code, ...message);
+    },
+    debug(code, ...message) {
+      console.log("[AUTH DEBUG]", code, ...message);
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       try {
@@ -68,10 +91,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   events: {
     async signIn({ user, account, profile }) {
-      console.log("[AUTH] Sign in event:", {
+      console.log("[AUTH] ✓ Sign in successful:", {
         user: user.email,
         provider: account?.provider,
       });
     },
+    async createUser({ user }) {
+      console.log("[AUTH] ✓ User created:", user.email);
+    },
+    async linkAccount({ user, account }) {
+      console.log("[AUTH] ✓ Account linked:", {
+        user: user.email,
+        provider: account.provider,
+      });
+    },
+  },
+  pages: {
+    error: "/auth/error",
   },
 });
