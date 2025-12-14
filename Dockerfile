@@ -32,7 +32,6 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install necessary packages
@@ -53,8 +52,11 @@ COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/src/lib/drizzle/drizzle-schema.ts ./src/lib/drizzle/drizzle-schema.ts
 COPY --from=builder /app/package.json ./package.json
 
-# Install drizzle-kit locally for migrations
+# Install drizzle-kit for migrations (before setting NODE_ENV=production)
 RUN npm install drizzle-kit@0.31.4
+
+# Now set production mode
+ENV NODE_ENV=production
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
