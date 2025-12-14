@@ -36,7 +36,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install necessary packages
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash postgresql-client
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
