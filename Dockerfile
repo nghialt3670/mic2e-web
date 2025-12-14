@@ -53,5 +53,7 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+# Enable detailed logging
+ENV NODE_OPTIONS="--trace-warnings"
 
 CMD ["node", "server.js"]
