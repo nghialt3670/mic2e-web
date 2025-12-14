@@ -47,10 +47,14 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy drizzle config and migrations for runtime
+# Copy drizzle config, migrations, and schema for runtime
 COPY --from=builder /app/drizzle.config.js ./
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/src/lib/drizzle/drizzle-schema.ts ./src/lib/drizzle/drizzle-schema.ts
+COPY --from=builder /app/package.json ./package.json
+
+# Install drizzle-kit for migrations (as root)
+RUN npm install -g drizzle-kit@0.31.4
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
