@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 
-export default function AuthError() {
+function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
@@ -43,12 +44,12 @@ export default function AuthError() {
         </div>
 
         <div className="space-y-4">
-          <a
+          <Link
             href="/"
             className="block w-full rounded-md bg-primary px-4 py-2 text-center text-primary-foreground hover:bg-primary/90"
           >
             Go Home
-          </a>
+          </Link>
           
           <details className="rounded border border-border p-4">
             <summary className="cursor-pointer text-sm font-medium">
@@ -71,5 +72,17 @@ export default function AuthError() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthError() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    }>
+      <AuthErrorContent />
+    </Suspense>
   );
 }

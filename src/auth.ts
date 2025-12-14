@@ -90,7 +90,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   events: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       console.log("[AUTH] ✓ Sign in successful:", {
         user: user.email,
         provider: account?.provider,

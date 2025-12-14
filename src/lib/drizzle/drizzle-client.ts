@@ -30,7 +30,7 @@ function initializeDatabase(): DrizzleClient {
     onnotice: (notice) => {
       console.log("[DB] Notice:", notice);
     },
-    debug: (connection, query, params) => {
+    debug: (_connection, query) => {
       if (process.env.AUTH_DEBUG === "true") {
         console.log("[DB] Query:", query);
       }
