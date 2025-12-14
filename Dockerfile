@@ -53,8 +53,8 @@ COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/src/lib/drizzle/drizzle-schema.ts ./src/lib/drizzle/drizzle-schema.ts
 COPY --from=builder /app/package.json ./package.json
 
-# Install drizzle-kit for migrations (as root)
-RUN npm install -g drizzle-kit@0.31.4
+# Install drizzle-kit locally for migrations
+RUN npm install drizzle-kit@0.31.4
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
