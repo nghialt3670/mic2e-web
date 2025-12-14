@@ -7,19 +7,40 @@ import {
   contexts,
   cycles,
   messages,
+  settings,
 } from "@/lib/drizzle/drizzle-schema";
 import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 interface ChatCreateRequest {
-  chat: Omit<Chat, "id" | "createdAt" | "updatedAt">;
+  chat: Omit<Chat, "id" | "createdAt" | "updatedAt" | "userId" | "settingsId">;
 }
 
 export const createChat = withErrorHandler(
   withAuthHandler<ChatCreateRequest, Chat>(async ({ userId, chat }) => {
+    // Get or create user's current settings
+    let userSettings = await drizzleClient.query.settings.findFirst({
+      where: eq(settings.userId, userId),
+      orderBy: desc(settings.createdAt),
+    });
+
+    // If no settings exist, create default ones
+    if (!userSettings) {
+      [userSettings] = await drizzleClient
+        .insert(settings)
+        .values({
+          userId,
+          llmModel: "gpt-4o",
+          maxImageWidth: 480,
+          maxImageHeight: 360,
+        })
+        .returning();
+    }
+
+    // Create chat with settings snapshot
     const [createdChat] = await drizzleClient
       .insert(chats)
-      .values({ ...chat, userId })
+      .values({ ...chat, userId, settingsId: userSettings.id })
       .returning();
 
     return {
@@ -32,7 +53,7 @@ export const createChat = withErrorHandler(
 
 interface ChatUpdateRequest {
   chatId: string;
-  chat: Omit<Chat, "id" | "createdAt" | "updatedAt" | "userId">;
+  chat: Omit<Chat, "id" | "createdAt" | "updatedAt" | "userId" | "settingsId">;
 }
 
 export const updateChat = withErrorHandler(

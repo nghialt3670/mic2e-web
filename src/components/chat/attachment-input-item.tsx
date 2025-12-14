@@ -4,6 +4,7 @@ import {
   AttachmentInput,
   useMessageInputStore,
 } from "@/stores/message-input-store";
+import { useSettingsStore } from "@/stores/settings-store";
 import { Circle, Group, Path, Rect } from "fabric";
 import { X } from "lucide-react";
 import { FC } from "react";
@@ -21,6 +22,7 @@ export const AttachmentInputItem: FC<AttachmentInputItemProps> = ({
   const { setAttachment, removeAttachment, addReference, removeReference } =
     useMessageInputStore();
   const isMobile = useIsMobile();
+  const { maxImageWidth, maxImageHeight } = useSettingsStore();
 
   const handleRemove = () => {
     removeAttachment(attachment);
@@ -89,8 +91,8 @@ export const AttachmentInputItem: FC<AttachmentInputItemProps> = ({
       <FigCanvas
         ref={attachment.canvasRef}
         figFile={attachment.file}
-        maxHeight={isMobile ? 180 : 360}
-        maxWidth={isMobile ? 240 : 480}
+        maxHeight={isMobile ? Math.round(maxImageHeight / 2) : maxImageHeight}
+        maxWidth={isMobile ? Math.round(maxImageWidth / 2) : maxImageWidth}
         onFigFileChange={handleFigFileChange}
         onPointAdded={handlePointAdded}
         onBoxAdded={handleBoxAdded}

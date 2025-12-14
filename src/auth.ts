@@ -107,6 +107,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   pages: {
-    error: "/auth/error",
+    error: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/error`,
+    signIn: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/signin`,
   },
 });

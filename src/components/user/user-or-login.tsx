@@ -1,27 +1,20 @@
 "use client";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LogOutIcon } from "lucide-react";
-import { signIn, signOut, useSession } from "next-auth/react";
-import Image from "next/image";
+import { signIn, useSession } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 
 import { Button } from "../ui/button";
+import { UserMenu } from "./user-menu";
 
 export const UserOrLogin = () => {
   const { data: session } = useSession();
 
   const handleGoogleLoginClick = () => {
-    signIn("google", { callbackUrl: "/" });
-  };
-
-  const handleLogoutClick = () => {
-    signOut({ callbackUrl: "/" });
+    console.log("[LOGIN] Google login button clicked");
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    const callbackUrl = `${basePath}/`;
+    console.log("[LOGIN] Callback URL:", callbackUrl);
+    signIn("google", { callbackUrl });
   };
 
   if (!session) {
@@ -37,31 +30,5 @@ export const UserOrLogin = () => {
     );
   }
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex items-center gap-2">
-          <Image
-            className="rounded-full"
-            src={session?.user?.image || ""}
-            alt="User"
-            width={32}
-            height={32}
-          />
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">{session?.user?.name}</span>
-            <span className="text-sm text-muted-foreground">
-              {session?.user?.email}
-            </span>
-          </div>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem onClick={handleLogoutClick}>
-          <LogOutIcon />
-          Logout
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  return <UserMenu />;
 };

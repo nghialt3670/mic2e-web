@@ -35,6 +35,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install necessary packages
+RUN apk add --no-cache bash
+
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -43,6 +46,15 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+# Copy drizzle config and migrations for runtime
+COPY --from=builder /app/drizzle.config.js ./
+COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/src/lib/drizzle/drizzle-schema.ts ./src/lib/drizzle/drizzle-schema.ts
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Change ownership to nextjs user
 RUN chown -R nextjs:nodejs /app
@@ -56,4 +68,5 @@ ENV HOSTNAME="0.0.0.0"
 # Enable detailed logging
 ENV NODE_OPTIONS="--trace-warnings"
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "server.js"]

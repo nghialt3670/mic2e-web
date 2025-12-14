@@ -46,11 +46,25 @@ export const users = pgTable("users", {
 });
 
 // ─────────────────────────────────────────────
+// Settings
+// ─────────────────────────────────────────────
+export const settings = pgTable("settings", {
+  id: primaryKey("id"),
+  userId: foreignKey("user_id", users.id, { onDelete: "cascade" }).notNull(),
+  llmModel: text("llm_model").notNull().default("gpt-4o"),
+  maxImageWidth: integer("max_image_width").notNull().default(480),
+  maxImageHeight: integer("max_image_height").notNull().default(360),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
+// ─────────────────────────────────────────────
 // Chats
 // ─────────────────────────────────────────────
 export const chats = pgTable("chats", {
   id: primaryKey("id"),
   userId: foreignKey("user_id", users.id).notNull(),
+  settingsId: foreignKey("settings_id", settings.id),
   title: text("title"),
   failed: boolean("failed").default(false),
   createdAt: createdAt("createdAt"),
@@ -124,12 +138,25 @@ export const attachments = pgTable("attachments", {
 
 export const usersRelations = relations(users, ({ many }) => ({
   chats: many(chats),
+  settings: many(settings),
+}));
+
+export const settingsRelations = relations(settings, ({ one, many }) => ({
+  user: one(users, {
+    fields: [settings.userId],
+    references: [users.id],
+  }),
+  chats: many(chats),
 }));
 
 export const chatsRelations = relations(chats, ({ one, many }) => ({
   user: one(users, {
     fields: [chats.userId],
     references: [users.id],
+  }),
+  settings: one(settings, {
+    fields: [chats.settingsId],
+    references: [settings.id],
   }),
   cycles: many(cycles),
 }));
@@ -186,6 +213,7 @@ export const attachmentsRelations = relations(attachments, ({ one }) => ({
 // ─────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
+export type Settings = typeof settings.$inferSelect;
 export type Chat = typeof chats.$inferSelect;
 export type Context = typeof contexts.$inferSelect;
 export type Cycle = typeof cycles.$inferSelect;
