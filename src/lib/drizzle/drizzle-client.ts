@@ -4,26 +4,49 @@ import postgres from "postgres";
 
 import * as drizzleSchema from "./drizzle-schema";
 
-console.log("[DB] Initializing database connection...");
+// Type for the drizzle client with schema
+type DrizzleClient = ReturnType<typeof drizzle<typeof drizzleSchema>>;
 
-const sql = postgres(serverEnv.DATABASE_URL, {
-  ssl: false,
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-  onnotice: (notice) => {
-    console.log("[DB] Notice:", notice);
+// Lazy initialization to avoid Edge Runtime issues
+let sql: postgres.Sql | null = null;
+let client: DrizzleClient | null = null;
+
+function initializeDatabase(): DrizzleClient {
+  if (client) {
+    return client;
+  }
+
+  console.log("[DB] Initializing database connection...");
+
+  sql = postgres(serverEnv.DATABASE_URL, {
+    ssl: false,
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    onnotice: (notice) => {
+      console.log("[DB] Notice:", notice);
+    },
+    debug: (connection, query, params) => {
+      if (process.env.AUTH_DEBUG === "true") {
+        console.log("[DB] Query:", query);
+      }
+    },
+  });
+
+  client = drizzle(sql, { schema: drizzleSchema });
+
+  // Test connection (non-blocking)
+  sql`SELECT 1 as test`
+    .then(() => console.log("[DB] ✓ Database connection successful"))
+    .catch((err) => console.error("[DB] ✗ Database connection failed:", err.message));
+
+  return client;
+}
+
+// Export a proxy that initializes on first use with proper typing
+export const drizzleClient = new Proxy({} as DrizzleClient, {
+  get(target, prop) {
+    const client = initializeDatabase();
+    return (client as any)[prop];
   },
-  debug: (connection, query, params) => {
-    if (process.env.AUTH_DEBUG === "true") {
-      console.log("[DB] Query:", query);
-    }
-  },
-});
-
-// Test connection on startup
-sql`SELECT 1 as test`
-  .then(() => console.log("[DB] ✓ Database connection successful"))
-  .catch((err) => console.error("[DB] ✗ Database connection failed:", err.message));
-
-export const drizzleClient = drizzle(sql, { schema: drizzleSchema });
+}) as DrizzleClient;
