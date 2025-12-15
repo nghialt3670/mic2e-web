@@ -64,7 +64,7 @@ export const createFigFrame = (canvas: Canvas, color: string) => {
   for (let i = 1; i < objects.length; i++) {
     fig.add(objects[i]);
   }
-
+  fig.set({ color })
   canvas.requestRenderAll();
   return fig;
 };

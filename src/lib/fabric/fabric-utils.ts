@@ -8,16 +8,20 @@ export const createFigObjectFromImageFile = async (
 ): Promise<Record<string, any>> => {
   const dataUrl = await readFileAsDataURL(file);
   const image = await FabricImage.fromURL(dataUrl);
-  image.selectable = false;
+  image.set({
+    originX: "center",
+    originY: "center",
+    selectable: false,
+  });
   const group = new Group([image]);
   group.set({
     id: crypto.randomUUID(),
-  });
-  group.selectable = false;
-  group.hoverCursor = "default";
-  group.getObjects().forEach((obj, index) => {
-    obj.selectable = index !== 0;
-    obj.evented = true;
+    originX: "center",
+    originY: "center",
+    left: image.getScaledWidth() / 2,
+    top: image.getScaledHeight() / 2,
+    selectable: false,
+    hoverCursor: "default",
   });
   return group.toObject(["id", "selectable", "evented", "hoverCursor"] as any);
 };
