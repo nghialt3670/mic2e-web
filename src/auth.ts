@@ -112,7 +112,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   pages: {
-    error: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/error`,
-    signIn: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/signin`,
+    // When using Next.js basePath, use relative paths - Next.js handles the prefix
+    error: "/auth/error",
+    signIn: "/auth/signin",
   },
 });

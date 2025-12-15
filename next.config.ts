@@ -9,14 +9,28 @@ const remotePatterns: RemotePatterns = [
   },
 ];
 
+// Get basePath - must be empty string or path starting with "/" (but not just "/")
+const getBasePath = (): string => {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH;
+  // Return empty string if not set, empty, or just "/"
+  if (!basePath || basePath === "/") {
+    return "";
+  }
+  // Ensure it starts with "/"
+  return basePath.startsWith("/") ? basePath : `/${basePath}`;
+};
+
+const basePath = getBasePath();
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns,
   },
   output: "standalone",
-  // Only use assetPrefix for static assets (CSS, JS, images)
-  // Do NOT use basePath when nginx strips the path prefix
-  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  // Use basePath when nginx does NOT strip the path prefix
+  // basePath must be empty string or a valid path prefix (starts with "/" but not just "/")
+  basePath: basePath || undefined,
+  assetPrefix: basePath || undefined,
 };
 
 export default nextConfig;

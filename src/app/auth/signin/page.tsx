@@ -12,8 +12,9 @@ export default function SignIn() {
   const handleGoogleSignIn = async () => {
     console.log("[SIGNIN PAGE] Starting Google sign in...");
     try {
+      // When using Next.js basePath, use relative URL - Next.js handles the prefix
       const result = await signIn("google", { 
-        callbackUrl: process.env.NEXT_PUBLIC_BASE_PATH || "/",
+        callbackUrl: "/",
         redirect: true,
       });
       console.log("[SIGNIN PAGE] Sign in result:", result);
