@@ -86,7 +86,7 @@ export const ContextDialog = ({ context }: ContextDialogProps) => {
           className="p-1 size-fit"
           title="View execution context"
         >
-          <Container className="size-3" />
+          <Container className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col p-0">

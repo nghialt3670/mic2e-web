@@ -37,7 +37,7 @@ export const CycleDetail: FC<CycleDetailProps> = ({ jsonData }) => {
           className="p-1 size-fit"
           title="View cycle details"
         >
-          <ListChevronsUpDown className="size-3" />
+          <ListChevronsUpDown className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col p-0 w-screen h-screen overflow-scroll">

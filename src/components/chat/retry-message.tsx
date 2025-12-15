@@ -1,8 +1,9 @@
 import { FC, useState } from "react";
-import { MessageText } from "./message-text";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { generateCycle } from "@/actions/cycle-actions";
 import { Button } from "../ui/button";
+import { cn } from "@/lib/utils";
+import { RefreshCcw } from "lucide-react";
 
 interface RetryMessageProps {
   cycleId: string;
@@ -18,13 +19,13 @@ export const RetryMessage: FC<RetryMessageProps> = ({ cycleId }) => {
     setLoading(false);
   };
   return (
-    <div className="flex flex-col gap-1">
-      <div className="w-full flex justify-start">
-        <MessageText text="Failed to generate response. Please try again." />
+    <div className="flex flex-row items-center justify-start gap-1 bg-muted p-1 rounded-lg">
+      <div className="w-full flex justify-start px-1.5">
+        <span className="text-muted-foreground">Failed to generate response. Please try again.</span>
       </div>
-      <div className="mt-2">
-        <Button variant="outline" size="sm" onClick={handleRetryClick} disabled={loading}>Retry</Button>
-      </div>
+      <Button className="p-1 size-fit" variant="outline" size="icon" onClick={handleRetryClick} disabled={loading}>
+        <RefreshCcw className={cn("size-3", loading && "animate-spin text-muted-foreground")} />
+      </Button>
     </div>
   );
 };

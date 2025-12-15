@@ -33,12 +33,12 @@ export const CycleItem: FC<CycleItemProps> = ({ cycle, failed }) => {
   }, []);
 
   return (
-    <div className="flex flex-col h-full w-full pr-2 pl-6 gap-6">
+    <div className="flex flex-col w-full gap-6">
       <div className="w-full flex justify-end">
         <MessageItem message={request} type="request" />
       </div>
       {response && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <div className="w-full flex justify-start">
             <MessageItem message={response} type="response" />
           </div>

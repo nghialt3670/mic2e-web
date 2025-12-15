@@ -81,8 +81,6 @@ export const MessageText: FC<MessageTextProps> = ({ text }) => {
               style={{
                 backgroundColor: `${part.mention.color}20`,
                 color: part.mention.color,
-                borderRadius: "4px",
-                padding: "0 2px",
               }}
             >
               {part.content}

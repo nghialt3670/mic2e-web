@@ -28,7 +28,7 @@ export const CycleRegenerate = ({ cycleId }: CycleRegenerateProps) => {
       disabled={loading}
       title="Regenerate cycle"
     >
-      <RefreshCcw className={cn("size-3", loading && "animate-spin text-muted-foreground")} />
+      <RefreshCcw className={cn("size-4", loading && "animate-spin text-muted-foreground")} />
     </Button>
   );
 };

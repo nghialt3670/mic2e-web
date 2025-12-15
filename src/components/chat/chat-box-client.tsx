@@ -13,12 +13,16 @@ interface ChatBoxClientProps {
 export const ChatBoxClient = ({ chat, children }: ChatBoxClientProps) => {
   return (
     <ChatContext.Provider value={{ chat }}>
-      <div className="relative flex h-full w-full flex-col items-center">
-        <div className="flex w-full flex-1 items-start justify-center max-w-5xl overflow-y-scroll pt-3 pb-2">
-          {children}
+      <div className="relative flex h-full w-full flex-col">
+        {/* Scrollbar on the edge of the page */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-5xl py-2 px-4">{children}</div>
         </div>
-        <div className="relative flex w-full max-w-5xl items-center justify-center px-4 pb-10">
-          <MessageInput />
+
+        <div className="relative w-full">
+          <div className="mx-auto w-full max-w-5xl px-4 pb-10 pt-2">
+            <MessageInput />
+          </div>
         </div>
       </div>
     </ChatContext.Provider>
