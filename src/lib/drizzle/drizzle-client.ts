@@ -22,7 +22,7 @@ function initializeDatabase(): DrizzleClient {
 
   console.log("[DB] Initializing database connection...");
 
-  sql = postgres(serverEnv.DATABASE_URL, {
+  sql = postgres("postgresql://admin:changemelater@localhost:5432/mic2e", {
     ssl: false,
     max: 10,
     idle_timeout: 20,

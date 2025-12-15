@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
+import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
 import { drizzleClient } from "./lib/drizzle/drizzle-client";
@@ -19,6 +20,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           response_type: "code"
         }
       }
+    }),
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
     })
   ],
   logger: {

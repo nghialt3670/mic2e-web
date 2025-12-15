@@ -18,7 +18,21 @@ interface CycleCompleteRequest {
   cycleId: string;
 }
 
+interface LlmConfig {
+  provider: "openai" | "google";
+  api_key?: string;
+  model: string;
+  params?: Record<string, any>;
+}
+
+interface Chat2EditConfig {
+  max_prompt_cycles?: number;
+  max_llm_exchanges?: number;
+}
+
 interface Chat2EditGenerateRequest {
+  llm_config?: LlmConfig;
+  chat2edit_config?: Chat2EditConfig;
   message: {
     text: string;
     attachments: {
@@ -27,11 +41,11 @@ interface Chat2EditGenerateRequest {
     }[];
   };
   history: Record<string, any>[];
-  context_file_id: string;
+  context_file_id?: string;
 }
 
 interface Chat2EditGenerateResponse {
-  message: {
+  message?: {
     text: string;
     attachments: {
       file_id: string;
@@ -40,6 +54,47 @@ interface Chat2EditGenerateResponse {
   };
   cycle: Record<string, any>;
   context_file_id: string;
+}
+
+/**
+ * Maps frontend LLM model names to backend provider and model
+ */
+function mapLlmModelToConfig(llmModel: string): LlmConfig {
+  // Map model name to provider and actual model name
+  const modelMap: Record<
+    string,
+    { provider: "openai" | "google"; model: string }
+  > = {
+    "gpt-4o": { provider: "openai", model: "gpt-4o" },
+    "gpt-4o-mini": { provider: "openai", model: "gpt-4o-mini" },
+    "gpt-4-turbo": { provider: "openai", model: "gpt-4-turbo" },
+    "gpt-3.5-turbo": { provider: "openai", model: "gpt-3.5-turbo" },
+    "claude-3-5-sonnet": { provider: "openai", model: "claude-3-5-sonnet-20241022" },
+    "claude-3-opus": { provider: "openai", model: "claude-3-opus-20240229" },
+    "claude-3-sonnet": { provider: "openai", model: "claude-3-sonnet-20240229" },
+    "claude-3-haiku": { provider: "openai", model: "claude-3-haiku-20240307" },
+    "gemini-2.0-flash": { provider: "google", model: "gemini-2.0-flash-exp" },
+    "gemini-1.5-pro": { provider: "google", model: "gemini-1.5-pro" },
+    "gemini-1.5-flash": { provider: "google", model: "gemini-1.5-flash" },
+  };
+
+  const mapping = modelMap[llmModel];
+  
+  if (!mapping) {
+    // Default to Google's gemini-2.0-flash if model not found
+    console.warn(`Unknown LLM model: ${llmModel}, defaulting to gemini-2.0-flash-exp`);
+    return {
+      provider: "google",
+      model: "gemini-2.0-flash-exp",
+      params: {},
+    };
+  }
+
+  return {
+    provider: mapping.provider,
+    model: mapping.model,
+    params: {},
+  };
 }
 
 interface CycleCreateRequest {
@@ -82,6 +137,7 @@ export const generateCycle = withErrorHandler(
 
     const chat = await drizzleClient.query.chats.findFirst({
       where: eq(chats.id, cycle.chatId),
+      with: { settings: true },
     });
     if (!chat) {
       return {
@@ -90,6 +146,21 @@ export const generateCycle = withErrorHandler(
         data: undefined as any,
       };
     }
+
+    // Get LLM config from chat settings snapshot
+    const llmConfig = chat.settings
+      ? mapLlmModelToConfig(chat.settings.llmModel)
+      : {
+          provider: "google" as const,
+          model: "gemini-2.0-flash-exp",
+          params: {},
+        };
+
+    // Default Chat2Edit config
+    const chat2editConfig: Chat2EditConfig = {
+      max_prompt_cycles: 5,
+      max_llm_exchanges: 2,
+    };
 
     const prevCycles = await drizzleClient.query.cycles.findMany({
       where: and(
@@ -131,6 +202,8 @@ export const generateCycle = withErrorHandler(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          llm_config: llmConfig,
+          chat2edit_config: chat2editConfig,
           message: {
             text: cycle.request.text,
             attachments: cycle.request.attachments.map((attachment) => ({
@@ -139,7 +212,7 @@ export const generateCycle = withErrorHandler(
             })),
           },
           history: prevCycles.map((cycle) => cycle.jsonData),
-          context_file_id: prevCycles.at(-1)?.context?.fileId,
+          context_file_id: prevCycles.at(-1)?.context?.fileId || undefined,
         } as Chat2EditGenerateRequest),
       },
     );

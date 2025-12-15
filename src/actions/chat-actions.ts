@@ -30,7 +30,7 @@ export const createChat = withErrorHandler(
         .insert(settings)
         .values({
           userId,
-          llmModel: "gpt-4o",
+          llmModel: "gemini-2.0-flash",
           maxImageWidth: 480,
           maxImageHeight: 360,
         })

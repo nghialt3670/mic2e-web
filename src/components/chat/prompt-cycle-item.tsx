@@ -177,13 +177,17 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                               <div className="text-sm font-medium">
                                 LLM Exchange {exchangeIdx + 1}
                               </div>
-                              {exchange.code ? (
+                              {exchange.error ? (
+                                <div className="text-xs text-destructive flex items-center gap-1 mt-1">
+                                  <XCircle className="size-4 text-destructive" />
+                                </div>
+                              ) : exchange.code ? (
                                 <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
                                   <CheckCircle className="size-4 text-green-600" />
                                 </div>
                               ) : (
-                                <div className="text-xs text-destructive flex items-center gap-1 mt-1">
-                                  <XCircle className="size-4 text-destructive" />
+                                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                  <CircleDot className="size-4 text-muted-foreground" />
                                 </div>
                               )}
                             </div>
@@ -242,6 +246,40 @@ export const PromptCycleItem: FC<PromptCycleItemProps> = ({
                                     </div>
                                     <div className="p-3 text-xs whitespace-pre-wrap leading-relaxed">
                                       {exchange.answer.text}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {exchange.error && (
+                                  <div className="relative rounded-lg border border-destructive/50 bg-destructive/5 overflow-hidden">
+                                    <div className="flex items-center justify-between px-4 py-2 border-b border-destructive/20 bg-destructive/10">
+                                      <div className="flex items-center gap-2">
+                                        <XCircle className="h-4 w-4 text-destructive" />
+                                        <span className="text-xs text-destructive font-medium">
+                                          Error
+                                          {exchange.error.type && (
+                                            <span className="ml-2 text-xs text-destructive/70 font-normal">
+                                              ({exchange.error.type})
+                                            </span>
+                                          )}
+                                        </span>
+                                      </div>
+                                      <button
+                                        onClick={() => {
+                                          if (exchange.error) {
+                                            copyToClipboard(
+                                              exchange.error.message,
+                                              "Error message",
+                                            );
+                                          }
+                                        }}
+                                        className="flex items-center gap-1.5 text-xs text-destructive/70 hover:text-destructive transition-colors"
+                                      >
+                                        <Copy className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                    <div className="p-3 text-xs whitespace-pre-wrap leading-relaxed text-destructive">
+                                      {exchange.error?.message}
                                     </div>
                                   </div>
                                 )}

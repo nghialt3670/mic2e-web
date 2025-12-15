@@ -1,1 +1,0 @@
-ALTER TABLE "attachments" ADD COLUMN "path" text NOT NULL;

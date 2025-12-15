@@ -11,7 +11,7 @@ export interface SettingsStore {
   resetToDefaults: () => void;
 }
 
-const DEFAULT_LLM_MODEL = "gpt-4o";
+const DEFAULT_LLM_MODEL = "gemini-2.0-flash";
 const DEFAULT_MAX_IMAGE_WIDTH = 480;
 const DEFAULT_MAX_IMAGE_HEIGHT = 360;
 
@@ -38,6 +38,9 @@ export const useSettingsStore = create<SettingsStore>()(
 );
 
 export const LLM_MODELS = [
+  { value: "gemini-2.0-flash", label: "Gemini 2.0 Flash (Default)" },
+  { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
+  { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
   { value: "gpt-4o", label: "GPT-4o" },
   { value: "gpt-4o-mini", label: "GPT-4o Mini" },
   { value: "gpt-4-turbo", label: "GPT-4 Turbo" },

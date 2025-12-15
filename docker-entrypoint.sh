@@ -27,10 +27,10 @@ until [ $RETRY_COUNT -ge $MAX_RETRIES ]; do
 done
 
 # Run migrations
-echo "📦 Pushing schema changes..."
+echo "📦 Running migrations..."
 export DRIZZLE_DATABASE_URL="${DATABASE_URL}"
 
-npx drizzle-kit push --config=drizzle.config.js
+npx drizzle-kit migrate --config=drizzle.config.js
 
 if [ $? -eq 0 ]; then
   echo "✓ Migrations completed successfully"

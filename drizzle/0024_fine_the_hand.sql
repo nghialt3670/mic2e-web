@@ -1,1 +1,0 @@
-ALTER TABLE "chats" ADD COLUMN "failed" boolean DEFAULT false;

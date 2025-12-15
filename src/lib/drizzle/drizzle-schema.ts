@@ -51,7 +51,7 @@ export const users = pgTable("users", {
 export const settings = pgTable("settings", {
   id: primaryKey("id"),
   userId: foreignKey("user_id", users.id, { onDelete: "cascade" }).notNull(),
-  llmModel: text("llm_model").notNull().default("gpt-4o"),
+  llmModel: text("llm_model").notNull().default("gemini-2.0-flash"),
   maxImageWidth: integer("max_image_width").notNull().default(480),
   maxImageHeight: integer("max_image_height").notNull().default(360),
   createdAt: createdAt("createdAt"),
