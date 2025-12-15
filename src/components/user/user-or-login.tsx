@@ -8,25 +8,23 @@ import { Button } from "../ui/button";
 import { UserMenu } from "./user-menu";
 
 export const UserOrLogin = () => {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const handleGoogleLoginClick = () => {
     console.log("[LOGIN] Google login button clicked");
+    // Include full path since we're not using Next.js basePath
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    const callbackUrl = `${basePath}/`;
-    console.log("[LOGIN] Callback URL:", callbackUrl);
-    signIn("google", { callbackUrl });
+    signIn("google", { callbackUrl: `${basePath}/` });
   };
 
   const handleGithubLoginClick = () => {
     console.log("[LOGIN] GitHub login button clicked");
+    // Include full path since we're not using Next.js basePath
     const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    const callbackUrl = `${basePath}/`;
-    console.log("[LOGIN] Callback URL:", callbackUrl);
-    signIn("github", { callbackUrl });
+    signIn("github", { callbackUrl: `${basePath}/` });
   };
 
-  if (!session) {
+  if (status === "unauthenticated") {
     return (
       <div className="flex flex-col gap-2 w-full">
         <Button

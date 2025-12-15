@@ -30,7 +30,7 @@ export const createChat = withErrorHandler(
         .insert(settings)
         .values({
           userId,
-          llmModel: "gemini-2.0-flash",
+          llmModel: "gemini-2.5-flash",
           maxImageWidth: 480,
           maxImageHeight: 360,
         })

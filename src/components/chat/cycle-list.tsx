@@ -9,8 +9,8 @@ export const CycleList = () => {
 
   return (
     <div className="flex flex-col w-full gap-6">
-      {chat?.cycles.map((cycle) => (
-        <CycleItem key={cycle.id} cycle={cycle} />
+      {chat?.cycles.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()).map((cycle) => (
+        <CycleItem key={cycle.id} cycle={cycle} failed={!!chat?.failed} />
       ))}
     </div>
   );

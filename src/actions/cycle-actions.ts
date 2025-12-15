@@ -65,27 +65,18 @@ function mapLlmModelToConfig(llmModel: string): LlmConfig {
     string,
     { provider: "openai" | "google"; model: string }
   > = {
-    "gpt-4o": { provider: "openai", model: "gpt-4o" },
-    "gpt-4o-mini": { provider: "openai", model: "gpt-4o-mini" },
-    "gpt-4-turbo": { provider: "openai", model: "gpt-4-turbo" },
     "gpt-3.5-turbo": { provider: "openai", model: "gpt-3.5-turbo" },
-    "claude-3-5-sonnet": { provider: "openai", model: "claude-3-5-sonnet-20241022" },
-    "claude-3-opus": { provider: "openai", model: "claude-3-opus-20240229" },
-    "claude-3-sonnet": { provider: "openai", model: "claude-3-sonnet-20240229" },
-    "claude-3-haiku": { provider: "openai", model: "claude-3-haiku-20240307" },
-    "gemini-2.0-flash": { provider: "google", model: "gemini-2.0-flash-exp" },
-    "gemini-1.5-pro": { provider: "google", model: "gemini-1.5-pro" },
-    "gemini-1.5-flash": { provider: "google", model: "gemini-1.5-flash" },
+    "gemini-2.5-flash": { provider: "google", model: "gemini-2.5-flash" },
   };
 
   const mapping = modelMap[llmModel];
   
   if (!mapping) {
-    // Default to Google's gemini-2.0-flash if model not found
-    console.warn(`Unknown LLM model: ${llmModel}, defaulting to gemini-2.0-flash-exp`);
+    // Default to Google's gemini-2.5-flash if model not found
+    console.warn(`Unknown LLM model: ${llmModel}, defaulting to gemini-2.5-flash`);
     return {
       provider: "google",
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-2.5-flash",
       params: {},
     };
   }

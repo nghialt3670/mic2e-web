@@ -81,13 +81,12 @@ export const MessageInput = () => {
         chatId,
         requestId: createdMessage.id,
       });
-      await forceRefresh(); // Force refresh to show the created cycle
-
-      // Generate cycle and force UI update
-      await withToastHandler(generateCycle, {
-        cycleId: createdCycle.id,
-      });
-      await forceRefresh(); // Force refresh to show the generated cycle
+      setTimeout(() => {
+        // Generate cycle and force UI update
+        withToastHandler(generateCycle, {
+          cycleId: createdCycle.id,
+        });
+      }, 100);
     } catch (error) {
       console.error("Error submitting message:", error);
       // Error is already shown via withToastHandler
