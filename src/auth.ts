@@ -9,8 +9,6 @@ import { users } from "./lib/drizzle/drizzle-schema";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   debug: true, // Always enable debug to see errors
   trustHost: true,
-  // Explicitly set basePath to match what server receives after nginx strips prefix
-  basePath: "/api/auth",
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -114,7 +112,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   pages: {
-    // Include full path since we're not using Next.js basePath
     error: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/error`,
     signIn: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/signin`,
   },

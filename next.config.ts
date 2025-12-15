@@ -14,8 +14,8 @@ const nextConfig: NextConfig = {
     remotePatterns,
   },
   output: "standalone",
-  // When nginx STRIPS the path prefix, use assetPrefix for static assets only
-  // Do NOT use basePath - it would double the prefix
+  // Only use assetPrefix for static assets (CSS, JS, images)
+  // Do NOT use basePath when nginx strips the path prefix
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
 };
 

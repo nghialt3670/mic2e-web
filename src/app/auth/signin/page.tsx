@@ -12,10 +12,8 @@ export default function SignIn() {
   const handleGoogleSignIn = async () => {
     console.log("[SIGNIN PAGE] Starting Google sign in...");
     try {
-      // Include full path since we're not using Next.js basePath
-      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
       const result = await signIn("google", { 
-        callbackUrl: `${basePath}/`,
+        callbackUrl: process.env.NEXT_PUBLIC_BASE_PATH || "/",
         redirect: true,
       });
       console.log("[SIGNIN PAGE] Sign in result:", result);
