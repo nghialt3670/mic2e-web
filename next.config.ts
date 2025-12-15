@@ -28,9 +28,8 @@ const nextConfig: NextConfig = {
   },
   output: "standalone",
   // Use basePath when nginx does NOT strip the path prefix
-  // basePath must be empty string or a valid path prefix (starts with "/" but not just "/")
+  // basePath handles both routes AND assets automatically - don't set assetPrefix
   basePath: basePath || undefined,
-  assetPrefix: basePath || undefined,
 };
 
 export default nextConfig;
