@@ -17,7 +17,7 @@ interface ChatItemProps {
 
 export const ChatItem: FC<ChatItemProps> = ({ chat }) => {
   const pathname = usePathname();
-  const isActive = pathname === `/chats/${chat.id}`;
+  const isActive = pathname === `/c/${chat.id}`;
   return (
     <Link href={`/c/${chat.id}`} className="block group">
       <div

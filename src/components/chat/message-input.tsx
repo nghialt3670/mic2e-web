@@ -58,7 +58,7 @@ export const MessageInput = () => {
           },
         });
         chatId = newChat.id;
-        router.push(`/chats/${chatId}`);
+        router.push(`/c/${chatId}`);
       }
 
       const createdMessage = await withToastHandler(createMessage, {

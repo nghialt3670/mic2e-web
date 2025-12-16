@@ -50,7 +50,7 @@ export const ChatActions: FC<ChatActionsProps> = ({
   const [newTitle, setNewTitle] = useState(currentTitle || "");
   const [isLoading, setIsLoading] = useState(false);
   const pathname = usePathname();
-  const isActive = pathname === `/chats/${chatId}`;
+  const isActive = pathname === `/c/${chatId}`;
 
   const handleRename = async () => {
     if (!newTitle.trim()) return;

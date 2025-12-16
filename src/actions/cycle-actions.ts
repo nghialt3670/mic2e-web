@@ -103,7 +103,7 @@ export const createCycle = withErrorHandler(
       })
       .returning();
 
-    revalidatePath(`/chats/${chatId}`);
+    revalidatePath(`/c/${chatId}`);
     return {
       message: "Cycle created successfully",
       code: 200,
@@ -214,7 +214,7 @@ export const generateCycle = withErrorHandler(
         .set({ failed: true })
         .where(eq(chats.id, cycle.chatId));
 
-      revalidatePath(`/chats/${cycle.chatId}`);
+      revalidatePath(`/c/${cycle.chatId}`);
 
       return {
         message: "Failed to generate cycle",
@@ -287,7 +287,7 @@ export const generateCycle = withErrorHandler(
       .where(eq(cycles.id, cycle.id))
       .returning();
 
-    revalidatePath(`/chats/${cycle.chatId}`);
+    revalidatePath(`/c/${cycle.chatId}`);
     return {
       message: "Cycle completed successfully",
       code: 200,
