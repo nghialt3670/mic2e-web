@@ -17,7 +17,7 @@ export const UserMenu = () => {
   const { data: session } = useSession();
 
   const handleLogoutClick = () => {
-    signOut({ callbackUrl: "/" });
+    signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/` });
   };
 
   if (!session) {

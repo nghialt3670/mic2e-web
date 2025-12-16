@@ -12,18 +12,14 @@ export const UserOrLogin = () => {
 
   const handleGoogleLoginClick = () => {
     console.log("[LOGIN] Google login button clicked");
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    const callbackUrl = `${basePath}/`;
-    console.log("[LOGIN] Callback URL:", callbackUrl);
-    signIn("google", { callbackUrl });
+    // basePath is handled by Next.js, use "/" for app root
+    signIn("google", { callbackUrl: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/` });
   };
 
   const handleGithubLoginClick = () => {
     console.log("[LOGIN] GitHub login button clicked");
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    const callbackUrl = `${basePath}/`;
-    console.log("[LOGIN] Callback URL:", callbackUrl);
-    signIn("github", { callbackUrl });
+    // basePath is handled by Next.js, use "/" for app root
+    signIn("github", { callbackUrl: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/` });
   };
 
   if (status === "unauthenticated") {

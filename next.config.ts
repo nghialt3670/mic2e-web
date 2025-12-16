@@ -7,6 +7,10 @@ const remotePatterns: RemotePatterns = [
     protocol: "https",
     hostname: "lh3.googleusercontent.com",
   },
+  {
+    protocol: "https",
+    hostname: "avatars.githubusercontent.com",
+  }
 ];
 
 const nextConfig: NextConfig = {
@@ -14,9 +18,9 @@ const nextConfig: NextConfig = {
     remotePatterns,
   },
   output: "standalone",
-  // Only use assetPrefix for static assets (CSS, JS, images)
-  // Do NOT use basePath when nginx strips the path prefix
-  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || "",
+  // basePath tells Next.js that routes are served from this sub-path
+  // This is needed when nginx forwards the full path (e.g., /chat2edit/api/...)
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || "",
 };
 
 export default nextConfig;

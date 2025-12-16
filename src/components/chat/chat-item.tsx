@@ -19,7 +19,7 @@ export const ChatItem: FC<ChatItemProps> = ({ chat }) => {
   const pathname = usePathname();
   const isActive = pathname === `/chats/${chat.id}`;
   return (
-    <Link href={`/chats/${chat.id}`} className="block group">
+    <Link href={`/c/${chat.id}`} className="block group">
       <div
         className={cn(
           "relative p-4 rounded-lg border transition-all duration-200",

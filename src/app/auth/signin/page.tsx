@@ -13,7 +13,7 @@ export default function SignIn() {
     console.log("[SIGNIN PAGE] Starting Google sign in...");
     try {
       const result = await signIn("google", { 
-        callbackUrl: process.env.NEXT_PUBLIC_BASE_PATH || "/",
+        callbackUrl: "/",  // basePath is handled by Next.js
         redirect: true,
       });
       console.log("[SIGNIN PAGE] Sign in result:", result);

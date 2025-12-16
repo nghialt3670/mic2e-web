@@ -6,9 +6,13 @@ import Google from "next-auth/providers/google";
 import { drizzleClient } from "./lib/drizzle/drizzle-client";
 import { users } from "./lib/drizzle/drizzle-schema";
 
+// Build auth basePath - must include the app's basePath for proper URL construction
+const authBasePath = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/api/auth`;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   debug: true, // Always enable debug to see errors
   trustHost: true,
+  basePath: authBasePath,
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -24,6 +28,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
+      authorization: {
+        params: {
+          scope: "user:email",
+        }
+      }
     })
   ],
   logger: {
@@ -112,7 +121,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   pages: {
-    error: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/error`,
-    signIn: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/auth/signin`,
+    // basePath is set in next.config.ts, so no need to prefix here
+    error: "/auth/error",
+    signIn: "/auth/signin",
   },
 });
