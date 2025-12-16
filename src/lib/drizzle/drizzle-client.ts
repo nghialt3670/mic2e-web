@@ -21,8 +21,9 @@ function initializeDatabase(): DrizzleClient {
   checkEnvironmentVariables();
 
   console.log("[DB] Initializing database connection...");
+  console.log("[DB] DATABASE_URL:", serverEnv.DATABASE_URL.replace(/:[^:@]+@/, ":***@")); // Log URL with masked password
 
-  sql = postgres("postgresql://admin:changemelater@localhost:5432/mic2e", {
+  sql = postgres(serverEnv.DATABASE_URL, {
     ssl: false,
     max: 10,
     idle_timeout: 20,
