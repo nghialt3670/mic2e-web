@@ -3,6 +3,7 @@ import { z } from "zod";
 const serverEnvSchema = z.object({
   DATABASE_URL: z.string().url(),
   AGENT_API_HOST: z.string().url(),
+  STORAGE_API_HOST: z.string().url(),
 });
 
 // Check if we're in build phase
@@ -14,6 +15,7 @@ const serverEnv = isBuildPhase
     ({
       DATABASE_URL: "",
       AGENT_API_HOST: "",
+      STORAGE_API_HOST: "",
     } as z.infer<typeof serverEnvSchema>)
   : // At runtime, validate and throw if invalid
     serverEnvSchema.parse(process.env);
