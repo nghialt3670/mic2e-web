@@ -5,7 +5,7 @@ import {
   createAttachments,
 } from "@/actions/attachment-actions";
 import { createChat } from "@/actions/chat-actions";
-import { createCycle, generateCycle } from "@/actions/cycle-actions";
+import { clearCycle, createCycle, generateCycle } from "@/actions/cycle-actions";
 import { createMessage } from "@/actions/message-actions";
 import { Button } from "@/components/ui/button";
 import { ChatContext } from "@/contexts/chat-context";
@@ -81,11 +81,19 @@ export const MessageInput = () => {
         chatId,
         requestId: createdMessage.id,
       });
-      setTimeout(() => {
-        // Generate cycle and force UI update
-        withToastHandler(generateCycle, {
+
+      // Clear cycle (cleanup) - UI will update after this
+      setTimeout(async () => {
+        await withToastHandler(clearCycle, {
           cycleId: createdCycle.id,
         });
+
+        // Generate cycle after clearing - UI will update after this too
+        setTimeout(() => {
+          withToastHandler(generateCycle, {
+            cycleId: createdCycle.id,
+          });
+        }, 100);
       }, 100);
     } catch (error) {
       console.error("Error submitting message:", error);

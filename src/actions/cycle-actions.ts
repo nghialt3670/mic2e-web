@@ -114,6 +114,144 @@ export const createCycle = withErrorHandler(
   }),
 );
 
+export const clearCycle = withErrorHandler(
+  withAuthHandler<CycleCompleteRequest, Cycle>(async ({ cycleId }) => {
+    const cycle = await drizzleClient.query.cycles.findFirst({
+      where: eq(cycles.id, cycleId),
+    });
+    if (!cycle) {
+      return {
+        message: "Cycle not found",
+        code: 404,
+        data: undefined as any,
+      };
+    }
+
+    // Delete cycles created after the current one (revert functionality)
+    // Use a safer approach: query for cycles to delete first, then delete by ID
+    const cyclesToDelete = await drizzleClient.query.cycles.findMany({
+      where: and(
+        eq(cycles.chatId, cycle.chatId),
+        gt(cycles.createdAt, cycle.createdAt),
+      ),
+      with: { context: true },
+    });
+
+    // Collect message IDs, context IDs, context file IDs, and attachment file IDs to delete
+    const messageIdsToDelete = new Set<string>();
+    const contextIdsToDelete = new Set<string>();
+    const contextFileIdsToDelete = new Set<string>();
+    const attachmentFileIdsToDelete = new Set<string>();
+    
+    for (const cycleToDelete of cyclesToDelete) {
+      if (cycleToDelete.responseId) messageIdsToDelete.add(cycleToDelete.responseId);
+      if (cycleToDelete.contextId) {
+        contextIdsToDelete.add(cycleToDelete.contextId);
+        if (cycleToDelete.context?.fileId) {
+          contextFileIdsToDelete.add(cycleToDelete.context.fileId);
+        }
+      }
+    }
+
+    // Also collect message and context IDs from the current cycle (except request)
+    if (cycle.responseId) messageIdsToDelete.add(cycle.responseId);
+    if (cycle.contextId) {
+      contextIdsToDelete.add(cycle.contextId);
+      // Get the context to retrieve its fileId
+      const currentContext = await drizzleClient.query.contexts.findFirst({
+        where: eq(contexts.id, cycle.contextId),
+      });
+      if (currentContext?.fileId) {
+        contextFileIdsToDelete.add(currentContext.fileId);
+      }
+    }
+
+    // Get all attachments from messages to be deleted
+    if (messageIdsToDelete.size > 0) {
+      const attachmentsToDelete = await drizzleClient.query.attachments.findMany({
+        where: inArray(attachments.messageId, Array.from(messageIdsToDelete)),
+      });
+      for (const attachment of attachmentsToDelete) {
+        attachmentFileIdsToDelete.add(attachment.fileId);
+      }
+    }
+
+    // Reset the current cycle FIRST: remove response, context, and jsonData, keep only request
+    // This removes foreign key references so we can safely delete messages and contexts
+    await drizzleClient
+      .update(cycles)
+      .set({
+        responseId: null,
+        contextId: null,
+        jsonData: null,
+      })
+      .where(eq(cycles.id, cycleId));
+
+    // Only delete if there are cycles to delete, and explicitly exclude current cycle
+    if (cyclesToDelete.length > 0) {
+      const idsToDelete = cyclesToDelete
+        .map((c) => c.id)
+        .filter((id) => id !== cycleId); // Safety check: never delete the current cycle
+
+      if (idsToDelete.length > 0) {
+        await drizzleClient
+          .delete(cycles)
+          .where(inArray(cycles.id, idsToDelete));
+      }
+    }
+
+    // Delete orphaned messages (CASCADE will automatically delete attachments)
+    if (messageIdsToDelete.size > 0) {
+      await drizzleClient
+        .delete(messages)
+        .where(inArray(messages.id, Array.from(messageIdsToDelete)));
+    }
+
+    // Delete orphaned contexts
+    if (contextIdsToDelete.size > 0) {
+      await drizzleClient
+        .delete(contexts)
+        .where(inArray(contexts.id, Array.from(contextIdsToDelete)));
+    }
+
+    // Delete context files from storage
+    if (contextFileIdsToDelete.size > 0) {
+      const deletePromises = Array.from(contextFileIdsToDelete).map((fileId) =>
+        fetch(`${serverEnv.STORAGE_API_HOST}/files/${fileId}`, {
+          method: "DELETE",
+        }).catch((error) => {
+          logger.error("CycleActions", `Failed to delete context file ${fileId}`, error);
+        })
+      );
+      await Promise.all(deletePromises);
+    }
+
+    // Delete attachment files from storage
+    if (attachmentFileIdsToDelete.size > 0) {
+      const deletePromises = Array.from(attachmentFileIdsToDelete).map((fileId) =>
+        fetch(`${serverEnv.STORAGE_API_HOST}/files/${fileId}`, {
+          method: "DELETE",
+        }).catch((error) => {
+          logger.error("CycleActions", `Failed to delete attachment file ${fileId}`, error);
+        })
+      );
+      await Promise.all(deletePromises);
+    }
+
+    // Get the cleared cycle to return
+    const clearedCycle = await drizzleClient.query.cycles.findFirst({
+      where: eq(cycles.id, cycleId),
+    });
+
+    revalidatePath(`/c/${cycle.chatId}`);
+    return {
+      message: "Cycle cleared successfully",
+      code: 200,
+      data: clearedCycle,
+    };
+  }),
+);
+
 export const generateCycle = withErrorHandler(
   withAuthHandler<CycleCompleteRequest, Cycle>(async ({ cycleId }) => {
     const cycle = await drizzleClient.query.cycles.findFirst({
@@ -164,28 +302,15 @@ export const generateCycle = withErrorHandler(
       with: { context: true },
     });
 
-    // Delete cycles created after the current one (revert functionality)
-    // Use a safer approach: query for cycles to delete first, then delete by ID
-    const cyclesToDelete = await drizzleClient.query.cycles.findMany({
-      where: and(
-        eq(cycles.chatId, cycle.chatId),
-        gt(cycles.createdAt, cycle.createdAt),
-      ),
-      columns: { id: true },
-    });
+    // Set chat as generating (not failed) at the start
+    await drizzleClient
+      .update(chats)
+      .set({ failed: false })
+      .where(eq(chats.id, cycle.chatId));
 
-    // Only delete if there are cycles to delete, and explicitly exclude current cycle
-    if (cyclesToDelete.length > 0) {
-      const idsToDelete = cyclesToDelete
-        .map((c) => c.id)
-        .filter((id) => id !== cycleId); // Safety check: never delete the current cycle
-
-      if (idsToDelete.length > 0) {
-        await drizzleClient
-          .delete(cycles)
-          .where(inArray(cycles.id, idsToDelete));
-      }
-    }
+    // Create abort controller with timeout (5 minutes)
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), 5 * 60 * 1000);
 
     const [error, response] = await to(fetch(
       `${serverEnv.AGENT_API_HOST}/chat2edit/generate`,
@@ -207,11 +332,20 @@ export const generateCycle = withErrorHandler(
           history: prevCycles.map((cycle) => cycle.jsonData),
           context_file_id: prevCycles.at(-1)?.context?.fileId || undefined,
         } as Chat2EditGenerateRequest),
+        signal: abortController.signal,
       },
     ));
 
+    clearTimeout(timeoutId);
+
     if (error || !response?.ok) {
-      logger.error("CycleActions", "Failed to generate cycle", error);
+      const isTimeout = error?.name === 'AbortError';
+      logger.error(
+        "CycleActions", 
+        isTimeout ? "Generate cycle timed out" : "Failed to generate cycle", 
+        error
+      );
+      
       await drizzleClient
         .update(chats)
         .set({ failed: true })
@@ -220,7 +354,7 @@ export const generateCycle = withErrorHandler(
       revalidatePath(`/c/${cycle.chatId}`);
 
       return {
-        message: "Failed to generate cycle",
+        message: isTimeout ? "Request timed out" : "Failed to generate cycle",
         code: response?.status || 500,
         data: undefined as any, // Required by ApiResponse
       };

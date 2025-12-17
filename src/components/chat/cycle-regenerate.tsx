@@ -1,4 +1,4 @@
-import { generateCycle } from "@/actions/cycle-actions";
+import { clearCycle, generateCycle } from "@/actions/cycle-actions";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { RefreshCcw } from "lucide-react";
 
@@ -14,10 +14,21 @@ export const CycleRegenerate = ({ cycleId }: CycleRegenerateProps) => {
   const [loading, setLoading] = useState(false);
   const handleRegenerateCycle = async () => {
     setLoading(true);
-    await withToastHandler(generateCycle, {
-      cycleId,
-    });
-    setLoading(false);
+    
+    // Clear cycle first (cleanup) - UI will update after this
+    setTimeout(async () => {
+      await withToastHandler(clearCycle, {
+        cycleId,
+      });
+
+      // Generate cycle after clearing - UI will update after this too
+      setTimeout(async () => {
+        await withToastHandler(generateCycle, {
+          cycleId,
+        });
+        setLoading(false);
+      }, 100);
+    }, 100);
   };
   return (
     <Button

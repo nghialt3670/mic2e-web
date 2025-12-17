@@ -1,34 +1,54 @@
 "use client";
 
 import { ChatCycleDetail } from "@/types/chat-cycle-detail";
-import { FC, useMemo } from "react";
+import { FC, useState, useEffect } from "react";
 
 import { CycleDetail } from "./cycle-detail";
 import { CycleRegenerate } from "./cycle-regenerate";
 import { MessageItem } from "./message-item";
 import { ContextDialog } from "./context-dialog";
 import { RetryMessage } from "./retry-message";
-import { MessageText } from "./message-text";
-import { Skeleton } from "../ui/skeleton";
 
 interface CycleItemProps {
   cycle: ChatCycleDetail;
   failed: boolean;
 }
 
+const LOADING_MESSAGES = [
+  "Hang on…",
+  "Processing your request…",
+  "Be patient…",
+  "Working on it…",
+  "Almost there…",
+  "Analyzing your image…",
+  "Thinking…",
+  "Generating response…",
+  "Just a moment…",
+  "Understanding your request…",
+  "Preparing the magic…",
+  "Computing…",
+  "This won't take long…",
+  "Loading…",
+  "Give me a second…",
+];
+
 export const CycleItem: FC<CycleItemProps> = ({ cycle, failed }) => {
   const { request, response } = cycle;
   const jsonData = cycle.jsonData as any;
 
-  const loadingMessage = useMemo(() => {
-    const messages = [
-      "Hang on…",
-      "Processing your request…",
-      "Be patient…",
-      "Working on it…",
-      "Almost there…",
-    ];
-    return messages[Math.floor(Math.random() * messages.length)];
+  const [loadingMessage, setLoadingMessage] = useState(() => {
+    return LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)];
+  });
+
+  useEffect(() => {
+    // Change loading message every 3 seconds
+    const interval = setInterval(() => {
+      setLoadingMessage(
+        LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)]
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -62,10 +82,9 @@ export const CycleItem: FC<CycleItemProps> = ({ cycle, failed }) => {
       {!failed && !response && (
         <div className="w-full flex justify-start">
           <div
-            className="p-3 w-fit max-w-[80%] border bg-muted animate-pulse overflow-hidden"
-            style={{ borderRadius: "0rem 0.5rem 0.5rem 0.5rem" }}
+            className="p-1 w-fit max-w-[80%] border bg-muted animate-pulse overflow-hidden rounded-lg px-3"
           >
-            <div className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
+            <div className="text text-muted-foreground flex items-center gap-2" style={{ fontStyle: 'italic' }}>
               <span className="inline-flex h-2 w-2 rounded-full bg-muted-foreground/60 animate-pulse" />
               {loadingMessage}
             </div>
