@@ -90,7 +90,14 @@ export const ContextDialog = ({ context }: ContextDialogProps) => {
           <Container className="size-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="flex flex-col p-0">
+      <DialogContent className="flex flex-col p-0"
+        style={{ 
+          width: '60vw', 
+          height: '90vh', 
+          maxWidth: '60vw', 
+          maxHeight: '90vh' 
+        }}
+      >
         <DialogHeader className="px-6 pt-6 pb-3 border-b flex flex-row items-center justify-between gap-4">
           <div>
             <DialogTitle className="text-base">Execution context</DialogTitle>

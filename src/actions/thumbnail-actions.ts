@@ -13,7 +13,6 @@ export interface ThumbnailCreateRequest {
 
 export const createThumbnail = withErrorHandler(
   withAuthHandler<ThumbnailCreateRequest, Thumbnail>(async ({ thumbnail }) => {
-    console.log("thumbnail", thumbnail)
     const [createdThumbnail] = await drizzleClient
       .insert(thumbnailsTable)
       .values({ ...thumbnail })

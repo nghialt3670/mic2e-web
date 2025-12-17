@@ -13,6 +13,8 @@ import { withAuthHandler, withErrorHandler } from "@/utils/server/action-utils";
 import { serverEnv } from "@/utils/server/env-utils";
 import { and, asc, eq, gt, inArray, lt } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { to } from "await-to-js"
+import logger from "@/lib/logger";
 
 interface CycleCompleteRequest {
   cycleId: string;
@@ -185,7 +187,7 @@ export const generateCycle = withErrorHandler(
       }
     }
 
-    const response = await fetch(
+    const [error, response] = await to(fetch(
       `${serverEnv.AGENT_API_HOST}/chat2edit/generate`,
       {
         method: "POST",
@@ -206,9 +208,10 @@ export const generateCycle = withErrorHandler(
           context_file_id: prevCycles.at(-1)?.context?.fileId || undefined,
         } as Chat2EditGenerateRequest),
       },
-    );
+    ));
 
-    if (!response.ok) {
+    if (error || !response?.ok) {
+      logger.error("CycleActions", "Failed to generate cycle", error);
       await drizzleClient
         .update(chats)
         .set({ failed: true })
@@ -218,7 +221,7 @@ export const generateCycle = withErrorHandler(
 
       return {
         message: "Failed to generate cycle",
-        code: response.status,
+        code: response?.status || 500,
         data: undefined as any, // Required by ApiResponse
       };
     }

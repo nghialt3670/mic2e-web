@@ -19,7 +19,6 @@ interface CycleItemProps {
 export const CycleItem: FC<CycleItemProps> = ({ cycle, failed }) => {
   const { request, response } = cycle;
   const jsonData = cycle.jsonData as any;
-  console.log(jsonData);
 
   const loadingMessage = useMemo(() => {
     const messages = [
@@ -50,8 +49,14 @@ export const CycleItem: FC<CycleItemProps> = ({ cycle, failed }) => {
         </div>
       )}
       {failed && (
-        <div className="w-full flex justify-start">
-          <RetryMessage cycleId={cycle.id} />
+        <div className="flex flex-col gap-2">
+          <div className="w-full flex justify-start">
+            <RetryMessage cycleId={cycle.id} />
+          </div>
+          <div className="flex items-start gap-1">
+            {jsonData && <CycleDetail jsonData={jsonData} />}
+            {cycle.context && <ContextDialog context={cycle.context} />}
+          </div>
         </div>
       )}
       {!failed && !response && (
