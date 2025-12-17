@@ -30,7 +30,6 @@ export function checkEnvironmentVariables() {
     "AUTH_URL",
     "AUTH_TRUST_HOST",
     "NEXT_PUBLIC_BASE_PATH",
-    "NEXT_PUBLIC_STORAGE_API_HOST",
   ];
 
   console.log("\nOptional variables:");

@@ -8,7 +8,6 @@ import {
 } from "@/lib/fabric";
 import { downloadFile, uploadFile } from "@/lib/storage";
 import { withToastHandler } from "@/utils/client/action-utils";
-import { clientEnv } from "@/utils/client/env-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
 import Image from "next/image";
 import { createRef, FC, useEffect, useState } from "react";
@@ -33,14 +32,8 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
       }
 
       try {
-        // Build full URL from relative path for fetching
-        const attachmentFileUrl = `${clientEnv.NEXT_PUBLIC_STORAGE_API_HOST}/files/${attachment.fileId}`;
-        const response = await fetch(attachmentFileUrl);
-        if (!response.ok) return;
-        const figBlob = await response.blob();
-        const figFile = new File([figBlob], attachment.filename, {
-          type: "application/json",
-        });
+        // Use downloadFile which now goes through Next.js API
+        const figFile = await downloadFile(attachment.fileId);
         const figObject = await createFigObjectFromFigFile(figFile);
         const imageFile = await createImageFileFromFigObject(figObject);
         const {
@@ -83,7 +76,7 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
 
   return (
     <Image
-      src={`${clientEnv.NEXT_PUBLIC_STORAGE_API_HOST}/files/${fileId}`}
+      src={`/api/storage/files/${fileId}`}
       alt={attachment.filename}
       width={width}
       height={height}

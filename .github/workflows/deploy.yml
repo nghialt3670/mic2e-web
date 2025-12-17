@@ -28,7 +28,6 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/mic2e-web:latest
           build-args: |
             NEXT_PUBLIC_BASE_PATH=${{ secrets.NEXT_PUBLIC_BASE_PATH }}
-            NEXT_PUBLIC_STORAGE_API_HOST=${{ secrets.NEXT_PUBLIC_STORAGE_API_HOST }}
 
       - name: Write VPN config file
         run: |

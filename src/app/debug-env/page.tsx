@@ -9,12 +9,6 @@ export default function DebugEnv() {
             {process.env.NEXT_PUBLIC_BASE_PATH || "(not set)"}
           </code>
         </div>
-        <div>
-          <strong>NEXT_PUBLIC_STORAGE_API_HOST:</strong>{" "}
-          <code className="bg-muted px-2 py-1 rounded">
-            {process.env.NEXT_PUBLIC_STORAGE_API_HOST || "(not set)"}
-          </code>
-        </div>
       </div>
       
       <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded">

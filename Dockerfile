@@ -18,12 +18,10 @@ COPY . .
 
 # NEXT_PUBLIC_ vars must be available at build time
 ARG NEXT_PUBLIC_BASE_PATH=""
-ARG NEXT_PUBLIC_STORAGE_API_HOST=""
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
-ENV NEXT_PUBLIC_STORAGE_API_HOST=$NEXT_PUBLIC_STORAGE_API_HOST
 
 # Build the application
 RUN npm run build

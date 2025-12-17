@@ -11,7 +11,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Context } from "@/lib/drizzle/drizzle-schema";
-import { clientEnv } from "@/utils/client/env-utils";
 import { Container, FileJson, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -32,7 +31,7 @@ export const ContextDialog = ({ context }: ContextDialogProps) => {
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<ParsedEntry[]>([]);
 
-  const contextUrl = `${clientEnv.NEXT_PUBLIC_STORAGE_API_HOST}/files/${context?.fileId ?? ""}`;
+  const contextUrl = `/api/storage/files/${context?.fileId ?? ""}`;
 
   const handleFetch = async () => {
     if (!contextUrl) return;
