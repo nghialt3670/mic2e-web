@@ -8,6 +8,7 @@ import {
 } from "@/lib/fabric";
 import { downloadFile, uploadFile } from "@/lib/storage";
 import { withToastHandler } from "@/utils/client/action-utils";
+import { clientEnv } from "@/utils/client/env-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
 import Image from "next/image";
 import { createRef, FC, useEffect, useState } from "react";
@@ -74,9 +75,11 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
     addAttachment({ file: figFile, canvasRef: createRef<FigCanvasRef>() });
   }
 
+  const basePath = clientEnv.NEXT_PUBLIC_BASE_PATH || "";
+
   return (
     <Image
-      src={`/api/storage/files/${fileId}`}
+      src={`${basePath}/api/storage/files/${fileId}`}
       alt={attachment.filename}
       width={width}
       height={height}

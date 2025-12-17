@@ -1,7 +1,11 @@
 "use client";
 
+import { clientEnv } from "@/utils/client/env-utils";
+
 // API endpoints now go through Next.js server API routes
-const FILES_ENDPOINT = "/api/storage/files";
+// Include basePath for proper routing (e.g., /chat2edit/api/storage/files)
+const basePath = clientEnv.NEXT_PUBLIC_BASE_PATH || "";
+const FILES_ENDPOINT = `${basePath}/api/storage/files`;
 
 export async function uploadFile(file: File): Promise<string> {
   const formData = new FormData();
