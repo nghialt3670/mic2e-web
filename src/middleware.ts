@@ -6,9 +6,9 @@ export default auth((req: NextRequest) => {
   try {
     const { pathname, search } = req.nextUrl;
     const method = req.method;
-    
+
     console.log(`[${new Date().toISOString()}] ${method} ${pathname}${search}`);
-    
+
     // Log auth status
     const session = (req as any).auth;
     if (session?.user) {
@@ -21,7 +21,7 @@ export default auth((req: NextRequest) => {
   } catch (error) {
     console.error("[MIDDLEWARE ERROR]", error);
   }
-  
+
   // Don't create NextResponse, just let auth handle it
   // return undefined to continue with default behavior
 });

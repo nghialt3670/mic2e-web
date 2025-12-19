@@ -2,8 +2,8 @@ import { serverEnv } from "@/utils/server/env-utils";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import * as drizzleSchema from "./drizzle-schema";
 import { checkEnvironmentVariables } from "../check-env";
+import * as drizzleSchema from "./drizzle-schema";
 
 // Type for the drizzle client with schema
 type DrizzleClient = ReturnType<typeof drizzle<typeof drizzleSchema>>;
@@ -21,7 +21,10 @@ function initializeDatabase(): DrizzleClient {
   checkEnvironmentVariables();
 
   console.log("[DB] Initializing database connection...");
-  console.log("[DB] DATABASE_URL:", serverEnv.DATABASE_URL.replace(/:[^:@]+@/, ":***@")); // Log URL with masked password
+  console.log(
+    "[DB] DATABASE_URL:",
+    serverEnv.DATABASE_URL.replace(/:[^:@]+@/, ":***@"),
+  ); // Log URL with masked password
 
   sql = postgres(serverEnv.DATABASE_URL, {
     ssl: false,
@@ -43,7 +46,9 @@ function initializeDatabase(): DrizzleClient {
   // Test connection (non-blocking)
   sql`SELECT 1 as test`
     .then(() => console.log("[DB] ✓ Database connection successful"))
-    .catch((err) => console.error("[DB] ✗ Database connection failed:", err.message));
+    .catch((err) =>
+      console.error("[DB] ✗ Database connection failed:", err.message),
+    );
 
   return client;
 }

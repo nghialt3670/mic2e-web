@@ -1,9 +1,9 @@
+import { cn } from "@/lib/utils";
 import { FC } from "react";
 
 import { MessageDetail } from "../../types";
 import { MessageAttachmentList } from "./attachment-list";
 import { MessageText } from "./message-text";
-import { cn } from "@/lib/utils";
 
 interface MessageItemProps {
   message: MessageDetail;
@@ -15,9 +15,7 @@ export const MessageItem: FC<MessageItemProps> = ({ message, type }) => {
     <div
       className={cn(
         "p-1 w-fit max-w-[80%] border overflow-hidden rounded-lg",
-        type === "request"
-          ? "ml-auto"
-          : "bg-muted"
+        type === "request" ? "ml-auto" : "bg-muted",
       )}
     >
       {message.attachments.length > 0 && (

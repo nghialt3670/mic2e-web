@@ -1,7 +1,9 @@
 export default function DebugEnv() {
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Environment Variables (Build Time)</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Environment Variables (Build Time)
+      </h1>
       <div className="space-y-2 font-mono text-sm">
         <div>
           <strong>NEXT_PUBLIC_BASE_PATH:</strong>{" "}
@@ -10,11 +12,12 @@ export default function DebugEnv() {
           </code>
         </div>
       </div>
-      
+
       <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded">
         <p className="text-sm">
-          <strong>Note:</strong> NEXT_PUBLIC_ variables are embedded at build time.
-          If you changed them, rebuild: <code>docker-compose up -d --build web</code>
+          <strong>Note:</strong> NEXT_PUBLIC_ variables are embedded at build
+          time. If you changed them, rebuild:{" "}
+          <code>docker-compose up -d --build web</code>
         </p>
       </div>
     </div>

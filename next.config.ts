@@ -10,7 +10,7 @@ const remotePatterns: RemotePatterns = [
   {
     protocol: "https",
     hostname: "avatars.githubusercontent.com",
-  }
+  },
 ];
 
 const nextConfig: NextConfig = {
@@ -21,7 +21,10 @@ const nextConfig: NextConfig = {
   // basePath tells Next.js that routes are served from this sub-path
   // This is needed when nginx forwards the full path (e.g., /chat2edit/api/...)
   // basePath must be either empty string or a path prefix (not just "/")
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH === "/" ? "" : (process.env.NEXT_PUBLIC_BASE_PATH || ""),
+  basePath:
+    process.env.NEXT_PUBLIC_BASE_PATH === "/"
+      ? ""
+      : process.env.NEXT_PUBLIC_BASE_PATH || "",
 };
 
 export default nextConfig;

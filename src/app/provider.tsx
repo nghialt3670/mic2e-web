@@ -6,7 +6,7 @@ export const Provider = ({ children }: { children: React.ReactNode }) => {
   // NEXT_PUBLIC_BASE_PATH is inlined at build time
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   const authBasePath = `${basePath}/api/auth`;
-  
+
   return (
     <SessionProvider basePath={authBasePath}>
       <SettingsProvider>{children}</SettingsProvider>

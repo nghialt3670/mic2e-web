@@ -23,7 +23,7 @@ const _chatDetails = drizzleClient.query.chats.findFirst({
             },
           },
         },
-        context: true
+        context: true,
       },
     },
   },

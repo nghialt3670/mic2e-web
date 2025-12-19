@@ -2,7 +2,7 @@
 export function checkEnvironmentVariables() {
   const requiredEnvVars = [
     "AUTH_SECRET",
-    "AUTH_GOOGLE_ID", 
+    "AUTH_GOOGLE_ID",
     "AUTH_GOOGLE_SECRET",
     "DATABASE_URL",
   ];
@@ -11,7 +11,7 @@ export function checkEnvironmentVariables() {
   const present: string[] = [];
 
   console.log("\n=== Environment Variables Check ===");
-  
+
   for (const envVar of requiredEnvVars) {
     const value = process.env[envVar];
     if (!value || value === "") {
@@ -20,7 +20,8 @@ export function checkEnvironmentVariables() {
     } else {
       present.push(envVar);
       // Mask the value for security
-      const masked = value.substring(0, 4) + "..." + value.substring(value.length - 4);
+      const masked =
+        value.substring(0, 4) + "..." + value.substring(value.length - 4);
       console.log(`✓ ${envVar}: ${masked}`);
     }
   }

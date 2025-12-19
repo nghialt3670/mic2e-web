@@ -8,20 +8,20 @@ export async function withToastHandler<T>(
   args: any,
 ): Promise<T> {
   try {
-  const response = await action(args);
+    const response = await action(args);
 
-  if (response.code !== 200) {
-    console.error(response);
-    toast.error(response.message, {
-      description: `Code: ${response.code}`,
-    });
-    return undefined as any;
-  }
+    if (response.code !== 200) {
+      console.error(response);
+      toast.error(response.message, {
+        description: `Code: ${response.code}`,
+      });
+      return undefined as any;
+    }
 
-  if (!response.data) {
-    toast.error("No data returned from action");
-    return undefined as any;
-  }
+    if (!response.data) {
+      toast.error("No data returned from action");
+      return undefined as any;
+    }
 
     return response.data;
   } catch (error) {

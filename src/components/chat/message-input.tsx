@@ -5,7 +5,11 @@ import {
   createAttachments,
 } from "@/actions/attachment-actions";
 import { createChat } from "@/actions/chat-actions";
-import { clearCycle, createCycle, generateCycle } from "@/actions/cycle-actions";
+import {
+  clearCycle,
+  createCycle,
+  generateCycle,
+} from "@/actions/cycle-actions";
 import { createMessage } from "@/actions/message-actions";
 import { Button } from "@/components/ui/button";
 import { ChatContext } from "@/contexts/chat-context";
@@ -22,18 +26,30 @@ import { withToastHandler } from "@/utils/client/action-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
 import { Send, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 
 import { AttachmentInput } from "./attachment-input";
 import { AttachmentInputList } from "./attachment-input-list";
 import { MessageTextInput } from "./message-text-input";
 
+// Realistic progress messages that mimic Chat2Edit steps
+const PROGRESS_MESSAGES = [
+  "Initializing Chat2Edit...",
+  "Sending request to LLM...",
+  "Generating prompt...",
+  "Processing LLM response...",
+  "Extracting code blocks...",
+  "Executing operations...",
+  "Finalizing response...",
+];
+
 export const MessageInput = () => {
   const router = useRouter();
-  const { chat } = useContext(ChatContext);
+  const { chat, setProgressMessage } = useContext(ChatContext);
   const { text, setText, clearText, getAttachments, clearAttachments } =
     useMessageInputStore();
   const attachments = getAttachments();
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   // Helper to force router refresh with proper timing
   const forceRefresh = async () => {
     return new Promise<void>((resolve) => {
@@ -82,18 +98,19 @@ export const MessageInput = () => {
         requestId: createdMessage.id,
       });
 
-      // Clear cycle (cleanup) - UI will update after this
+      // Clear cycle (cleanup) and start generation
       setTimeout(async () => {
         await withToastHandler(clearCycle, {
           cycleId: createdCycle.id,
         });
 
-        // Generate cycle after clearing - UI will update after this too
-        setTimeout(() => {
-          withToastHandler(generateCycle, {
-            cycleId: createdCycle.id,
-          });
-        }, 100);
+        // Start generation (WebSocket will handle progress updates)
+        await withToastHandler(generateCycle, {
+          cycleId: createdCycle.id,
+        });
+
+        // The CycleProgressTracker component will handle WebSocket connection
+        // and progress updates via ChatContext
       }, 100);
     } catch (error) {
       console.error("Error submitting message:", error);

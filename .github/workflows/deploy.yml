@@ -71,11 +71,11 @@ jobs:
             cd ${{ secrets.SERVER_PATH }}
             docker compose pull web
             docker compose up -d web
-            
+
             # Wait for web service to be healthy
             echo "⏳ Waiting for web service to be ready..."
             sleep 10
-            
+
             # Check if migrations ran successfully
             docker compose logs web | grep "Migrations completed successfully" && \
               echo "✓ Database migrations successful" || \

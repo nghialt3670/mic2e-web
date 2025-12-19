@@ -6,18 +6,23 @@ import { NextRequest } from "next/server";
 // This function rewrites the request URL to include the basePath.
 function rewriteRequestWithBasePath(req: NextRequest): NextRequest {
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  
+
   if (!basePath) {
     return req;
   }
-  
+
   // Reconstruct URL with basePath
   const url = new URL(req.url);
   const newPathname = `${basePath}${url.pathname}`;
   const newUrl = new URL(newPathname + url.search, url.origin);
-  
-  console.log("[AUTH ROUTE] Rewriting URL:", url.pathname, "->", newUrl.pathname);
-  
+
+  console.log(
+    "[AUTH ROUTE] Rewriting URL:",
+    url.pathname,
+    "->",
+    newUrl.pathname,
+  );
+
   // Create new NextRequest with corrected URL (preserves nextUrl property)
   return new NextRequest(newUrl.toString(), {
     method: req.method,

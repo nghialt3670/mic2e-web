@@ -12,8 +12,8 @@ const parsed = clientEnvSchema.safeParse({
 });
 
 // Provide fallback during build, validate at runtime
-export const clientEnv = parsed.success 
-  ? parsed.data 
-  : ({ 
+export const clientEnv = parsed.success
+  ? parsed.data
+  : ({
       NEXT_PUBLIC_BASE_PATH: process.env.NEXT_PUBLIC_BASE_PATH || "",
     } as z.infer<typeof clientEnvSchema>);

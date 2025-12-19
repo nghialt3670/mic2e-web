@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
 import { serverEnv } from "@/utils/server/env-utils";
+import { NextRequest, NextResponse } from "next/server";
 
 const FILES_ENDPOINT = `${serverEnv.STORAGE_API_HOST}/files`;
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ fileId: string }> }
+  { params }: { params: Promise<{ fileId: string }> },
 ) {
   try {
     const { fileId } = await params;
@@ -14,7 +14,7 @@ export async function GET(
     if (!response.ok) {
       return NextResponse.json(
         { error: "Failed to download file" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -25,21 +25,23 @@ export async function GET(
     return new NextResponse(blob, {
       headers: {
         "Content-Type": contentType || "application/octet-stream",
-        ...(contentDisposition && { "Content-Disposition": contentDisposition }),
+        ...(contentDisposition && {
+          "Content-Disposition": contentDisposition,
+        }),
       },
     });
   } catch (error) {
     console.error("Download file error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ fileId: string }> }
+  { params }: { params: Promise<{ fileId: string }> },
 ) {
   try {
     const { fileId } = await params;
@@ -53,7 +55,7 @@ export async function PUT(
     if (!response.ok) {
       return NextResponse.json(
         { error: "Failed to replace file" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -63,14 +65,14 @@ export async function PUT(
     console.error("Replace file error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ fileId: string }> }
+  { params }: { params: Promise<{ fileId: string }> },
 ) {
   try {
     const { fileId } = await params;
@@ -82,7 +84,7 @@ export async function DELETE(
     if (!response.ok) {
       return NextResponse.json(
         { error: "Failed to delete file" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -92,7 +94,7 @@ export async function DELETE(
     console.error("Delete file error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

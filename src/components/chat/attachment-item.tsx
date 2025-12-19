@@ -7,14 +7,14 @@ import {
   createImageFileFromFigObject,
 } from "@/lib/fabric";
 import { downloadFile, uploadFile } from "@/lib/storage";
+import { useMessageInputStore } from "@/stores/message-input-store";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { clientEnv } from "@/utils/client/env-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
 import Image from "next/image";
-import { createRef, FC, useEffect, useState } from "react";
+import { FC, createRef, useEffect, useState } from "react";
 
 import type { AttachmentDetail } from "../../types";
-import { useMessageInputStore } from "@/stores/message-input-store";
 import { FigCanvasRef } from "../edit/fig-canvas";
 
 interface AttachmentItemProps {
@@ -73,7 +73,7 @@ export const AttachmentItem: FC<AttachmentItemProps> = ({ attachment }) => {
   const handleImageClick = async () => {
     const figFile = await downloadFile(attachment.fileId);
     addAttachment({ file: figFile, canvasRef: createRef<FigCanvasRef>() });
-  }
+  };
 
   const basePath = clientEnv.NEXT_PUBLIC_BASE_PATH || "";
 

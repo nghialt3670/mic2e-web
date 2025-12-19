@@ -40,10 +40,7 @@ interface ChatActionsProps {
   currentTitle?: string | null;
 }
 
-export const ChatActions: FC<ChatActionsProps> = ({
-  chatId,
-  currentTitle,
-}) => {
+export const ChatActions: FC<ChatActionsProps> = ({ chatId, currentTitle }) => {
   const router = useRouter();
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -88,9 +85,9 @@ export const ChatActions: FC<ChatActionsProps> = ({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             className="h-8 w-8 hover:bg-accent"
           >
             <MoreVertical className="h-4 w-4 text-muted-foreground hover:text-foreground" />
@@ -156,7 +153,10 @@ export const ChatActions: FC<ChatActionsProps> = ({
             >
               Cancel
             </Button>
-            <Button onClick={handleRename} disabled={isLoading || !newTitle.trim()}>
+            <Button
+              onClick={handleRename}
+              disabled={isLoading || !newTitle.trim()}
+            >
               {isLoading ? "Renaming..." : "Rename"}
             </Button>
           </DialogFooter>

@@ -6,7 +6,10 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-console.log("✓ Using DATABASE_URL:", process.env.DATABASE_URL.replace(/:[^:@]+@/, ':****@'));
+console.log(
+  "✓ Using DATABASE_URL:",
+  process.env.DATABASE_URL.replace(/:[^:@]+@/, ":****@"),
+);
 
 export default defineConfig({
   schema: "./src/lib/drizzle/drizzle-schema.ts",

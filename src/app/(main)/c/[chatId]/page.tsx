@@ -42,12 +42,12 @@ export default async function ChatPage({
               },
             },
           },
-          context: true
+          context: true,
         },
       },
     },
   });
-  
+
   if (!chat) {
     return <ChatNotFound />;
   }

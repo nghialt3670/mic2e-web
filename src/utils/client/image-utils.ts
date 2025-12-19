@@ -58,7 +58,11 @@ export async function createImageThumbnail(
             { type: "image/jpeg" },
           );
 
-          resolve({ file: thumbnailFile, width: Math.round(width), height: Math.round(height) });
+          resolve({
+            file: thumbnailFile,
+            width: Math.round(width),
+            height: Math.round(height),
+          });
         },
         "image/jpeg",
         quality,

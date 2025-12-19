@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const serverEnvSchema = z.object({
   DATABASE_URL: z.string().url(),
-  AGENT_API_HOST: z.string().url(),
+  AGENT_API_URL: z.string().url(),
   STORAGE_API_HOST: z.string().url(),
 });
 
@@ -14,7 +14,7 @@ const serverEnv = isBuildPhase
   ? // Provide empty object during build - values will be available at runtime
     ({
       DATABASE_URL: "",
-      AGENT_API_HOST: "",
+      AGENT_API_URL: "",
       STORAGE_API_HOST: "",
     } as z.infer<typeof serverEnvSchema>)
   : // At runtime, validate and throw if invalid

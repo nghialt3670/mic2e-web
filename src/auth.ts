@@ -21,9 +21,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
-        }
-      }
+          response_type: "code",
+        },
+      },
     }),
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
@@ -31,9 +31,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorization: {
         params: {
           scope: "user:email",
-        }
-      }
-    })
+        },
+      },
+    }),
   ],
   logger: {
     error(code, ...message) {
@@ -51,7 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       try {
         if (user) {
           console.log("[AUTH] JWT callback - New user login:", user.email);
-          
+
           const existingUser = await drizzleClient.query.users.findFirst({
             where: eq(users.email, user.email!),
           });
