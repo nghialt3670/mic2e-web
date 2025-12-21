@@ -1,5 +1,6 @@
 "use client";
 
+import { clientEnv } from "@/utils/client/env-utils";
 import { useEffect, useRef, useState } from "react";
 
 export interface Chat2EditProgressEvent {
@@ -39,7 +40,7 @@ export function useChat2EditProgress({
 
     let isCancelled = false;
 
-    const url = `/api/chat2edit/progress/${cycleId}`;
+    const url = `${clientEnv.NEXT_PUBLIC_BASE_PATH}/api/agent/chat2edit/progress/${cycleId}`;
 
     const poll = async () => {
       try {
