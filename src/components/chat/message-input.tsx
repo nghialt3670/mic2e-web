@@ -24,9 +24,9 @@ import {
 } from "@/stores/message-input-store";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
-import { Send, WandSparkles } from "lucide-react";
+import { Loader2, Send, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useRef, useState } from "react";
 
 import { AttachmentInput } from "./attachment-input";
 import { AttachmentInputList } from "./attachment-input-list";
@@ -50,6 +50,7 @@ export const MessageInput = () => {
     useMessageInputStore();
   const attachments = getAttachments();
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // Helper to force router refresh with proper timing
   const forceRefresh = async () => {
     return new Promise<void>((resolve) => {
@@ -65,8 +66,17 @@ export const MessageInput = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (isSubmitting || !text.trim()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
       let chatId = chat?.id;
+      let shouldNavigate = false;
+      
       if (!chatId) {
         const newChat = await withToastHandler(createChat, {
           chat: {
@@ -74,13 +84,20 @@ export const MessageInput = () => {
           },
         });
         chatId = newChat.id;
-        router.push(`/c/${chatId}`);
+        shouldNavigate = true;
       }
 
       const createdMessage = await withToastHandler(createMessage, {
         chatId,
         message: { text },
       });
+
+      // Navigate after message is created to ensure submission completes
+      if (shouldNavigate) {
+        router.push(`/c/${chatId}`);
+        // Wait a bit for navigation to start
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
 
       if (attachments.length > 0) {
         await withToastHandler(createAttachments, {
@@ -109,19 +126,21 @@ export const MessageInput = () => {
           cycleId: createdCycle.id,
         });
 
-        // The CycleProgressTracker component will handle WebSocket connection
-        // and progress updates via ChatContext
+      // The CycleProgressTracker component will handle WebSocket connection
+      // and progress updates via ChatContext
       }, 100);
     } catch (error) {
       console.error("Error submitting message:", error);
       // Error is already shown via withToastHandler
       // Just refresh to show the current state
       await forceRefresh();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form className="w-full" onSubmit={handleSubmit}>
+    <form className="w-full" onSubmit={handleSubmit} aria-disabled={isSubmitting}>
       <div className="relative border rounded-2xl bg-white shadow-sm">
         {/* Attachments inside the input */}
         {attachments.length > 0 && (
@@ -152,8 +171,9 @@ export const MessageInput = () => {
             type="submit"
             variant="outline"
             className="size-10 rounded-full"
+            disabled={isSubmitting || !text.trim()}
           >
-            <Send className="size-5" />
+            {isSubmitting ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
           </Button>
         </div>
       </div>
