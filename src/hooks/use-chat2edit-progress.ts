@@ -1,6 +1,5 @@
 "use client";
 
-import { clientEnv } from "@/lib/client-env";
 import { useEffect, useRef, useState } from "react";
 
 export interface Chat2EditProgressEvent {
@@ -33,14 +32,14 @@ export function useChat2EditProgress({
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
   const lastEventCountRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isConnectedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (!cycleId) return;
 
     let isCancelled = false;
 
-    const agentHost = clientEnv.AGENT_API_URL;
-    const url = `${agentHost}/chat2edit/progress/${cycleId}`;
+    const url = `/api/chat2edit/progress/${cycleId}`;
 
     const poll = async () => {
       try {
@@ -61,7 +60,8 @@ export function useChat2EditProgress({
         if (isCancelled) return;
 
         // First successful poll -> mark as "connected"
-        if (!isConnected) {
+        if (!isConnectedRef.current) {
+          isConnectedRef.current = true;
           setIsConnected(true);
         }
 
@@ -122,6 +122,7 @@ export function useChat2EditProgress({
         intervalRef.current = null;
       }
       lastEventCountRef.current = 0;
+      isConnectedRef.current = false;
       setIsConnected(false);
     };
   }, [cycleId, onProgress, onComplete, onError]);
