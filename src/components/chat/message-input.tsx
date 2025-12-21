@@ -24,33 +24,20 @@ import {
 } from "@/stores/message-input-store";
 import { withToastHandler } from "@/utils/client/action-utils";
 import { createImageThumbnail } from "@/utils/client/image-utils";
-import { Loader2, Send, WandSparkles } from "lucide-react";
+import { Send, WandSparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useContext, useRef, useState } from "react";
+import { useContext } from "react";
 
 import { AttachmentInput } from "./attachment-input";
 import { AttachmentInputList } from "./attachment-input-list";
 import { MessageTextInput } from "./message-text-input";
 
-// Realistic progress messages that mimic Chat2Edit steps
-const PROGRESS_MESSAGES = [
-  "Initializing Chat2Edit...",
-  "Sending request to LLM...",
-  "Generating prompt...",
-  "Processing LLM response...",
-  "Extracting code blocks...",
-  "Executing operations...",
-  "Finalizing response...",
-];
-
 export const MessageInput = () => {
   const router = useRouter();
-  const { chat, setProgressMessage } = useContext(ChatContext);
+  const { chat } = useContext(ChatContext);
   const { text, setText, clearText, getAttachments, clearAttachments } =
     useMessageInputStore();
   const attachments = getAttachments();
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   // Helper to force router refresh with proper timing
   const forceRefresh = async () => {
     return new Promise<void>((resolve) => {
@@ -66,17 +53,8 @@ export const MessageInput = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Prevent double submission
-    if (isSubmitting || !text.trim()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
     try {
       let chatId = chat?.id;
-      let shouldNavigate = false;
-      
       if (!chatId) {
         const newChat = await withToastHandler(createChat, {
           chat: {
@@ -84,20 +62,19 @@ export const MessageInput = () => {
           },
         });
         chatId = newChat.id;
-        shouldNavigate = true;
+        // Navigate to the new chat page and wait for navigation to complete
+        await router.push(`/c/${chatId}`);
+        // Refresh to ensure server components re-fetch with the new chat
+        router.refresh();
+        // Wait for the refresh to complete before proceeding
+        // Production builds need more time for server components to re-fetch and context to update
+        await new Promise<void>((resolve) => setTimeout(resolve, 200));
       }
 
       const createdMessage = await withToastHandler(createMessage, {
         chatId,
         message: { text },
       });
-
-      // Navigate after message is created to ensure submission completes
-      if (shouldNavigate) {
-        router.push(`/c/${chatId}`);
-        // Wait a bit for navigation to start
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
 
       if (attachments.length > 0) {
         await withToastHandler(createAttachments, {
@@ -126,21 +103,19 @@ export const MessageInput = () => {
           cycleId: createdCycle.id,
         });
 
-      // The CycleProgressTracker component will handle WebSocket connection
-      // and progress updates via ChatContext
+        // The CycleProgressTracker component will handle WebSocket connection
+        // and progress updates via ChatContext
       }, 100);
     } catch (error) {
       console.error("Error submitting message:", error);
       // Error is already shown via withToastHandler
       // Just refresh to show the current state
       await forceRefresh();
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <form className="w-full" onSubmit={handleSubmit} aria-disabled={isSubmitting}>
+    <form className="w-full" onSubmit={handleSubmit}>
       <div className="relative border rounded-2xl bg-white shadow-sm">
         {/* Attachments inside the input */}
         {attachments.length > 0 && (
@@ -171,9 +146,8 @@ export const MessageInput = () => {
             type="submit"
             variant="outline"
             className="size-10 rounded-full"
-            disabled={isSubmitting || !text.trim()}
           >
-            {isSubmitting ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
+            <Send className="size-5" />
           </Button>
         </div>
       </div>
