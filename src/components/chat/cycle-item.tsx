@@ -1,14 +1,12 @@
 "use client";
 
 import { ChatContext } from "@/contexts/chat-context";
-import { Chat2EditProgressEvent } from "@/types/chat2edit-progress";
 import { ChatCycleDetail } from "@/types/chat-cycle-detail";
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { FC, useContext } from "react";
 
 import { ContextDialog } from "./context-dialog";
 import { CycleDetail } from "./cycle-detail";
+import { CycleProgressView } from "./cycle-progress-view";
 import { CycleRegenerate } from "./cycle-regenerate";
 import { MessageItem } from "./message-item";
 import { RetryMessage } from "./retry-message";
@@ -28,18 +26,32 @@ export const CycleItem: FC<CycleItemProps> = ({
   const { request, response } = cycle;
   const jsonData = cycle.jsonData as any;
 
-  const liveEvents: Chat2EditProgressEvent[] =
+  const liveEvents =
     (progressEventsByCycle && progressEventsByCycle[cycle.id]) || [];
-  const effectiveProgress =
-    progressMessage || (liveEvents.length === 0
-      ? "Initializing Chat2Edit… please wait"
-      : "");
+  const effectiveProgress = progressMessage || "";
+
+  // Show progress if we have live events OR jsonData with cycles OR if we're still generating (no response yet)
+  const hasProgress =
+    liveEvents.length > 0 || (jsonData?.cycles && jsonData.cycles.length > 0);
+  const isGenerating = !response && !failed;
 
   return (
-    <div className="flex flex-col w-full gap-6">
+    <div className="flex flex-col w-full gap-2">
       <div className="w-full flex justify-end">
         <MessageItem message={request} type="request" />
       </div>
+      
+      {/* Show progress view before response (when generating or after completion) */}
+      {(hasProgress || isGenerating) && (
+        <div className="w-full flex justify-start">
+          <CycleProgressView
+            events={liveEvents}
+            jsonData={jsonData}
+            isComplete={!!response}
+          />
+        </div>
+      )}
+
       {response && (
         <div className="flex flex-col gap-2">
           <div className="w-full flex justify-start">
@@ -63,9 +75,9 @@ export const CycleItem: FC<CycleItemProps> = ({
           </div>
         </div>
       )}
-      {!failed && !response && (
+      {!failed && !response && !hasProgress && (
         <div className="w-full flex flex-col items-start gap-2">
-          {/* Progress headline (text) */}
+          {/* Loading placeholder - only show when no progress available */}
           {effectiveProgress && (
             <div className="p-1 w-fit max-w-[80%] border bg-muted animate-pulse overflow-hidden rounded-lg px-3">
               <div
@@ -74,50 +86,6 @@ export const CycleItem: FC<CycleItemProps> = ({
               >
                 <span className="inline-flex h-2 w-2 rounded-full bg-muted-foreground/60 animate-pulse" />
                 {effectiveProgress}
-              </div>
-            </div>
-          )}
-
-          {/* Structured progress data, similar to PromptCycleItem */}
-          {liveEvents.length > 0 && (
-            <div className="mt-1 w-full max-w-[80%] rounded-lg border bg-muted/40 p-2">
-              <div className="mb-1 text-[11px] font-semibold text-muted-foreground">
-                Live Chat2Edit progress
-              </div>
-              <div className="space-y-1">
-                {liveEvents.map((event, idx) => (
-                  <div
-                    key={idx}
-                    className="rounded-md bg-background border px-2 py-1.5 text-[11px]"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="uppercase tracking-wide text-[10px] font-semibold text-primary">
-                        {event.type}
-                      </span>
-                      {event.message && (
-                        <span className="ml-2 text-[10px] text-muted-foreground">
-                          {event.message}
-                        </span>
-                      )}
-                    </div>
-                    {event.data && (
-                      <SyntaxHighlighter
-                        language="json"
-                        style={oneLight}
-                        customStyle={{
-                          margin: 0,
-                          padding: "0.5rem",
-                          fontSize: "0.7rem",
-                          lineHeight: "1.4",
-                          background: "transparent",
-                        }}
-                        wrapLongLines
-                      >
-                        {JSON.stringify(event.data, null, 2)}
-                      </SyntaxHighlighter>
-                    )}
-                  </div>
-                ))}
               </div>
             </div>
           )}

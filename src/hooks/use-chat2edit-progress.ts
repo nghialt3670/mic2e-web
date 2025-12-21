@@ -111,8 +111,8 @@ export function useChat2EditProgress({
     // Initial poll immediately
     poll();
 
-    // Then poll periodically
-    intervalRef.current = setInterval(poll, 1000);
+    // Then poll periodically - reduced interval for faster updates
+    intervalRef.current = setInterval(poll, 300);
 
     // Cleanup on unmount or cycleId change
     return () => {

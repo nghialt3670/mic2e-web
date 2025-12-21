@@ -120,3 +120,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 6px rgba(59, 130, 246, 0.6), 0 0 10px rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 1), 0 0 14px rgba(59, 130, 246, 0.7), 0 0 18px rgba(59, 130, 246, 0.5);
+  }
+}
+
+/* Apply glow animation to all text elements inside SyntaxHighlighter - target all possible nested elements */
+.glowing-code pre,
+.glowing-code code,
+.glowing-code pre code,
+.glowing-code pre code span,
+.glowing-code pre span,
+.glowing-code pre code span[class*="token"],
+.glowing-code pre span[class*="token"] {
+  animation: glow 2s ease-in-out infinite !important;
+}
+
+/* Fallback: apply to all descendants */
+.glowing-code * {
+  animation: glow 2s ease-in-out infinite !important;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
