@@ -1,7 +1,7 @@
 import { serverEnv } from "@/utils/server/env-utils";
 import { NextRequest, NextResponse } from "next/server";
 
-const FILES_ENDPOINT = `${serverEnv.STORAGE_API_HOST}/files`;
+const FILES_ENDPOINT = `${serverEnv.STORAGE_API_URL}/files`;
 
 export async function GET(
   request: NextRequest,

@@ -234,7 +234,7 @@ export const clearCycle = withErrorHandler(
     // Delete context files from storage
     if (contextFileIdsToDelete.size > 0) {
       const deletePromises = Array.from(contextFileIdsToDelete).map((fileId) =>
-        fetch(`${serverEnv.STORAGE_API_HOST}/files/${fileId}`, {
+        fetch(`${serverEnv.STORAGE_API_URL}/files/${fileId}`, {
           method: "DELETE",
         }).catch((error) => {
           logger.error(
@@ -251,7 +251,7 @@ export const clearCycle = withErrorHandler(
     if (attachmentFileIdsToDelete.size > 0) {
       const deletePromises = Array.from(attachmentFileIdsToDelete).map(
         (fileId) =>
-          fetch(`${serverEnv.STORAGE_API_HOST}/files/${fileId}`, {
+          fetch(`${serverEnv.STORAGE_API_URL}/files/${fileId}`, {
             method: "DELETE",
           }).catch((error) => {
             logger.error(
