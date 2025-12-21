@@ -18,10 +18,12 @@ COPY . .
 
 # NEXT_PUBLIC_ vars must be available at build time
 ARG NEXT_PUBLIC_BASE_PATH=""
+ARG NEXT_PUBLIC_AGENT_API_URL=""
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
+ENV NEXT_PUBLIC_AGENT_API_URL=$NEXT_PUBLIC_AGENT_API_URL
 
 # Build the application
 RUN npm run build
