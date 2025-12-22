@@ -386,6 +386,7 @@ const FigCanvasComponent = forwardRef<FigCanvasRef, FigCanvasProps>(
         fabricCanvas.add(fig);
         resizeAndZoomCanvas(fabricCanvas, maxWidth, maxHeight);
         fabricCanvas.requestRenderAll();
+        console.log("fabricCanvas", fabricCanvas.toObject());
 
         // Get data URL from rendered canvas for color generation
         figDataUrlRef.current = fabricCanvas.toDataURL();

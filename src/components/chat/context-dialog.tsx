@@ -31,6 +31,7 @@ export const ContextDialog = ({ context }: ContextDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [entries, setEntries] = useState<ParsedEntry[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   const basePath = clientEnv.NEXT_PUBLIC_BASE_PATH || "";
   const contextUrl = `${basePath}/api/storage/files/${context?.fileId ?? ""}`;
@@ -64,6 +65,10 @@ export const ContextDialog = ({ context }: ContextDialogProps) => {
   };
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (open && contextUrl && entries.length === 0 && !loading && !error) {
       void handleFetch();
     }
@@ -76,6 +81,21 @@ export const ContextDialog = ({ context }: ContextDialogProps) => {
     () => [...entries].sort((a, b) => a.key.localeCompare(b.key)),
     [entries],
   );
+
+  // Only render Dialog after client-side hydration to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <Button
+        size="icon"
+        variant="ghost"
+        disabled={!hasContext}
+        className="p-1 size-fit"
+        title="View execution context"
+      >
+        <Container className="size-4" />
+      </Button>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

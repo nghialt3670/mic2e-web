@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatContext } from "@/contexts/chat-context";
 import { Chat2EditProgressEvent } from "@/types/chat2edit-progress";
 import { ListChevronsUpDown } from "lucide-react";
-import { FC, useContext, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 
 import { PromptCycle } from "./prompt-cycle-item";
 import { PromptCycleList } from "./prompt-cycle-list";
@@ -26,12 +26,32 @@ interface CycleDetailProps {
 export const CycleDetail: FC<CycleDetailProps> = ({ cycleId, jsonData }) => {
   const { progressEventsByCycle } = useContext(ChatContext);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const cycles = jsonData?.cycles || ([] as PromptCycle[]);
   const liveEvents: Chat2EditProgressEvent[] =
     (progressEventsByCycle && progressEventsByCycle[cycleId]) || [];
 
   const hasCycles = cycles && cycles.length > 0;
   const cycleCount = cycles?.length || 0;
+
+  // Only render Dialog after client-side hydration to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <Button
+        size="icon"
+        variant="ghost"
+        disabled={!hasCycles}
+        className="p-1 size-fit"
+        title="View cycle details"
+      >
+        <ListChevronsUpDown className="size-4" />
+      </Button>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
