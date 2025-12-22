@@ -19,11 +19,13 @@ export const ChatList = async () => {
     );
   }
 
-  const chats = await drizzleClient
-    .select()
-    .from(chatsTable)
-    .where(eq(chatsTable.userId, userId))
-    .orderBy(desc(chatsTable.updatedAt));
+  const chats = await drizzleClient.query.chats.findMany({
+    where: eq(chatsTable.userId, userId),
+    orderBy: [desc(chatsTable.updatedAt)],
+    with: {
+      settings: true,
+    },
+  });
 
   return (
     <ScrollArea className="h-full">
