@@ -166,10 +166,18 @@ export const MessageTextInput = ({
       const textarea = container.querySelector("textarea");
       if (textarea) {
         inputRef.current = textarea;
-        // Small delay to ensure the input is ready
-        setTimeout(() => {
-          textarea.focus();
-        }, 0);
+        // Use requestAnimationFrame to ensure DOM is ready, especially after navigation
+        requestAnimationFrame(() => {
+          // Additional delay for production builds where navigation might take longer
+          setTimeout(() => {
+            if (textarea && document.contains(textarea)) {
+              textarea.focus();
+              // Set cursor to end of text to prevent it moving to front
+              const length = textarea.value.length;
+              textarea.setSelectionRange(length, length);
+            }
+          }, 50);
+        });
       }
     }
     previousValueRef.current = localValue;
@@ -235,9 +243,13 @@ export const MessageTextInput = ({
         !e.metaKey
       ) {
         e.preventDefault();
+        e.stopPropagation();
         const target = e.target as HTMLTextAreaElement | null;
         const form = target?.closest("form");
-        form?.requestSubmit();
+        if (form && target?.value.trim()) {
+          // Submit the form - let the form's handleSubmit handle everything
+          form.requestSubmit();
+        }
       }
     };
 
