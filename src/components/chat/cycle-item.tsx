@@ -35,6 +35,8 @@ export const CycleItem: FC<CycleItemProps> = ({
     liveEvents.length > 0 || (jsonData?.cycles && jsonData.cycles.length > 0);
   const isGenerating = !response && !failed;
 
+  console.log(JSON.stringify(jsonData, null, 2));
+
   return (
     <div className="flex flex-col w-full gap-2">
       <div className="w-full flex justify-end">

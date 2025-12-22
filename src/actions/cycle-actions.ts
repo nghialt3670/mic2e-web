@@ -81,7 +81,9 @@ function mapLlmModelToConfig(llmModel: string): LlmConfig {
     { provider: "openai" | "google"; model: string }
   > = {
     "gpt-3.5-turbo": { provider: "openai", model: "gpt-3.5-turbo" },
+    "gpt-4o-mini": { provider: "openai", model: "gpt-4o-mini" },
     "gemini-2.5-flash": { provider: "google", model: "gemini-2.5-flash" },
+    "gemini-2.5-flash-lite": { provider: "google", model: "gemini-2.5-flash-lite" },
   };
 
   const mapping = modelMap[llmModel];
