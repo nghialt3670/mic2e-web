@@ -38,6 +38,7 @@ export const useSettingsStore = create<SettingsStore>()(
 );
 
 export const LLM_MODELS = [
-  { value: "gemini-2.5-flash", label: "gemini-2.5-flash" },
   { value: "gpt-3.5-turbo", label: "gpt-3.5-turbo" },
+  { value: "gemini-2.5-flash", label: "gemini-2.5-flash" },
+  { value: "gemini-2.5-flash-lite", label: "gemini-2.5-flash-lite" },
 ] as const;
