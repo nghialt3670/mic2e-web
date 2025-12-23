@@ -100,6 +100,7 @@ const FigCanvasComponent = forwardRef<FigCanvasRef, FigCanvasProps>(
       const fig = canvas.getObjects()[0];
       if (!fig) return;
       const figObject = fig.toObject(["id", "image_id", "ephemeral", "reference", "color"]);
+      console.log("figObject", figObject);
       const newfigFile = await createFigFileFromFigObject(
         figObject,
         figFile.name,

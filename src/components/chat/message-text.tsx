@@ -8,12 +8,11 @@ interface ParsedMention {
   label: string;
   value: string;
   color: string;
-  figId: string;
 }
 
 export const MessageText: FC<MessageTextProps> = ({ text }) => {
   // Parse text and extract mentions with their colors
-  // Format: #colorCode[label](value@figId)
+  // Format: #colorCode[label](value)
   const parseMentions = (text: string) => {
     const parts: Array<{
       type: "text" | "mention";
@@ -21,9 +20,15 @@ export const MessageText: FC<MessageTextProps> = ({ text }) => {
       mention?: ParsedMention;
     }> = [];
 
-    // Regex to match the mention pattern: #colorCode[label](value@figId)
-    // Matches: #2f88a2[box](8fe4e0c7-ef83-4897-9007-89b26cf952f8@deeaaac2-a474-4e30-a42c-2838b2cc5713)
-    const mentionRegex = /#([a-zA-Z0-9_]+)\[([^\]]+)\]\(([^@]+)\)/g;
+    // Regex to match the mention pattern: #colorCode[label](value)
+    // Example stored text:
+    //   "Add #2f88a2[point](ref1) in #ff0000[image](ref2)"
+    //
+    // Groups:
+    //   1: colorCode  - hex color without '#', e.g. "2f88a2"
+    //   2: label      - visible label, e.g. "point"
+    //   3: value      - internal reference id, e.g. "ref1"
+    const mentionRegex = /#([a-fA-F0-9]+)\[([^\]]+)\]\(([^)]+)\)/g;
 
     let lastIndex = 0;
     let match;
@@ -49,7 +54,6 @@ export const MessageText: FC<MessageTextProps> = ({ text }) => {
           label: match[2],
           value: match[3],
           color: color,
-          figId: match[4],
         },
       });
 
