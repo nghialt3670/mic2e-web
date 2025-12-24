@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -98,10 +99,16 @@ export const SettingsDialog = () => {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="w-full justify-start">
+        <DropdownMenuItem
+          className="flex items-center gap-2"
+          onSelect={(e) => {
+            e.preventDefault(); // keep dropdown open while opening dialog
+            setOpen(true);
+          }}
+        >
           <Settings className="size-4" />
           Settings
-        </Button>
+        </DropdownMenuItem>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -171,7 +178,7 @@ export const SettingsDialog = () => {
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-3">
           <Button variant="outline" onClick={handleReset}>
             Reset to Defaults
           </Button>

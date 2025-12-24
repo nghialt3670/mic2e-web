@@ -8,6 +8,7 @@ type ChatContextType = {
   chat?: ChatDetails;
   progressMessage?: string | null;
   setProgressMessage?: (message: string | null) => void;
+  hideProgressAndActions?: boolean;
 
   // WebSocket progress events keyed by cycle ID
   progressEventsByCycle?: Record<string, Chat2EditProgressEvent[]>;
@@ -22,6 +23,7 @@ export const ChatContext = createContext<ChatContextType>({
   chat: undefined,
   progressMessage: null,
   setProgressMessage: undefined,
+  hideProgressAndActions: false,
   progressEventsByCycle: {},
   addProgressEventForCycle: undefined,
   clearProgressEventsForCycle: undefined,

@@ -22,7 +22,7 @@ export const CycleItem: FC<CycleItemProps> = ({
   failed,
   progressMessage,
 }) => {
-  const { progressEventsByCycle } = useContext(ChatContext);
+  const { progressEventsByCycle, hideProgressAndActions } = useContext(ChatContext);
   const { request, response } = cycle;
   const jsonData = cycle.jsonData as any;
 
@@ -32,8 +32,9 @@ export const CycleItem: FC<CycleItemProps> = ({
 
   // Show progress if we have live events OR jsonData with cycles OR if we're still generating (no response yet)
   const hasProgress =
-    liveEvents.length > 0 || (jsonData?.cycles && jsonData.cycles.length > 0);
-  const isGenerating = !response && !failed;
+    !hideProgressAndActions &&
+    (liveEvents.length > 0 || (jsonData?.cycles && jsonData.cycles.length > 0));
+  const isGenerating = !hideProgressAndActions && !response && !failed;
 
   console.log(JSON.stringify(jsonData, null, 2));
 
@@ -42,7 +43,18 @@ export const CycleItem: FC<CycleItemProps> = ({
       <div className="w-full flex justify-end">
         <MessageItem message={request} type="request" />
       </div>
-      
+
+      {hideProgressAndActions ? (
+        <>
+          {response && (
+            <div className="w-full flex justify-start">
+              <MessageItem message={response} type="response" />
+            </div>
+          )}
+          {/* In survey view we intentionally skip progress/controls for pure transcript */}
+        </>
+      ) : (
+        <>
       {/* Show progress view before response (when generating or after completion) */}
       {(hasProgress || isGenerating) && (
         <div className="w-full flex justify-start">
@@ -92,6 +104,8 @@ export const CycleItem: FC<CycleItemProps> = ({
             </div>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   );

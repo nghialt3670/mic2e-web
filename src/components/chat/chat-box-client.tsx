@@ -46,6 +46,7 @@ export const ChatBoxClient = ({ chat, children }: ChatBoxClientProps) => {
         chat,
         progressMessage,
         setProgressMessage,
+        hideProgressAndActions: false,
         progressEventsByCycle,
         addProgressEventForCycle,
         clearProgressEventsForCycle,

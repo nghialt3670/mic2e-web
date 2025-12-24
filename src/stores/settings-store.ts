@@ -11,7 +11,7 @@ export interface SettingsStore {
   resetToDefaults: () => void;
 }
 
-const DEFAULT_LLM_MODEL = "gemini-2.5-flash";
+const DEFAULT_LLM_MODEL = "gpt-4o-mini";
 const DEFAULT_MAX_IMAGE_WIDTH = 480;
 const DEFAULT_MAX_IMAGE_HEIGHT = 360;
 

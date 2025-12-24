@@ -8,6 +8,20 @@
       "when": 1765777071367,
       "tag": "0000_chunky_puck",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766498589842,
+      "tag": "0001_good_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766501029790,
+      "tag": "0002_workable_cardiac",
+      "breakpoints": true
     }
   ]
 }

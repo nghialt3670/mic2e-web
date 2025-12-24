@@ -9,6 +9,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 import { v4 as uuidv4 } from "uuid";
+import { uniqueIndex } from "drizzle-orm/pg-core";
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -133,6 +134,72 @@ export const attachments = pgTable("attachments", {
 });
 
 // ─────────────────────────────────────────────
+// Surveys
+// ─────────────────────────────────────────────
+export const surveySamples = pgTable("survey_samples", {
+  id: primaryKey("id"),
+  userId: foreignKey("user_id", users.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
+export const surveyChats = pgTable("survey_chats", {
+  id: primaryKey("id"),
+  sampleId: foreignKey("sample_id", surveySamples.id, { onDelete: "cascade" }).notNull(),
+  sourceChatId: foreignKey("source_chat_id", chats.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
+export const surveyQuestions = pgTable("survey_questions", {
+  id: primaryKey("id"),
+  chatId: foreignKey("chat_id", surveyChats.id, { onDelete: "cascade" }).notNull(),
+  text: text("text").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
+export const surveyOptions = pgTable("survey_options", {
+  id: primaryKey("id"),
+  questionId: foreignKey("question_id", surveyQuestions.id, {
+    onDelete: "cascade",
+  }).notNull(),
+  label: text("label").notNull(),
+  value: text("value").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
+export const surveyAnswers = pgTable(
+  "survey_answers",
+  {
+    id: primaryKey("id"),
+    userId: foreignKey("user_id", users.id, { onDelete: "cascade" }).notNull(),
+    sampleId: foreignKey("sample_id", surveySamples.id, {
+      onDelete: "cascade",
+    }).notNull(),
+    chatId: foreignKey("chat_id", surveyChats.id, { onDelete: "cascade" }).notNull(),
+    questionId: foreignKey("question_id", surveyQuestions.id, {
+      onDelete: "cascade",
+    }).notNull(),
+    optionId: foreignKey("option_id", surveyOptions.id, { onDelete: "cascade" }).notNull(),
+    createdAt: createdAt("createdAt"),
+    updatedAt: updatedAt("updatedAt"),
+  },
+  (table) => ({
+    uq_user_question: uniqueIndex("uq_survey_answers_user_question").on(
+      table.userId,
+      table.questionId,
+    ),
+  }),
+);
+
+// ─────────────────────────────────────────────
 // Relations
 // ─────────────────────────────────────────────
 
@@ -208,6 +275,64 @@ export const attachmentsRelations = relations(attachments, ({ one }) => ({
   }),
 }));
 
+export const surveySamplesRelations = relations(surveySamples, ({ one, many }) => ({
+  user: one(users, {
+    fields: [surveySamples.userId],
+    references: [users.id],
+  }),
+  chats: many(surveyChats),
+  answers: many(surveyAnswers),
+}));
+
+export const surveyChatsRelations = relations(surveyChats, ({ one, many }) => ({
+  sample: one(surveySamples, {
+    fields: [surveyChats.sampleId],
+    references: [surveySamples.id],
+  }),
+  questions: many(surveyQuestions),
+  answers: many(surveyAnswers),
+}));
+
+export const surveyQuestionsRelations = relations(surveyQuestions, ({ one, many }) => ({
+  chat: one(surveyChats, {
+    fields: [surveyQuestions.chatId],
+    references: [surveyChats.id],
+  }),
+  options: many(surveyOptions),
+  answers: many(surveyAnswers),
+}));
+
+export const surveyOptionsRelations = relations(surveyOptions, ({ one, many }) => ({
+  question: one(surveyQuestions, {
+    fields: [surveyOptions.questionId],
+    references: [surveyQuestions.id],
+  }),
+  answers: many(surveyAnswers),
+}));
+
+export const surveyAnswersRelations = relations(surveyAnswers, ({ one }) => ({
+  user: one(users, {
+    fields: [surveyAnswers.userId],
+    references: [users.id],
+  }),
+  sample: one(surveySamples, {
+    fields: [surveyAnswers.sampleId],
+    references: [surveySamples.id],
+  }),
+  chat: one(surveyChats, {
+    fields: [surveyAnswers.chatId],
+    references: [surveyChats.id],
+  }),
+  question: one(surveyQuestions, {
+    fields: [surveyAnswers.questionId],
+    references: [surveyQuestions.id],
+  }),
+  option: one(surveyOptions, {
+    fields: [surveyAnswers.optionId],
+    references: [surveyOptions.id],
+  }),
+}));
+
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────
@@ -220,3 +345,8 @@ export type Cycle = typeof cycles.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Thumbnail = typeof thumbnails.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
+export type SurveySample = typeof surveySamples.$inferSelect;
+export type SurveyChat = typeof surveyChats.$inferSelect;
+export type SurveyQuestion = typeof surveyQuestions.$inferSelect;
+export type SurveyOption = typeof surveyOptions.$inferSelect;
+export type SurveyAnswer = typeof surveyAnswers.$inferSelect;

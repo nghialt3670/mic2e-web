@@ -7,9 +7,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOutIcon } from "lucide-react";
+import { ClipboardList, LogOutIcon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { SettingsDialog } from "./settings-dialog";
 
@@ -45,6 +46,12 @@ export const UserMenu = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <SettingsDialog />
+        <DropdownMenuItem asChild>
+          <Link href="/survey" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Survey
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogoutClick}>
           <LogOutIcon />
