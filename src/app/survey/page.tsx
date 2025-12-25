@@ -2,13 +2,14 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getSurveyProgress, getSurveySampleCount } from "@/actions/survey-actions";
+import { getSurveyProgress, getSurveySampleCount, getTotalResponseCount } from "@/actions/survey-actions";
 
 export default async function SurveyHomePage() {
   const progress = await getSurveyProgress();
   const sampleCount = await getSurveySampleCount();
+  const responseCount = await getTotalResponseCount();
   return (
-    <div className="max-w-4xl mx-auto w-full py-8 px-4 flex flex-col gap-6">
+    <div className="max-w-6xl mx-auto w-full py-8 px-4 flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Survey</h1>
@@ -21,7 +22,7 @@ export default async function SurveyHomePage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Configure survey</CardTitle>
@@ -53,6 +54,25 @@ export default async function SurveyHomePage() {
             <Link href="/survey/run" className="w-full">
               <Button className="w-full" variant="outline">
                 Start survey
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Survey Results</CardTitle>
+            <CardDescription>
+              View and analyze survey responses and statistics.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="text-sm text-muted-foreground">
+              Responses: <span className="font-semibold text-foreground">{responseCount}</span>
+            </div>
+            <Link href="/survey/results" className="w-full">
+              <Button className="w-full" variant="secondary">
+                View dashboard
               </Button>
             </Link>
           </CardContent>

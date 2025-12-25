@@ -80,8 +80,10 @@ export async function getChatWithCycles(chatId: string): Promise<ChatDetails | n
   const userId = await getSessionUserId();
   if (!userId) return null;
 
+  // For survey mode: load chat without userId check (public access)
+  // This allows any user to view chats that are part of survey samples
   const chat = await drizzleClient.query.chats.findFirst({
-    where: and(eq(chats.id, chatId), eq(chats.userId, userId)),
+    where: eq(chats.id, chatId),
     with: {
       cycles: {
         orderBy: asc(cycles.createdAt),
@@ -125,8 +127,8 @@ export async function listSurveySamples(): Promise<
     return [];
   }
 
+  // Fetch all samples (public), but only the current user's answers
   const samples = await drizzleClient.query.surveySamples.findMany({
-    where: eq(surveySamples.userId, userId),
     with: {
       chats: {
         orderBy: asc(surveyChats.sortOrder),
@@ -141,7 +143,9 @@ export async function listSurveySamples(): Promise<
           },
         },
       },
-      answers: true,
+      answers: {
+        where: eq(surveyAnswers.userId, userId),
+      },
     },
   });
 
@@ -153,15 +157,17 @@ export async function getSurveyProgress(): Promise<number> {
   const userId = await getSessionUserId();
   if (!userId) return 0;
 
+  // Get all samples (public) but only current user's answers
   const samples = await drizzleClient.query.surveySamples.findMany({
-    where: eq(surveySamples.userId, userId),
     with: {
       chats: {
         with: {
           questions: true,
         },
       },
-      answers: true,
+      answers: {
+        where: eq(surveyAnswers.userId, userId),
+      },
     },
   });
 
@@ -190,11 +196,86 @@ export async function getSurveySampleCount(): Promise<number> {
   const userId = await getSessionUserId();
   if (!userId) return 0;
 
-  const samples = await drizzleClient.query.surveySamples.findMany({
-    where: eq(surveySamples.userId, userId),
-  });
+  // Count all samples (public)
+  const samples = await drizzleClient.query.surveySamples.findMany({});
 
   return samples.length;
+}
+
+export async function getTotalResponseCount(): Promise<number> {
+  const userId = await getSessionUserId();
+  if (!userId) return 0;
+
+  // Count all survey answers across all users
+  const answers = await drizzleClient.query.surveyAnswers.findMany({});
+
+  return answers.length;
+}
+
+export async function getSurveyStats() {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+
+  // Get all samples with their answers
+  const samples = await drizzleClient.query.surveySamples.findMany({
+    with: {
+      chats: {
+        with: {
+          questions: {
+            with: {
+              options: true,
+            },
+          },
+        },
+      },
+      answers: true,
+    },
+  });
+
+  // Collect all unique users first
+  const allUsers = new Set<string>();
+  samples.forEach((sample) => {
+    (sample.answers || []).forEach((a) => allUsers.add(a.userId));
+  });
+
+  // Calculate statistics
+  const sampleStats = samples.map((sample) => {
+    const sampleAnswers = sample.answers || [];
+    const uniqueUsers = new Set(sampleAnswers.map((a) => a.userId));
+    
+    // Calculate question statistics
+    const questionStats = sample.chats.flatMap((chat) =>
+      chat.questions.map((question) => {
+        const questionAnswers = sampleAnswers.filter((a) => a.questionId === question.id);
+        const optionCounts = question.options.map((option) => ({
+          label: option.label,
+          value: option.value,
+          count: questionAnswers.filter((a) => a.optionId === option.id).length,
+        }));
+
+        return {
+          id: question.id,
+          text: question.text,
+          totalAnswers: questionAnswers.length,
+          options: optionCounts,
+        };
+      }),
+    );
+
+    return {
+      id: sample.id,
+      name: sample.name,
+      responseCount: uniqueUsers.size,
+      questions: questionStats,
+    };
+  });
+
+  return {
+    totalSamples: samples.length,
+    totalResponses: allUsers.size,
+    totalUsers: allUsers.size,
+    sampleStats,
+  };
 }
 
 export async function createSurveySample(name: string) {
@@ -213,9 +294,10 @@ export async function createSurveySample(name: string) {
 export async function deleteSurveySample(sampleId: string) {
   const userId = await getSessionUserId();
   if (!userId) throw new Error("Unauthorized");
+  // Anyone can delete public samples
   await drizzleClient
     .delete(surveySamples)
-    .where(and(eq(surveySamples.id, sampleId), eq(surveySamples.userId, userId)));
+    .where(eq(surveySamples.id, sampleId));
   revalidateSurvey();
 }
 
@@ -223,8 +305,9 @@ export async function addSurveyChat(sampleId: string, chatId: string, title: str
   const userId = await getSessionUserId();
   if (!userId) throw new Error("Unauthorized");
 
+  // Anyone can add chats to public samples
   const sample = await drizzleClient.query.surveySamples.findFirst({
-    where: and(eq(surveySamples.id, sampleId), eq(surveySamples.userId, userId)),
+    where: eq(surveySamples.id, sampleId),
   });
   if (!sample) throw new Error("Sample not found");
 
@@ -250,13 +333,11 @@ export async function addSurveyQuestion(chatId: string, text: string, options: A
   const userId = await getSessionUserId();
   if (!userId) throw new Error("Unauthorized");
 
+  // Anyone can add questions to public samples
   const chat = await drizzleClient.query.surveyChats.findFirst({
     where: eq(surveyChats.id, chatId),
-    with: {
-      sample: true,
-    },
   });
-  if (!chat || chat.sample.userId !== userId) throw new Error("Chat not found");
+  if (!chat) throw new Error("Chat not found");
 
   const sortOrder =
     (await drizzleClient
@@ -290,15 +371,11 @@ export async function addSurveyOption(questionId: string, label: string, value?:
   const userId = await getSessionUserId();
   if (!userId) throw new Error("Unauthorized");
 
+  // Anyone can add options to public samples
   const question = await drizzleClient.query.surveyQuestions.findFirst({
     where: eq(surveyQuestions.id, questionId),
-    with: {
-      chat: {
-        with: { sample: true },
-      },
-    },
   });
-  if (!question || question.chat.sample.userId !== userId) throw new Error("Question not found");
+  if (!question) throw new Error("Question not found");
 
   const sortOrder =
     (await drizzleClient

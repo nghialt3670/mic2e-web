@@ -138,7 +138,7 @@ export const attachments = pgTable("attachments", {
 // ─────────────────────────────────────────────
 export const surveySamples = pgTable("survey_samples", {
   id: primaryKey("id"),
-  userId: foreignKey("user_id", users.id, { onDelete: "cascade" }).notNull(),
+  userId: foreignKey("user_id", users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),
