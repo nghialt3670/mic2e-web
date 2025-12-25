@@ -122,8 +122,8 @@ export const MessageInput = () => {
 
         // Start generation (WebSocket will handle progress updates)
         await withToastHandler(generateCycle, {
-          cycleId: createdCycle.id,
-        });
+            cycleId: createdCycle.id,
+          });
 
       // The CycleProgressTracker component will handle WebSocket connection
       // and progress updates via ChatContext

@@ -27,9 +27,6 @@ export default async function SurveyRunPage() {
           <Button variant="ghost">← Back to survey</Button>
         </Link>
       </div>
-      <p className="text-muted-foreground px-4 pb-2 shrink-0">
-        Answer questions for each chat.
-      </p>
 
       <div className="flex-1 px-4 pb-4 overflow-hidden">
         <RunSurvey initialSamples={samples as any} chatDetailsById={chatDetailsById} />

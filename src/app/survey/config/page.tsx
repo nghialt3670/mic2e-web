@@ -1,10 +1,19 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { listSurveySamples, getSurveyTemplates, listUserChats } from "@/actions/survey-actions";
 import { Button } from "@/components/ui/button";
 import { SurveyConfigClient } from "@/components/survey/survey-config-client";
+import { getSession } from "@/utils/server/auth-utils";
 
 export default async function SurveyConfigPage() {
+  const session = await getSession();
+  const isAdmin = session?.user?.email === "22520946@gm.uit.edu.vn";
+
+  if (!isAdmin) {
+    redirect("/survey");
+  }
+
   const samples = await listSurveySamples();
   const templates = await getSurveyTemplates();
   const chats = await listUserChats();

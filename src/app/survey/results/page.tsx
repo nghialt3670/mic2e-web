@@ -1,11 +1,28 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { getSurveyStats } from "@/actions/survey-actions";
+import { getSurveyStats, getChatWithCycles } from "@/actions/survey-actions";
 import { SurveyDashboard } from "@/components/survey/survey-dashboard";
 
 export default async function SurveyResultsPage() {
   const stats = await getSurveyStats();
+
+  // Fetch chat details for all chats with sourceChatId
+  let chatDetailsById = {};
+  if (stats) {
+    const chatIds = Array.from(
+      new Set(
+        stats.sampleStats
+          .flatMap((s) => s.chats.map((c) => c.sourceChatId).filter(Boolean)) as string[],
+      ),
+    );
+    const chatDetails = await Promise.all(chatIds.map((id) => getChatWithCycles(id)));
+    chatDetailsById = chatIds.reduce<Record<string, any>>((acc, id, idx) => {
+      const chat = chatDetails[idx];
+      if (chat) acc[id] = chat;
+      return acc;
+    }, {});
+  }
 
   return (
     <div className="w-full h-screen flex flex-col overflow-hidden">
@@ -21,7 +38,7 @@ export default async function SurveyResultsPage() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-4">
         {stats ? (
-          <SurveyDashboard stats={stats} />
+          <SurveyDashboard stats={stats} chatDetailsById={chatDetailsById} />
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             No survey data available

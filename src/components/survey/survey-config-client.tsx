@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { v4 as uuid } from "uuid";
 
 import { SampleBuilder } from "@/components/survey/sample-builder";
 import { Button } from "@/components/ui/button";
@@ -15,11 +14,13 @@ import {
   createSurveySample,
   deleteSurveySample,
   listSurveySamples,
-  getSurveyTemplates,
-  listUserChats,
+  updateSurveyQuestionText,
+  deleteSurveyQuestion,
 } from "@/actions/survey-actions";
 
 import type {
+  QuestionTemplate,
+  QuestionTemplateOption,
   SurveyAnswer,
   SurveyChat,
   SurveyOption,
@@ -30,7 +31,12 @@ import type {
 type SampleWithContent = SurveySample & {
   chats: Array<
     SurveyChat & {
-      questions: Array<SurveyQuestion & { options: SurveyOption[] }>;
+      questions: Array<
+        SurveyQuestion & {
+          template: (QuestionTemplate & { options: QuestionTemplateOption[] }) | null;
+          options: SurveyOption[];
+        }
+      >;
     }
   >;
   answers?: SurveyAnswer[];
@@ -38,7 +44,7 @@ type SampleWithContent = SurveySample & {
 
 interface SurveyConfigClientProps {
   initialSamples: SampleWithContent[];
-  templates: Array<{ id: string; text: string; options: Array<{ label: string; value: string }> }>;
+  templates: Array<QuestionTemplate & { options: QuestionTemplateOption[] }>;
   availableChats: Array<{ id: string; title: string | null; updatedAt: Date | null }>;
 }
 
@@ -83,11 +89,10 @@ export function SurveyConfigClient({
 
   const handleAddQuestionFromTemplate = (
     chatId: string,
-    text: string,
-    options: Array<{ label: string; value: string }>,
+    templateId: string,
   ) => {
     startTransition(async () => {
-      await addSurveyQuestion(chatId, text, options);
+      await addSurveyQuestion(chatId, templateId);
       await refresh();
     });
   };
@@ -95,6 +100,20 @@ export function SurveyConfigClient({
   const handleAddOption = (questionId: string, label: string, value?: string) => {
     startTransition(async () => {
       await addSurveyOption(questionId, label, value);
+      await refresh();
+    });
+  };
+
+  const handleUpdateQuestionText = (questionId: string, text: string) => {
+    startTransition(async () => {
+      await updateSurveyQuestionText(questionId, text);
+      await refresh();
+    });
+  };
+
+  const handleDeleteQuestion = (questionId: string) => {
+    startTransition(async () => {
+      await deleteSurveyQuestion(questionId);
       await refresh();
     });
   };
@@ -161,6 +180,8 @@ export function SurveyConfigClient({
                   onAddChat={handleAddChat}
                   onAddQuestionFromTemplate={handleAddQuestionFromTemplate}
                   onAddOption={handleAddOption}
+                  onUpdateQuestionText={handleUpdateQuestionText}
+                  onDeleteQuestion={handleDeleteQuestion}
                 />
               </CardContent>
             </Card>

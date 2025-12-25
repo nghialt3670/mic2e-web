@@ -26,11 +26,11 @@ export const CycleList = () => {
             {isGenerating && (
               <CycleProgressTracker cycleId={cycle.id} isActive={true} />
             )}
-            <CycleItem
-              cycle={cycle}
-              failed={!!chat?.failed}
+        <CycleItem 
+          cycle={cycle} 
+          failed={!!chat?.failed}
               progressMessage={isLastCycle ? progressMessage : null}
-            />
+        />
           </div>
         );
       })}

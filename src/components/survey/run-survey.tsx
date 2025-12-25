@@ -1,8 +1,9 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
@@ -10,14 +11,19 @@ import { ChatContext } from "@/contexts/chat-context";
 import { CycleList } from "@/components/chat/cycle-list";
 import type { ChatDetails } from "@/types/chat-details";
 import { saveSurveyAnswer } from "@/actions/survey-actions";
-import type { SurveyAnswer, SurveyChat, SurveyOption, SurveyQuestion, SurveySample } from "@/lib/drizzle/drizzle-schema";
+import type { QuestionTemplate, QuestionTemplateOption, SurveyAnswer, SurveyChat, SurveyOption, SurveyQuestion, SurveySample } from "@/lib/drizzle/drizzle-schema";
 
 type AnswerMap = Record<string, Record<string, Record<string, string>>>;
 
 type SampleWithContent = SurveySample & {
   chats: Array<
     SurveyChat & {
-      questions: Array<SurveyQuestion & { options: SurveyOption[] }>;
+      questions: Array<
+        SurveyQuestion & {
+          template: (QuestionTemplate & { options: QuestionTemplateOption[] }) | null;
+          options: SurveyOption[];
+        }
+      >;
     }
   >;
   answers?: SurveyAnswer[];
@@ -41,6 +47,7 @@ interface RunSurveyProps {
 }
 
 export const RunSurvey = ({ initialSamples, chatDetailsById }: RunSurveyProps) => {
+  const router = useRouter();
   const shuffled = useMemo(
     () => [...initialSamples].sort(() => Math.random() - 0.5),
     [initialSamples],
@@ -123,52 +130,62 @@ export const RunSurvey = ({ initialSamples, chatDetailsById }: RunSurveyProps) =
   }, [samples, answers]);
 
   return (
-    <div className="h-full flex flex-col gap-4 overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       {selectedSample ? (
-        <div className="flex w-full gap-4 h-full overflow-hidden">
+        <div className="flex-1 flex gap-4 overflow-x-auto pb-2">
           {selectedSample.chats.map((chat) => (
-            <Card key={chat.id} className="flex-1 min-w-0 flex flex-col">
-              <CardContent className="flex-1 flex flex-col gap-3 overflow-hidden">
-                <div className="flex-1 flex flex-col gap-3 overflow-y-auto pr-1">
-                  {chat.sourceChatId && chatDetailsById[chat.sourceChatId] && (
-                    <div className="rounded-md border bg-muted/30 p-3">
-                      <ChatContext.Provider
-                        value={{
-                          chat: chatDetailsById[chat.sourceChatId],
-                          progressMessage: null,
-                          hideProgressAndActions: true,
-                        }}
-                      >
-                        <CycleList />
-                      </ChatContext.Provider>
-                    </div>
-                  )}
+            <div key={chat.id} className="flex-1 min-w-[800px] h-full flex flex-col border rounded-lg bg-card overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Chat Content */}
+                {chat.sourceChatId && chatDetailsById[chat.sourceChatId] && (
+                  <div className="rounded-md border bg-muted/30 p-3">
+                    <ChatContext.Provider
+                      value={{
+                        chat: chatDetailsById[chat.sourceChatId],
+                        progressMessage: null,
+                        hideProgressAndActions: true,
+                      }}
+                    >
+                      <CycleList />
+                    </ChatContext.Provider>
+                  </div>
+                )}
 
+                {/* Questions for this chat */}
+                <div className="flex gap-3 overflow-x-auto">
                   {chat.questions.map((q, qIdx) => (
-                    <div key={q.id} className="space-y-2">
-                      <Label className="text-sm font-medium">
-                        Q{qIdx + 1}. {q.text}
-                      </Label>
-                      <RadioGroup
-                        value={answers[selectedSample.id]?.[chat.id]?.[q.id] || ""}
-                        onValueChange={(optionId) =>
-                          handleAnswerChange(selectedSample.id, chat.id, q.id, optionId)
-                        }
-                      >
-                        {q.options.map((opt) => (
-                          <div key={opt.id} className="flex items-center space-x-2">
-                            <RadioGroupItem value={opt.id} id={`${q.id}-${opt.id}`} />
-                            <Label htmlFor={`${q.id}-${opt.id}`} className={getOptionColor(opt.label, opt.value)}>
-                              {opt.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
+                    <div key={q.id} className="flex-1 min-w-[350px] flex flex-col p-4 border rounded-lg bg-background">
+                      <div className="space-y-1 shrink-0">
+                        <h4 className="text-sm font-medium leading-relaxed">
+                          Q{qIdx + 1}. {q.template?.text || q.text || "Question"}
+                        </h4>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        <RadioGroup
+                          value={answers[selectedSample.id]?.[chat.id]?.[q.id] || ""}
+                          onValueChange={(optionId) =>
+                            handleAnswerChange(selectedSample.id, chat.id, q.id, optionId)
+                          }
+                          className="space-y-2"
+                        >
+                          {q.options.map((opt) => (
+                            <div key={opt.id} className="flex items-start space-x-2">
+                              <RadioGroupItem value={opt.id} id={`${q.id}-${opt.id}`} className="mt-1" />
+                              <Label 
+                                htmlFor={`${q.id}-${opt.id}`} 
+                                className={`text-sm leading-relaxed cursor-pointer ${getOptionColor(opt.label, opt.value)}`}
+                              >
+                                {opt.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
@@ -182,7 +199,7 @@ export const RunSurvey = ({ initialSamples, chatDetailsById }: RunSurveyProps) =
 
       <Separator />
 
-      <div className="flex items-center justify-between shrink-0">
+      <div className="flex items-center justify-between shrink-0 py-2">
         <div className="text-sm text-muted-foreground">
           Progress: <span className="font-semibold text-foreground">{progressPercentage}%</span> completed
         </div>
@@ -195,7 +212,10 @@ export const RunSurvey = ({ initialSamples, chatDetailsById }: RunSurveyProps) =
               {isSampleComplete(selectedSample) ? "Next sample" : "Complete all questions to continue"}
             </Button>
           ) : (
-            <Button disabled={!isSampleComplete(selectedSample) || isSaving}>
+            <Button
+              onClick={() => isSampleComplete(selectedSample) && router.push("/survey")}
+              disabled={!isSampleComplete(selectedSample) || isSaving}
+            >
               {isSampleComplete(selectedSample) ? "All responses saved" : "Complete all questions"}
             </Button>
           )}

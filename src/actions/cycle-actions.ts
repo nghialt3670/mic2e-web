@@ -87,7 +87,7 @@ function mapLlmModelToConfig(llmModel: string): LlmConfig {
   };
 
   const mapping = modelMap[llmModel];
-
+  
   if (!mapping) {
     // Default to Google's gemini-2.5-flash if model not found
     console.warn(
@@ -159,7 +159,7 @@ export const clearCycle = withErrorHandler(
     const contextIdsToDelete = new Set<string>();
     const contextFileIdsToDelete = new Set<string>();
     const attachmentFileIdsToDelete = new Set<string>();
-
+    
     for (const cycleToDelete of cyclesToDelete) {
       if (cycleToDelete.responseId)
         messageIdsToDelete.add(cycleToDelete.responseId);
@@ -188,8 +188,8 @@ export const clearCycle = withErrorHandler(
     if (messageIdsToDelete.size > 0) {
       const attachmentsToDelete =
         await drizzleClient.query.attachments.findMany({
-          where: inArray(attachments.messageId, Array.from(messageIdsToDelete)),
-        });
+        where: inArray(attachments.messageId, Array.from(messageIdsToDelete)),
+      });
       for (const attachment of attachmentsToDelete) {
         attachmentFileIdsToDelete.add(attachment.fileId);
       }
@@ -254,8 +254,8 @@ export const clearCycle = withErrorHandler(
       const deletePromises = Array.from(attachmentFileIdsToDelete).map(
         (fileId) =>
           fetch(`${serverEnv.STORAGE_API_URL}/files/${fileId}`, {
-            method: "DELETE",
-          }).catch((error) => {
+          method: "DELETE",
+        }).catch((error) => {
             logger.error(
               "CycleActions",
               `Failed to delete attachment file ${fileId}`,
@@ -361,7 +361,7 @@ export const generateCycle = withErrorHandler(
 
     if (error || !response?.ok) {
       logger.error("CycleActions", "Failed to start generation", error);
-
+      
       await drizzleClient
         .update(chats)
         .set({ failed: true })
@@ -393,87 +393,87 @@ interface SaveGenerationResultRequest {
 export const saveGenerationResult = withErrorHandler(
   withAuthHandler<SaveGenerationResultRequest, Cycle>(
     async ({ cycleId, result }) => {
-      const cycle = await drizzleClient.query.cycles.findFirst({
-        where: eq(cycles.id, cycleId),
-      });
-      if (!cycle) {
-        return {
-          message: "Cycle not found",
-          code: 404,
-          data: undefined as any,
-        };
-      }
+    const cycle = await drizzleClient.query.cycles.findFirst({
+      where: eq(cycles.id, cycleId),
+    });
+    if (!cycle) {
+      return {
+        message: "Cycle not found",
+        code: 404,
+        data: undefined as any,
+      };
+    }
 
       const { message, cycle: cycleJsonData, context_file_id } = result;
 
-      if (cycle.contextId) {
-        await drizzleClient
-          .update(contexts)
-          .set({ fileId: context_file_id })
-          .where(eq(contexts.id, cycle.contextId));
-      } else {
-        const context = await drizzleClient
-          .insert(contexts)
-          .values({
-            fileId: context_file_id,
-          })
-          .returning()
-          .then((rows) => rows[0]);
-        await drizzleClient
-          .update(cycles)
-          .set({ contextId: context.id })
-          .where(eq(cycles.id, cycle.id));
+    if (cycle.contextId) {
+      await drizzleClient
+        .update(contexts)
+        .set({ fileId: context_file_id })
+        .where(eq(contexts.id, cycle.contextId));
+    } else {
+      const context = await drizzleClient
+        .insert(contexts)
+        .values({
+          fileId: context_file_id,
+        })
+        .returning()
+        .then((rows) => rows[0]);
+      await drizzleClient
+        .update(cycles)
+        .set({ contextId: context.id })
+        .where(eq(cycles.id, cycle.id));
+    }
+    
+    if (message) {
+      const responseMessage = await drizzleClient
+        .insert(messages)
+        .values({
+          text: message.text,
+        })
+        .returning()
+        .then((rows) => rows[0]);
+  
+      if (message.attachments.length > 0) {
+        await drizzleClient.insert(attachments).values(
+          message.attachments.map((attachment) => ({
+            messageId: responseMessage.id,
+            fileId: attachment.file_id,
+            filename: attachment.filename,
+          })),
+        );
       }
 
-      if (message) {
-        const responseMessage = await drizzleClient
-          .insert(messages)
-          .values({
-            text: message.text,
-          })
-          .returning()
-          .then((rows) => rows[0]);
+      await drizzleClient
+        .update(cycles)
+        .set({ responseId: responseMessage.id })
+        .where(eq(cycles.id, cycle.id));
 
-        if (message.attachments.length > 0) {
-          await drizzleClient.insert(attachments).values(
-            message.attachments.map((attachment) => ({
-              messageId: responseMessage.id,
-              fileId: attachment.file_id,
-              filename: attachment.filename,
-            })),
-          );
-        }
-
-        await drizzleClient
-          .update(cycles)
-          .set({ responseId: responseMessage.id })
-          .where(eq(cycles.id, cycle.id));
-
-        await drizzleClient
-          .update(chats)
-          .set({ failed: false })
-          .where(eq(chats.id, cycle.chatId));
+      await drizzleClient
+        .update(chats)
+        .set({ failed: false })
+        .where(eq(chats.id, cycle.chatId));
       } else {
         await drizzleClient
           .update(chats)
           .set({ failed: true })
           .where(eq(chats.id, cycle.chatId));
-      }
+    }
 
-      const [completedCycle] = await drizzleClient
-        .update(cycles)
-        .set({
-          jsonData: cycleJsonData,
-        })
-        .where(eq(cycles.id, cycle.id))
-        .returning();
+    const [completedCycle] = await drizzleClient
+      .update(cycles)
+      .set({
+        jsonData: cycleJsonData,
+      })
+      .where(eq(cycles.id, cycle.id))
+      .returning();
 
-      revalidatePath(`/c/${cycle.chatId}`);
-      return {
-        message: "Cycle saved successfully",
-        code: 200,
-        data: completedCycle,
-      };
+    revalidatePath(`/c/${cycle.chatId}`);
+    return {
+      message: "Cycle saved successfully",
+      code: 200,
+      data: completedCycle,
+    };
     },
   ),
 );
@@ -566,13 +566,13 @@ export const generateCycleStream = withErrorHandler(
     if (error || !response?.ok) {
       const isTimeout = error?.name === "AbortError";
       logger.error(
-        "CycleActions",
+        "CycleActions", 
         isTimeout
           ? "Generate cycle stream timed out"
           : "Failed to generate cycle stream",
         error,
       );
-
+      
       await drizzleClient
         .update(chats)
         .set({ failed: true })
@@ -676,7 +676,7 @@ export const generateCycleStream = withErrorHandler(
         .set({ contextId: context.id })
         .where(eq(cycles.id, cycle.id));
     }
-
+    
     if (message) {
       const responseMessage = await drizzleClient
         .insert(messages)
@@ -685,7 +685,7 @@ export const generateCycleStream = withErrorHandler(
         })
         .returning()
         .then((rows) => rows[0]);
-
+  
       if (message.attachments.length > 0) {
         await drizzleClient.insert(attachments).values(
           message.attachments.map((attachment) => ({

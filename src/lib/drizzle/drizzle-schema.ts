@@ -154,10 +154,32 @@ export const surveyChats = pgTable("survey_chats", {
   updatedAt: updatedAt("updatedAt"),
 });
 
+export const questionTemplates = pgTable("question_templates", {
+  id: primaryKey("id"),
+  text: text("text").notNull(),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
+export const questionTemplateOptions = pgTable("question_template_options", {
+  id: primaryKey("id"),
+  templateId: foreignKey("template_id", questionTemplates.id, {
+    onDelete: "cascade",
+  }).notNull(),
+  label: text("label").notNull(),
+  value: text("value").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: createdAt("createdAt"),
+  updatedAt: updatedAt("updatedAt"),
+});
+
 export const surveyQuestions = pgTable("survey_questions", {
   id: primaryKey("id"),
   chatId: foreignKey("chat_id", surveyChats.id, { onDelete: "cascade" }).notNull(),
-  text: text("text").notNull(),
+  templateId: foreignKey("template_id", questionTemplates.id, {
+    onDelete: "restrict",
+  }),
+  text: text("text"), // Keep for backward compatibility during migration
   sortOrder: integer("sort_order").default(0),
   createdAt: createdAt("createdAt"),
   updatedAt: updatedAt("updatedAt"),
@@ -293,10 +315,26 @@ export const surveyChatsRelations = relations(surveyChats, ({ one, many }) => ({
   answers: many(surveyAnswers),
 }));
 
+export const questionTemplatesRelations = relations(questionTemplates, ({ many }) => ({
+  options: many(questionTemplateOptions),
+  surveyQuestions: many(surveyQuestions),
+}));
+
+export const questionTemplateOptionsRelations = relations(questionTemplateOptions, ({ one }) => ({
+  template: one(questionTemplates, {
+    fields: [questionTemplateOptions.templateId],
+    references: [questionTemplates.id],
+  }),
+}));
+
 export const surveyQuestionsRelations = relations(surveyQuestions, ({ one, many }) => ({
   chat: one(surveyChats, {
     fields: [surveyQuestions.chatId],
     references: [surveyChats.id],
+  }),
+  template: one(questionTemplates, {
+    fields: [surveyQuestions.templateId],
+    references: [questionTemplates.id],
   }),
   options: many(surveyOptions),
   answers: many(surveyAnswers),
@@ -347,6 +385,8 @@ export type Thumbnail = typeof thumbnails.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
 export type SurveySample = typeof surveySamples.$inferSelect;
 export type SurveyChat = typeof surveyChats.$inferSelect;
+export type QuestionTemplate = typeof questionTemplates.$inferSelect;
+export type QuestionTemplateOption = typeof questionTemplateOptions.$inferSelect;
 export type SurveyQuestion = typeof surveyQuestions.$inferSelect;
 export type SurveyOption = typeof surveyOptions.$inferSelect;
 export type SurveyAnswer = typeof surveyAnswers.$inferSelect;
