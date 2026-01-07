@@ -128,7 +128,7 @@ export async function getSurveyTemplates(): Promise<
   });
 
   // Initialize default templates if none exist
-  if (templates.length <= 3) {
+  if (templates.length === 0) {
     // Create "About Result" template
     const resultTemplateId = uuid();
     await drizzleClient.insert(questionTemplates).values({
