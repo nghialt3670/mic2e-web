@@ -13,6 +13,7 @@ import {
   surveyOptions,
   surveyQuestions,
   surveySamples,
+  surveySamplePreferences,
   type Chat,
   type QuestionTemplate,
   type QuestionTemplateOption,
@@ -152,17 +153,6 @@ export async function getSurveyTemplates(): Promise<
       { id: uuid(), templateId: interactionTemplateId, label: "3 = Acceptable", value: "3", sortOrder: 2 },
       { id: uuid(), templateId: interactionTemplateId, label: "4 = Good", value: "4", sortOrder: 3 },
       { id: uuid(), templateId: interactionTemplateId, label: "5 = Excellent", value: "5", sortOrder: 4 },
-    ]);
-
-    // Create "Preference of Use" template
-    const preferenceTemplateId = uuid();
-    await drizzleClient.insert(questionTemplates).values({
-      id: preferenceTemplateId,
-      text: "Preference of Use: Which chat would you prefer to use?",
-    });
-    await drizzleClient.insert(questionTemplateOptions).values([
-      { id: uuid(), templateId: preferenceTemplateId, label: "Preferred Chat A", value: "chat-a", sortOrder: 0 },
-      { id: uuid(), templateId: preferenceTemplateId, label: "Preferred Chat B", value: "chat-b", sortOrder: 1 },
     ]);
 
     // Fetch templates again
@@ -684,4 +674,58 @@ export async function saveSurveyAnswer(
   });
 
   revalidateSurvey();
+}
+
+export async function saveSurveySamplePreference(
+  sampleId: string,
+  preferredChatId: string,
+): Promise<void> {
+  const userId = await getSessionUserId();
+  if (!userId) throw new Error("Unauthorized");
+
+  // Delete any existing preference for this user+sample, then insert new one
+  await drizzleClient
+    .delete(surveySamplePreferences)
+    .where(
+      and(
+        eq(surveySamplePreferences.userId, userId),
+        eq(surveySamplePreferences.sampleId, sampleId),
+      ),
+    );
+
+  const id = uuid();
+  await drizzleClient
+    .insert(surveySamplePreferences)
+    .values({
+      id,
+      userId,
+      sampleId,
+      preferredChatId,
+    })
+    .returning();
+
+  revalidateSurvey();
+}
+
+export async function getSurveySamplePreference(
+  sampleId: string,
+): Promise<{ preferredChatId: string } | null> {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+
+  const rows = await drizzleClient
+    .select({
+      preferredChatId: surveySamplePreferences.preferredChatId,
+    })
+    .from(surveySamplePreferences)
+    .where(
+      and(
+        eq(surveySamplePreferences.userId, userId),
+        eq(surveySamplePreferences.sampleId, sampleId),
+      ),
+    )
+    .limit(1);
+
+  if (!rows[0]) return null;
+  return { preferredChatId: rows[0].preferredChatId };
 }

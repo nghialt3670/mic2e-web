@@ -221,6 +221,28 @@ export const surveyAnswers = pgTable(
   }),
 );
 
+export const surveySamplePreferences = pgTable(
+  "survey_sample_preferences",
+  {
+    id: primaryKey("id"),
+    userId: foreignKey("user_id", users.id, { onDelete: "cascade" }).notNull(),
+    sampleId: foreignKey("sample_id", surveySamples.id, {
+      onDelete: "cascade",
+    }).notNull(),
+    preferredChatId: foreignKey("preferred_chat_id", surveyChats.id, {
+      onDelete: "cascade",
+    }).notNull(),
+    createdAt: createdAt("createdAt"),
+    updatedAt: updatedAt("updatedAt"),
+  },
+  (table) => ({
+    uq_user_sample: uniqueIndex("uq_survey_sample_preferences_user_sample").on(
+      table.userId,
+      table.sampleId,
+    ),
+  }),
+);
+
 // ─────────────────────────────────────────────
 // Relations
 // ─────────────────────────────────────────────
@@ -371,6 +393,24 @@ export const surveyAnswersRelations = relations(surveyAnswers, ({ one }) => ({
   }),
 }));
 
+export const surveySamplePreferencesRelations = relations(
+  surveySamplePreferences,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [surveySamplePreferences.userId],
+      references: [users.id],
+    }),
+    sample: one(surveySamples, {
+      fields: [surveySamplePreferences.sampleId],
+      references: [surveySamples.id],
+    }),
+    preferredChat: one(surveyChats, {
+      fields: [surveySamplePreferences.preferredChatId],
+      references: [surveyChats.id],
+    }),
+  }),
+);
+
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────
@@ -390,3 +430,4 @@ export type QuestionTemplateOption = typeof questionTemplateOptions.$inferSelect
 export type SurveyQuestion = typeof surveyQuestions.$inferSelect;
 export type SurveyOption = typeof surveyOptions.$inferSelect;
 export type SurveyAnswer = typeof surveyAnswers.$inferSelect;
+export type SurveySamplePreference = typeof surveySamplePreferences.$inferSelect;
