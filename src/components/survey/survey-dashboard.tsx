@@ -23,6 +23,7 @@ interface ChatStat {
   title: string;
   sourceChatId: string | null;
   questions: QuestionStat[];
+  preferredCount?: number;
 }
 
 interface SampleStat {
@@ -85,12 +86,21 @@ export const SurveyDashboard = ({ stats, chatDetailsById }: SurveyDashboardProps
         <Card key={sample.id}>
           <CardHeader>
             <CardTitle>{sample.name}</CardTitle>
-            <CardDescription>{sample.responseCount} responses</CardDescription>
+            <CardDescription>
+              {sample.responseCount} responses
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4 overflow-x-auto pb-2">
               {sample.chats.map((chat) => (
                 <div key={chat.id} className="flex-1 min-w-[800px] border rounded-lg p-4 bg-card space-y-4">
+                  <div className="flex items-baseline justify-between">
+                    <div className="text-sm font-medium">{chat.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      Preferred by {chat.preferredCount ?? 0} user{(chat.preferredCount ?? 0) === 1 ? "" : "s"}
+                    </div>
+                  </div>
+
                   {/* Chat Content */}
                   {chat.sourceChatId && chatDetailsById[chat.sourceChatId] && (
                     <div className="rounded-md border bg-muted/30 p-3 h-[300px] overflow-y-auto">

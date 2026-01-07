@@ -355,6 +355,23 @@ export async function getSurveyStats() {
     },
   });
 
+  // Get all sample-level chat preferences
+  const preferenceRows = await drizzleClient
+    .select({
+      sampleId: surveySamplePreferences.sampleId,
+      preferredChatId: surveySamplePreferences.preferredChatId,
+    })
+    .from(surveySamplePreferences);
+
+  const preferenceCountsBySample: Record<string, Record<string, number>> = {};
+  for (const row of preferenceRows) {
+    if (!preferenceCountsBySample[row.sampleId]) {
+      preferenceCountsBySample[row.sampleId] = {};
+    }
+    const chatCounts = preferenceCountsBySample[row.sampleId];
+    chatCounts[row.preferredChatId] = (chatCounts[row.preferredChatId] || 0) + 1;
+  }
+
   // Collect all unique users first
   const allUsers = new Set<string>();
   samples.forEach((sample) => {
@@ -399,11 +416,14 @@ export async function getSurveyStats() {
         };
       });
 
+      const prefCountsForSample = preferenceCountsBySample[sample.id] || {};
+
       return {
         id: chat.id,
         title: chat.title,
         sourceChatId: chat.sourceChatId,
         questions: questionStats,
+        preferredCount: prefCountsForSample[chat.id] ?? 0,
       };
     });
 
