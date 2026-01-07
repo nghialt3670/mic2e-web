@@ -128,7 +128,7 @@ export async function getSurveyTemplates(): Promise<
   });
 
   // Initialize default templates if none exist
-  if (templates.length === 0) {
+  if (templates.length !== 3) {
     // Create "About Result" template
     const resultTemplateId = uuid();
     await drizzleClient.insert(questionTemplates).values({
@@ -152,6 +152,18 @@ export async function getSurveyTemplates(): Promise<
       { id: uuid(), templateId: interactionTemplateId, label: "3 = Acceptable", value: "3", sortOrder: 2 },
       { id: uuid(), templateId: interactionTemplateId, label: "4 = Good", value: "4", sortOrder: 3 },
       { id: uuid(), templateId: interactionTemplateId, label: "5 = Excellent", value: "5", sortOrder: 4 },
+    ]);
+
+    // Create "Preference of Use" template
+    const preferenceTemplateId = uuid();
+    await drizzleClient.insert(questionTemplates).values({
+      id: preferenceTemplateId,
+      text: "Preference of Use: Which chat would you prefer to use?",
+    });
+    await drizzleClient.insert(questionTemplateOptions).values([
+      { id: uuid(), templateId: preferenceTemplateId, label: "Preferred Chat A", value: "chat-a", sortOrder: 0 },
+      { id: uuid(), templateId: preferenceTemplateId, label: "Preferred Chat B", value: "chat-b", sortOrder: 1 },
+      { id: uuid(), templateId: preferenceTemplateId, label: "No preference / both similar", value: "no-preference", sortOrder: 2 },
     ]);
 
     // Fetch templates again
